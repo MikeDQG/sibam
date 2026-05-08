@@ -1,0 +1,177 @@
+{
+  "info": {
+    "_postman_id": "af2c399c-9ba9-4d24-b6c8-7bc5348f43e4",
+    "name": "SibaM",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "/simple-api/test",
+      "id": "86e1c15a-6748-4f0b-ad85-abcbe10e02af",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/simple-api/test",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "simple-api",
+            "test"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "derp/marprom",
+      "id": "46b43be9-5afb-4467-bc94-e26a9a7455b8",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://marprom-proxy.derp.si/OBA/GetAllStopPoints",
+          "protocol": "https",
+          "host": [
+            "marprom-proxy",
+            "derp",
+            "si"
+          ],
+          "path": [
+            "OBA",
+            "GetAllStopPoints"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "derp/marpr LINES",
+      "id": "c48ac455-5af9-41ba-b4f4-8f8acadacdf0",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://marprom-proxy.derp.si/OBA/GetLines",
+          "protocol": "https",
+          "host": [
+            "marprom-proxy",
+            "derp",
+            "si"
+          ],
+          "path": [
+            "OBA",
+            "GetLines"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "derp/marpr ROUTES",
+      "id": "226291d3-bfa3-4346-bd41-125c878f7608",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67&Date=2026-05-07&IncludeShape=true",
+          "protocol": "https",
+          "host": [
+            "marprom-proxy",
+            "derp",
+            "si"
+          ],
+          "path": [
+            "OBA",
+            "GetRoutes"
+          ],
+          "query": [
+            {
+              "key": "lineId",
+              "value": "67"
+            },
+            {
+              "key": "Date",
+              "value": "2026-05-07"
+            },
+            {
+              "key": "IncludeShape",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "derp/marpr StopPoint Schedule for Line",
+      "id": "eb8b6c40-7723-46d0-a695-b5cc466dbed5",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://marprom-proxy.derp.si/OBA/GetStopPointSheduleForLine?lineId=67&Date=2026-05-08",
+          "protocol": "https",
+          "host": [
+            "marprom-proxy",
+            "derp",
+            "si"
+          ],
+          "path": [
+            "OBA",
+            "GetStopPointSheduleForLine"
+          ],
+          "query": [
+            {
+              "key": "lineId",
+              "value": "67"
+            },
+            {
+              "key": "Date",
+              "value": "2026-05-08"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "derp/marpr GetTrips",
+      "id": "11896f7b-876c-407a-90e4-796d38f71cc5",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67&Date=2026-05-08&IncludeShape=true",
+          "protocol": "https",
+          "host": [
+            "marprom-proxy",
+            "derp",
+            "si"
+          ],
+          "path": [
+            "OBA",
+            "GetTrips"
+          ],
+          "query": [
+            {
+              "key": "lineId",
+              "value": "67"
+            },
+            {
+              "key": "Date",
+              "value": "2026-05-08"
+            },
+            {
+              "key": "IncludeShape",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

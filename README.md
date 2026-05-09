@@ -1,10 +1,22 @@
 <p align="center">
-  <img src="assets/logo.jpeg" alt="ŠibaM logo" width="200"/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-celi-belo-besedilo.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/logo-celi-crno-besedilo.svg">
+    <img alt="ŠibaM logo" src="assets/logo-celi-crno-besedilo.svg" width="300"/>
+  </picture>
   <br>
   <em>Multimodalna mobilnost Maribora.</em>
   <br>
   <em>Avtorji: Gal Badrov, Miha Govedič, Kaja Vidmar</em>
+  <br>
+  <a href="https://sibam.atlassian.net/jira/software/projects/SCRUM/boards/1?atlOrigin=eyJpIjoiZGJkYjM2NDQxN2I1NDdlZDkxNDlmNjM0MzJmNGFmNDUiLCJwIjoiaiJ9">Jira projekt</a>
 </p>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-celi-belo-besedilo.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/logo-celi-crno-besedilo.svg">
+  <img alt="ŠibaM logo" src="assets/logo-celi-crno-besedilo.svg" width="300"/>
+</picture>
 
 šibaM je spletna aplikacija za načrtovanje multimodalnih poti po Mariboru in okolici. Združuje podatke o avtobusnih prevozih (Marprom/GTFS), mestnih kolesih (mBajk) in vremenskih razmerah ter uporabniku predlaga optimalno pot glede na čas, vreme in zelene površine.
 
@@ -123,3 +135,25 @@ SCRUM-15-gtfs-podatki
 SCRUM-19-firebase-avtorizacija
 SCRUM-6-backend-setup
 ```
+
+## Sledenje napakam (Bug Tracking)
+
+Napake se dodajajo v Jiro kot **Bug** tip taska.
+
+### Opis buga
+
+V opis vsakega buga vključi naslednje informacije:
+
+- Časovne informacije (kdaj je bila napaka odkrita),
+- osebo, ki je izvedla testiranje,
+- kontekst (na kateri strani, ob kateri akciji),
+- opis incidenta,
+- korake ponovitve (kako reproducirati napako),
+- oceno resnosti (Nizka / Srednja / Visoka / Kritična),
+- tveganje.
+
+Polje **Priority** uporabi za oceno prioritete, polje **Assignee** pa za določitev odgovorne osebe za popravilo. Status incidenta se sledi preko Jira statusa (To Do → In Progress → In Review → Done).
+
+### Kdaj dodati bug v sprint
+
+Bug se ustvari v Backlogu in se ga prestavi v sprint, v katerem je planiran popravek.

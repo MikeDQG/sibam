@@ -90,7 +90,7 @@ Zanimajo nas vsi podatki iz JSON.
 
 
 
-##### GetTrips
+### GetTrips
 
 https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67&Date=2026-05-08&IncludeShape=true
 
@@ -99,6 +99,12 @@ https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67&IncludeShape=true
 Zanimajo nas vsi podatki iz JSON, te podatke bomo morda uporabili pri zamudah, glede na "TripId".
 
 
+### Komentar
+
+V *ROUTES* se nahaja neke vrste polyline za vsak ROUTE, kar je super, ker iz tega dobimo naslednje informacije:
+- seznam vseh postajališč (StopPoint~BusStop) za vsako traso ROUTE
+- zaporedje teh postajališč
+- vmesne točke linije (in koordinate) za dober prikaz linije oz. trase na MAP-u (bassically *polyline*)
 
 
 

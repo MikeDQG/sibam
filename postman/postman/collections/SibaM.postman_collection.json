@@ -26,7 +26,7 @@
       "response": []
     },
     {
-      "name": "derp/marprom",
+      "name": "derp/marprom STOPS",
       "id": "46b43be9-5afb-4467-bc94-e26a9a7455b8",
       "request": {
         "method": "GET",

@@ -77,18 +77,3 @@ Jedro aplikacije, ki teče ob vsakem uporabniškem iskanju.
 | **Vozni redi** | **Time-dependent cost function** (Dijkstra, ki pozna uro). |
 | **Stroški API-jev** | **Caching** polylines in navodil za pogoste relacije. |
 
----
-
-## 🚀 Naslednji koraki
-
-1. Priprava `Dockerfile` za backend in frontend.
-2. Implementacija R-Tree iskanja v Javi.
-3. Testiranje A* algoritma na podmnožici linije 1 in 6.
-
----
-
-**Moj nasvet za začetek:**
-Začni z **Fazo 3.1 in 3.2 (brez voznih redov)**. Najprej poskrbi, da tvoj algoritem najde najkrajšo pot med dvema točkama v Mariboru, kot da so avtobusi "teleporti", ki so vedno na voljo. Ko bo to delovalo, dodaj v `Cost Function` še preverjanje ure in voznega reda.
-
-
-Želiš, da ti pomagam pripraviti specifikacijo za **Javanski razred `Edge**`, ki bo podpiral te različne tipe povezav?

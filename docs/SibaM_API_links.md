@@ -1,8 +1,8 @@
-### ŠibaM API links
+# ŠibaM API links
 
 
 
-#### MBajk
+## MBajk
 
 https://api.jcdecaux.com/vls/v3/stations?apiKey=frifk0jbxfefqqniqez09tw4jvk37wyf823b5j1i\&contract=maribor
 
@@ -28,22 +28,6 @@ Samo en link, zanima nas le datum in to:
 
 &#x20;       "lastUpdate": "2026-05-08T21:11:32Z",
 
-&#x20;       "totalStands": {
-
-&#x20;           "availabilities": {
-
-&#x20;               "bikes": 17,
-
-&#x20;               "stands": 3,
-
-&#x20;               "mechanicalBikes": 17,
-
-&#x20;           },
-
-&#x20;           "capacity": 20
-
-&#x20;       },
-
 &#x20;       "mainStands": {
 
 &#x20;           "availabilities": {
@@ -66,11 +50,11 @@ Samo en link, zanima nas le datum in to:
 
 
 
-#### Marprom
+## Marprom
 
 
 
-##### GetAllStopPoints
+### GetAllStopPoints
 
 https://marprom-proxy.derp.si/OBA/GetAllStopPoints
 
@@ -78,7 +62,7 @@ Zanimajo nas vsi podatki iz JSON.
 
 
 
-##### GetLines
+### GetLines
 
 https://marprom-proxy.derp.si/OBA/GetLines
 
@@ -86,17 +70,21 @@ Zanimajo nas vsi podatki iz JSON.
 
 
 
-##### GetRoutes
+### GetRoutes
 
-https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67\&Date=2026-05-07\&IncludeShape=true
+https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67&Date=2026-05-07&IncludeShape=true
+
+https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67&IncludeShape=true
 
 Zanimajo nas vsi podatki iz JSON.
 
 
 
-##### GetStopPointScheduleForLine
+### GetStopPointScheduleForLine
 
-https://marprom-proxy.derp.si/OBA/GetStopPointSheduleForLine?lineId=67\&Date=2026-05-08
+https://marprom-proxy.derp.si/OBA/GetStopPointSheduleForLine?lineId=67&Date=2026-05-08
+
+https://marprom-proxy.derp.si/OBA/GetStopPointSheduleForLine?lineId=67
 
 Zanimajo nas vsi podatki iz JSON.
 
@@ -104,7 +92,9 @@ Zanimajo nas vsi podatki iz JSON.
 
 ##### GetTrips
 
-https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67\&Date=2026-05-08\&IncludeShape=true
+https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67&Date=2026-05-08&IncludeShape=true
+
+https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67&IncludeShape=true
 
 Zanimajo nas vsi podatki iz JSON, te podatke bomo morda uporabili pri zamudah, glede na "TripId".
 

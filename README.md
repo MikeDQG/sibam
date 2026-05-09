@@ -12,12 +12,6 @@
   <a href="https://sibam.atlassian.net/jira/software/projects/SCRUM/boards/1?atlOrigin=eyJpIjoiZGJkYjM2NDQxN2I1NDdlZDkxNDlmNjM0MzJmNGFmNDUiLCJwIjoiaiJ9">Jira projekt</a>
 </p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-celi-belo-besedilo.svg">
-  <source media="(prefers-color-scheme: light)" srcset="assets/logo-celi-crno-besedilo.svg">
-  <img alt="ŠibaM logo" src="assets/logo-celi-crno-besedilo.svg" width="300"/>
-</picture>
-
 šibaM je spletna aplikacija za načrtovanje multimodalnih poti po Mariboru in okolici. Združuje podatke o avtobusnih prevozih (Marprom/GTFS), mestnih kolesih (mBajk) in vremenskih razmerah ter uporabniku predlaga optimalno pot glede na čas, vreme in zelene površine.
 
 ---

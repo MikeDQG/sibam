@@ -24,7 +24,7 @@ export const Login = () => {
         src='/LandingPage/background.jpeg'
         alt='Background'
       />
-      <div className='z-10 flex min-h-screen w-[512px] max-w-[550px] py-5 pr-5 lg:w-full lg:max-w-[50%]'>
+      <div className='z-10 flex min-h-screen w-lg max-w-137.5 py-5 pr-5 lg:w-full lg:max-w-[50%]'>
         <div className='relative flex w-full flex-col items-center rounded-lg bg-neutral-700 pt-20 gap-8'>
           <button
             type='button'

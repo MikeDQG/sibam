@@ -1,5 +1,6 @@
 import { Bike, Bus, Footprints } from "lucide-react";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
+import { MainMap } from "../MainAppComponents/MainMap";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
 
 const routeOptions = [
@@ -26,6 +27,9 @@ const routeOptions = [
 export const MainAppHome = () => {
   return (
     <main className='relative min-h-screen overflow-hidden'>
+      {/* map */}
+      <MainMap />
+
       {/* control overlay */}
       <MainAppControlOverlay />
 

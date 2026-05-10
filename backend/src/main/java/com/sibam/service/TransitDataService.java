@@ -24,6 +24,7 @@ public class TransitDataService {
         testGetLines();
         testGetRoutes();
         testGetStopScheduleForLine();
+        testGetTrips();
     }
 
     public void testDataIngestion() {
@@ -93,6 +94,24 @@ public class TransitDataService {
 
                 System.out.printf("StopPoint: %s (StopPointId: %s; Description: %s) %s%n",
                         stopPoint.get("Name"), stopPoint.get("StopPointId"), stopPoint.get("Description"), scheduleForLine.getFirst().get("LineId"));
+            });
+        });
+    }
+
+    public void testGetTrips() {
+        int lineId = 67;    // test, 67 je Tezno
+
+        marpromClient.getTrips(lineId).subscribe(response -> {
+            System.out.println("\n--- ŠibaM: Začenjam testni prevzem potovanj ---");
+
+            List<Map<String, Object>> trips = (List<Map<String, Object>>) response.get("Trips");
+
+            System.out.println("Število najdenih potovanj: " + trips.size());
+
+            // Izpis prvih treh za kontrolo
+            trips.stream().limit(3).forEach(s -> {
+                System.out.printf("Potovanje: %s (LineId: %s; RouteId: %s) %n",
+                        s.get("TripId"), s.get("LineId"), s.get("RouteId"));
             });
         });
     }

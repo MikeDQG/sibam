@@ -76,7 +76,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67&Date=2026-05-07&IncludeShape=true",
+          "raw": "https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67&Date=2026-05-08&IncludeShape=true",
           "protocol": "https",
           "host": [
             "marprom-proxy",
@@ -90,15 +90,18 @@
           "query": [
             {
               "key": "lineId",
-              "value": "67"
+              "value": "67",
+              "uuid": "373eaf0f-5de3-4145-817b-3b5dcc542cfd"
             },
             {
               "key": "Date",
-              "value": "2026-05-07"
+              "value": "2026-05-08",
+              "uuid": "be0a02f9-c4f6-4478-9042-dd6f2a043c92"
             },
             {
               "key": "IncludeShape",
-              "value": "true"
+              "value": "true",
+              "uuid": "dab4b1aa-e194-42ce-962a-af7a0c788e1b"
             }
           ]
         }
@@ -167,6 +170,44 @@
             {
               "key": "IncludeShape",
               "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "MBajk real",
+      "id": "647201d1-1452-4e18-ae85-373a14bfae44",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://api.jcdecaux.com/vls/v3/stations?apiKey=frifk0jbxfefqqniqez09tw4jvk37wyf823b5j1i&contract=maribor",
+          "protocol": "https",
+          "host": [
+            "api",
+            "jcdecaux",
+            "com"
+          ],
+          "path": [
+            "vls",
+            "v3",
+            "stations"
+          ],
+          "query": [
+            {
+              "key": "apiKey",
+              "value": "frifk0jbxfefqqniqez09tw4jvk37wyf823b5j1i",
+              "uuid": "c614f240-9791-4334-bddb-4bd1e2b64e2d"
+            },
+            {
+              "key": "contract",
+              "value": "maribor",
+              "uuid": "f898ae1a-bca1-4034-872f-b1108a134c03"
             }
           ]
         }

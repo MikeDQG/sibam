@@ -87,4 +87,23 @@ public class MarpromClient {
     public Mono<Map> getStopScheduleForLine(int lineId) {
         return this.getStopScheduleForLine(lineId, getFormattedDateHelper());
     }
+
+    /**
+     * Pridobi trase dolocene linije za specifičen datum (ekvivalent GetRoutes)
+     */
+    public Mono<Map> getTrips(int lineId, String date) {
+        return this.webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/GetTrips")
+                        .queryParam("IncludeShape", true)
+                        .queryParam("Date", date)
+                        .queryParam("lineId", lineId)
+                        .build())
+                .retrieve()
+                .bodyToMono(Map.class);
+    }
+
+    // TODO: odstrani, ko bos datum handlal na visjem nivoju
+    public Mono<Map> getTrips(int lineId) {
+        return this.getTrips(lineId, getFormattedDateHelper());
+    }
 }

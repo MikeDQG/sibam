@@ -1,12 +1,16 @@
 package com.sibam.integration.marprom;
 
+import com.sibam.dto.marprom.lines.MarpromLinesResponse;
+import com.sibam.dto.marprom.routes.MarpromRoutesResponseDto;
+import com.sibam.dto.marprom.schedules.MarpromScheduleResponse;
+import com.sibam.dto.marprom.stops.MarpromStopsResponse;
+import com.sibam.dto.marprom.trips.MarpromTripsResponseDto;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
 
 @Component
 public class MarpromClient {
@@ -27,34 +31,34 @@ public class MarpromClient {
     /**
      * Pridobi vsa postajališča (ekvivalent GetAllStopPoints v Pythonu)
      */
-    public Mono<Map> getAllStops() {
+    public Mono<MarpromStopsResponse> getAllStops() {
         return this.webClient.get()
                 .uri("/GetAllStopPoints")
                 .retrieve()
-                .bodyToMono(Map.class);
+                .bodyToMono(MarpromStopsResponse.class);
     }
 
     /**
      * Pridobi linije za specifičen datum (ekvivalent GetLines)
      */
-    public Mono<Map> getLines(String date) {
+    public Mono<MarpromLinesResponse> getLines(String date) {
         return this.webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/GetLines")
                         .queryParam("Date", date)
                         .build())
                 .retrieve()
-                .bodyToMono(Map.class);
+                .bodyToMono(MarpromLinesResponse.class);
     }
 
     // TODO: odstrani, ko bos datum handlal na visjem nivoju
-    public Mono<Map> getLines() {
+    public Mono<MarpromLinesResponse> getLines() {
         return this.getLines(getFormattedDateHelper());
     }
 
     /**
      * Pridobi trase dolocene linije za specifičen datum (ekvivalent GetRoutes)
      */
-    public Mono<Map> getRoutes(int lineId, String date) {
+    public Mono<MarpromRoutesResponseDto> getRoutes(int lineId, String date) {
         return this.webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/GetRoutes")
                         .queryParam("Date", date)
@@ -62,36 +66,36 @@ public class MarpromClient {
                         .queryParam("lineId", lineId)
                         .build())
                 .retrieve()
-                .bodyToMono(Map.class);
+                .bodyToMono(MarpromRoutesResponseDto.class);
     }
 
     // TODO: odstrani, ko bos datum handlal na visjem nivoju
-    public Mono<Map> getRoutes(int lineId) {
+    public Mono<MarpromRoutesResponseDto> getRoutes(int lineId) {
         return this.getRoutes(lineId, getFormattedDateHelper());
     }
 
     /**
      * Pridobi trase dolocene linije za specifičen datum (ekvivalent GetRoutes)
      */
-    public Mono<Map> getStopScheduleForLine(int lineId, String date) {
+    public Mono<MarpromScheduleResponse> getStopScheduleForLine(int lineId, String date) {
         return this.webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/GetStopPointSheduleForLine")
                         .queryParam("Date", date)
                         .queryParam("lineId", lineId)
                         .build())
                 .retrieve()
-                .bodyToMono(Map.class);
+                .bodyToMono(MarpromScheduleResponse.class);
     }
 
     // TODO: odstrani, ko bos datum handlal na visjem nivoju
-    public Mono<Map> getStopScheduleForLine(int lineId) {
+    public Mono<MarpromScheduleResponse> getStopScheduleForLine(int lineId) {
         return this.getStopScheduleForLine(lineId, getFormattedDateHelper());
     }
 
     /**
      * Pridobi trase dolocene linije za specifičen datum (ekvivalent GetRoutes)
      */
-    public Mono<Map> getTrips(int lineId, String date) {
+    public Mono<MarpromTripsResponseDto> getTrips(int lineId, String date) {
         return this.webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/GetTrips")
                         .queryParam("IncludeShape", true)
@@ -99,11 +103,11 @@ public class MarpromClient {
                         .queryParam("lineId", lineId)
                         .build())
                 .retrieve()
-                .bodyToMono(Map.class);
+                .bodyToMono(MarpromTripsResponseDto.class);
     }
 
     // TODO: odstrani, ko bos datum handlal na visjem nivoju
-    public Mono<Map> getTrips(int lineId) {
+    public Mono<MarpromTripsResponseDto> getTrips(int lineId) {
         return this.getTrips(lineId, getFormattedDateHelper());
     }
 }

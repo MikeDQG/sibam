@@ -8,6 +8,6 @@ public record MarpromStopDto(
         @JsonProperty("StopPointId") int id,
         @JsonProperty("Name") String name,
         @JsonProperty("Description") String address,
-        @JsonProperty("Lat") double lat,
-        @JsonProperty("Lon") double lon
+        @JsonProperty("Lat") Double lat,
+        @JsonProperty("Lon") Double lon
 ) {}

@@ -21,7 +21,9 @@ export const Header = () => {
   return (
     <header
       className={`fixed left-3 right-3 top-3 z-50 flex items-center justify-between rounded-xl px-6 py-3 transition-colors duration-300 ${
-        isScrolled ? "bg-neutral-600 shadow-lg" : "bg-neutral-600/00"
+        isScrolled
+          ? "bg-neutral-600/40 shadow-lg backdrop-blur-md"
+          : "bg-neutral-600/00"
       }`}>
       <img src='/logo.svg' alt='Šibam' className='h-15 w-auto' />
 

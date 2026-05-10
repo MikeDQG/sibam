@@ -2,12 +2,18 @@ import { APIProvider, Map } from "@vis.gl/react-google-maps";
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-const mariborCenter = {
-  lat: 46.5547,
-  lng: 15.6459,
+type MapCenter = {
+  lat: number;
+  lng: number;
 };
 
-export const MainMap = () => {
+type MainMapProps = {
+  center: MapCenter;
+  zoom: number;
+  onCameraChanged?: (center: MapCenter, zoom: number) => void;
+};
+
+export const MainMap = ({ center, zoom, onCameraChanged }: MainMapProps) => {
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
 
   if (!hasApiKey) {
@@ -22,8 +28,12 @@ export const MainMap = () => {
     <div className='absolute inset-0 z-0'>
       <APIProvider apiKey={apiKey} region='SI' language='sl'>
         <Map
-          defaultCenter={mariborCenter}
-          defaultZoom={14}
+          center={center}
+          zoom={zoom}
+          onCameraChanged={(event) => {
+            onCameraChanged?.(event.detail.center, event.detail.zoom);
+          }}
+          colorScheme='DARK'
           gestureHandling='greedy'
           disableDefaultUI
           reuseMaps

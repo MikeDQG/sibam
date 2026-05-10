@@ -9,7 +9,17 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
-export const MainAppControlOverlay = () => {
+type MainAppControlOverlayProps = {
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onLocate?: () => void;
+};
+
+export const MainAppControlOverlay = ({
+  onZoomIn,
+  onZoomOut,
+  onLocate,
+}: MainAppControlOverlayProps) => {
   return (
     <>
       {/* search bar */}
@@ -35,25 +45,28 @@ export const MainAppControlOverlay = () => {
       {/* temperatura */}
       <div className='absolute left-5 top-17 z-20 flex h-8 items-center gap-4 rounded-sm bg-red-700/80 px-4 text-white shadow-lg'>
         <CloudRain size={20} />
-        <span className='text-md 7'>15 °C -{">"} temporary</span>
+        <span className='text-md 7'>15 °C</span>
       </div>
 
       {/* controls */}
       <div className='absolute right-5 top-18 z-20 flex flex-col gap-2'>
         <Button
           type='button'
+          onClick={onZoomIn}
           className='flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg'
           aria-label='Povečaj'>
           <Plus size={20} />
         </Button>
         <Button
           type='button'
+          onClick={onZoomOut}
           className='flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg'
           aria-label='Pomanjšaj'>
           <Minus size={20} />
         </Button>
         <Button
           type='button'
+          onClick={onLocate}
           className='flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg'
           aria-label='Moja lokacija'>
           <LocateFixed size={20} />

@@ -16,7 +16,7 @@ export const RouteOptions = ({ routes }: RouteOptionProps) => {
   const dragStartY = useRef(0);
   const dragStartOffset = useRef(0);
   const didDrag = useRef(false);
-  const [offsetY, setOffsetY] = useState(0);
+  const [offsetY, setOffsetY] = useState(44);
   const [maxOffsetY, setMaxOffsetY] = useState(0);
 
   // initial nastavitev maxOffseta
@@ -31,7 +31,7 @@ export const RouteOptions = ({ routes }: RouteOptionProps) => {
       );
 
       setMaxOffsetY(nextMaxOffset);
-      setOffsetY((currentOffset) => Math.min(currentOffset, nextMaxOffset));
+      setOffsetY(nextMaxOffset); // ob prvi renderju naj bo sheet zaprt (offset enak maxOffsetu)
     };
 
     updateSheetHeight();

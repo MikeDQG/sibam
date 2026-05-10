@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
 import { MainMap } from "../MainAppComponents/MainMap";
@@ -24,14 +25,83 @@ const routeOptions = [
   },
 ];
 
+const fallbackCenter = {
+  lat: 46.5547,
+  lng: 15.6459,
+};
+
+type MapCenter = {
+  lat: number;
+  lng: number;
+};
+
 export const MainAppHome = () => {
+  const [center, setCenter] = useState<MapCenter>(fallbackCenter);
+  const [zoom, setZoom] = useState(14);
+
+  // iskanje userjeve lokacije
+  function locateUser(zoomToUser = false) {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCenter({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+
+        if (zoomToUser) {
+          setZoom(16);
+        }
+      },
+      () => {
+        setCenter(fallbackCenter);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      },
+    );
+  }
+
+  useEffect(() => {
+    locateUser();
+  }, []);
+
+  // handlanje overlay kontrol
+  function handleZoomIn() {
+    setZoom((currentZoom) => Math.min(currentZoom + 1, 20));
+  }
+
+  function handleZoomOut() {
+    setZoom((currentZoom) => Math.max(currentZoom - 1, 3));
+  }
+
+  function handleLocate() {
+    locateUser(true);
+  }
+
+  function handleCameraChanged(nextCenter: MapCenter, nextZoom: number) {
+    setCenter(nextCenter);
+    setZoom(nextZoom);
+  }
+
   return (
     <main className='relative min-h-screen overflow-hidden'>
       {/* map */}
-      <MainMap />
+      <MainMap
+        center={center}
+        zoom={zoom}
+        onCameraChanged={handleCameraChanged}
+      />
 
       {/* control overlay */}
-      <MainAppControlOverlay />
+      <MainAppControlOverlay
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onLocate={handleLocate}
+      />
 
       {/* route options */}
       <RouteOptions routes={routeOptions} />

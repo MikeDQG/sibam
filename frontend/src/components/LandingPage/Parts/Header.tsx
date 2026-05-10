@@ -20,16 +20,14 @@ export const Header = () => {
 
   return (
     <header
-      className={`fixed left-3 right-3 top-3 z-50 flex items-center justify-between rounded-xl px-5 py-3 transition-colors duration-300 ${
+      className={`fixed left-3 right-3 top-3 z-50 flex items-center justify-between rounded-xl px-6 py-3 transition-colors duration-300 ${
         isScrolled ? "bg-neutral-600 shadow-lg" : "bg-neutral-600/00"
       }`}>
-      <Link to='/' aria-label='Šibam home'>
-        <img src='/logo.svg' alt='Šibam' className='h-10 w-auto' />
-      </Link>
+      <img src='/logo.svg' alt='Šibam' className='h-15 w-auto' />
 
       <Button
         onClick={() => navigate("/login")}
-        className='rounded-lg bg-white px-5 py-2 font-medium text-neutral-800 transition-colors hover:bg-neutral-100'>
+        className='rounded-lg h-10 px-5 py-2 text-lg font-semibold transition-colors bg-red-700 hover:bg-red-800 text-white'>
         Prijava
       </Button>
     </header>

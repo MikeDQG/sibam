@@ -9,7 +9,7 @@ export const HeroSection = () => {
       <div className='flex w-full flex-col items-center gap-5 lg:flex-row lg:gap-0'>
         <div className='flex flex-1 flex-col items-center text-center lg:ml-[10%] lg:items-start lg:text-left'>
           <h1 className='m-0 p-0 text-center text-[72px] font-bold leading-none text-white sm:text-[92px] lg:text-left lg:text-[120px]'>
-            Šibam
+            šibaM
           </h1>
           <span className='ml-0 text-center text-2xl text-red-500 sm:text-[32px] lg:ml-2 lg:text-left lg:text-[40px]'>
             Vse poti na enem mestu.

@@ -18,7 +18,7 @@ export const HeroSection = () => {
 
         <div className='flex w-[40%] justify-center'>
           <Button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/home")}
             className='h-12 rounded-lg bg-red-700 px-7 py-3 text-lg font-semibold text-white transition-colors hover:bg-red-800'>
             Najdi pot
           </Button>

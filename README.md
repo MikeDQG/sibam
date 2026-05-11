@@ -131,20 +131,21 @@ SCRUM-19 Implementirana Firebase avtorizacija
 
 - Nikoli ne pushaj direktno na main,
 - vse spremembe gredo preko development,
-- za vsak večji task ustvari svojo vejo iz development.
+- za vsak nov feature ali popravek ustvari svojo vejo iz development.
 
 **Format imenovanja vej:**
 
 ```
-SCRUM-XX-kratek-opis
+feat/SCRUM-XX-kratek-opis
+fix/SCRUM-XX-kratek-opis
 ```
 
 **Primeri:**
 
 ```
-SCRUM-15-gtfs-podatki
-SCRUM-19-firebase-avtorizacija
-SCRUM-6-backend-setup
+feat/SCRUM-15-gtfs-podatki
+feat/SCRUM-19-firebase-avtorizacija
+fix/SCRUM-6-backend-setup
 ```
 
 ## Sledenje napakam (Bug Tracking)

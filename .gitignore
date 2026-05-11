@@ -33,6 +33,7 @@ dist-ssr
 target/
 application-local.properties
 application-local.yml
+backend/src/main/resources/firebase-service-account.json
 
 # Environment 
 .env

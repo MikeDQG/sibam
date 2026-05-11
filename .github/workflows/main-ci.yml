@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend Build & Test
+    name: Backend Build
     runs-on: ubuntu-latest
 
     defaults:
@@ -24,10 +24,10 @@ jobs:
 
     env:
       # Spring / DB
-      URL: ${{ secrets.DB_URL }}
-      USERNAME: ${{ secrets.DB_USERNAME }}
-      PASSWORD: ${{ secrets.DB_PASSWORD }}
-      CLASS_NAME: ${{ secrets.DB_CLASS_NAME }}
+      DB_URL: ${{ secrets.DB_URL }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_CLASS_NAME: ${{ secrets.DB_CLASS_NAME }}
 
       # Supabase backend
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

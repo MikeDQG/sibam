@@ -51,7 +51,7 @@ jobs:
         run: ./mvnw clean verify -Dspring.profiles.active=ci
 
   frontend:
-    name: Frontend Build & Lint
+    name: Frontend Build
     runs-on: ubuntu-latest
 
     defaults:

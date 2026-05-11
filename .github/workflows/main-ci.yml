@@ -22,6 +22,17 @@ jobs:
       run:
         working-directory: backend
 
+    env:
+      # Spring / DB
+      URL: ${{ secrets.DB_URL }}
+      USERNAME: ${{ secrets.DB_USERNAME }}
+      PASSWORD: ${{ secrets.DB_PASSWORD }}
+      CLASS_NAME: ${{ secrets.DB_CLASS_NAME }}
+
+      # Supabase backend
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,7 +48,7 @@ jobs:
         run: chmod +x mvnw
 
       - name: Build and verify backend
-        run: ./mvnw clean verify
+        run: ./mvnw clean verify -Dspring.profiles.active=ci
 
   frontend:
     name: Frontend Build & Lint
@@ -46,6 +57,22 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+
+    env:
+      # Firebase
+      VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+      # Supabase frontend
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+
+      # Google Maps
+      VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
     steps:
       - name: Checkout repository
@@ -66,4 +93,3 @@ jobs:
 
       - name: Build frontend
         run: npm run build
-        

@@ -1,5 +1,6 @@
 package com.sibam.scheduler;
 
+import com.sibam.service.GTFSRTDataService;
 import com.sibam.service.MBajkDataService;
 import com.sibam.service.WeatherDataService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.time.ZoneId;
 public class SchedulerService {
     private final MBajkDataService mbajkDataService;
     private final WeatherDataService weatherDataService;
+    private final GTFSRTDataService gtfsRTDataService;
 
     /**
      * Pridobivanje podatkov MBajk koles in vremena, vsakih 5 minut
@@ -39,5 +41,12 @@ public class SchedulerService {
     @Scheduled(fixedRate = 1000 * 30)
     public void fetchBusPBIngestion() {
         System.out.println();
+        log.info("Fetching Vehicle Positions");
+
+        try {
+            gtfsRTDataService.getRealtimeTrips();
+        } catch (Exception e) {
+            log.error("Failed to fetch Trips data", e);
+        }
     }
 }

@@ -13,15 +13,15 @@ public class SchedulerService {
     private final MBajkDataService mbajkDataService;
 
     /**
-     * Pridobivanje podatkov MBajk koles
+     * Pridobivanje podatkov MBajk koles, vsakih 5 minut
      */
-    @Scheduled(fixedRate = 1000 * 15)
+    @Scheduled(fixedRate = 1000 * 60 * 5)
     public void fetchBikesIngestion() {
         System.out.println();
         log.info("Fetching Bikes Ingestion");
 
         try {
-            mbajkDataService.testBikesIngestion();
+            mbajkDataService.ingestBikesData();
         } catch (Exception e) {
             log.error("Failed to fetch MBajk data", e);
         }

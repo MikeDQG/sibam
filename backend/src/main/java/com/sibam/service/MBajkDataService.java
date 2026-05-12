@@ -26,13 +26,10 @@ public class MBajkDataService {
         this.bikeStationSnapshotRepository = bikeStationSnapshotRepository;
     }
 
-    public void ingestBikesData() {
+    public void ingestBikesData(OffsetDateTime fetchedAt) {
         mbajkClient.getAllBikes()
                 .publishOn(Schedulers.boundedElastic())
-                .subscribe(bikeStops -> {
-                    OffsetDateTime fetchedAt = OffsetDateTime.now();
-                    bikeStops.forEach(dto -> saveBikeStop(dto, fetchedAt));
-                });
+                .subscribe(bikeStops -> bikeStops.forEach(dto -> saveBikeStop(dto, fetchedAt)));
     }
 
     private void saveBikeStop(BikeStopDto dto, OffsetDateTime fetchedAt) {

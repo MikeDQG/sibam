@@ -1,6 +1,6 @@
 package com.sibam.api;
 
-import com.sibam.model.User;
+import com.sibam.persistence.User;
 import com.sibam.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

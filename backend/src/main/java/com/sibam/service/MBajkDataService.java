@@ -2,8 +2,8 @@ package com.sibam.service;
 
 import com.sibam.dto.mbajk.BikeStopDto;
 import com.sibam.integration.mbajk.MBajkClient;
-import com.sibam.model.BikeStation;
-import com.sibam.model.BikeStationSnapshot;
+import com.sibam.persistence.BikeStation;
+import com.sibam.persistence.BikeStationSnapshot;
 import com.sibam.repository.BikeStationRepository;
 import com.sibam.repository.BikeStationSnapshotRepository;
 import org.springframework.stereotype.Service;

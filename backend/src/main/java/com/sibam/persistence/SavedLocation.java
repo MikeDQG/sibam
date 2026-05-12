@@ -1,20 +1,23 @@
-package com.sibam.model;
+package com.sibam.persistence;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "bike_stations")
+@Table(name = "saved_locations")
 @Data
-public class BikeStation {
+public class SavedLocation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "number", unique = true, nullable = false)
-    private int number;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -23,11 +26,11 @@ public class BikeStation {
     private String address;
 
     @Column(name = "latitude", nullable = false)
-    private double latitude;
+    private Double latitude;
 
     @Column(name = "longitude", nullable = false)
-    private double longitude;
+    private Double longitude;
 
-    @Column(name = "capacity", nullable = false)
-    private int capacity;
+    @Column(name = "created_at")
+    private OffsetDateTime createdAt;
 }

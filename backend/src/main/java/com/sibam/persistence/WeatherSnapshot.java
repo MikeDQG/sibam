@@ -1,4 +1,4 @@
-package com.sibam.model;
+package com.sibam.persistence;
 
 import jakarta.persistence.*;
 import lombok.Data;

@@ -22,6 +22,7 @@ jobs:
       DB_USERNAME: sa
       DB_PASSWORD: ""
       DB_CLASS_NAME: org.h2.Driver
+      MBAJK_API_KEY: ph
 
     steps:
       - name: Checkout

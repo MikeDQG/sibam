@@ -1,4 +1,4 @@
-package com.sibam.model;
+package com.sibam.model.graph;
 
 import java.time.LocalTime;
 import java.util.List;

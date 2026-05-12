@@ -1,6 +1,6 @@
 package com.sibam.service;
 
-import com.sibam.model.User;
+import com.sibam.persistence.User;
 import com.sibam.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;

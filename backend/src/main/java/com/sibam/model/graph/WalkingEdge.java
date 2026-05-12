@@ -1,4 +1,4 @@
-package com.sibam.model;
+package com.sibam.model.graph;
 
 public class WalkingEdge extends Edge {
 }

@@ -23,7 +23,7 @@ public class SchedulerService {
      * Pridobivanje podatkov MBajk koles in vremena, vsakih 5 minut
      */
     @Scheduled(fixedRate = 1000 * 60 * 5)
-    public void fetchIngestion() {
+    public void fetchBikeAndWeatherIngestion() {
         OffsetDateTime fetchedAt = OffsetDateTime.now(ZoneId.of("Europe/Ljubljana"));
         log.info("Fetching ingestion at {}", fetchedAt);
 
@@ -55,7 +55,7 @@ public class SchedulerService {
      * Pridobivanje zamud in lokacij iz ProtoBuf datotek
      */
     @Scheduled(fixedRate = 1000 * 30)
-    public void fetchBusPBIngestion() {
+    public void fetchBusTripsIngestion() {
         System.out.println();
         log.info("Fetching Vehicle Positions");
 

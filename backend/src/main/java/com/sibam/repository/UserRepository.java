@@ -1,6 +1,6 @@
 package com.sibam.repository;
 
-import com.sibam.model.User;
+import com.sibam.persistence.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

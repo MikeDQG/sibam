@@ -1,5 +1,7 @@
 package com.sibam.model;
 
+import com.sibam.model.graph.Mode;
+
 import java.time.LocalTime;
 
 public record Leg(

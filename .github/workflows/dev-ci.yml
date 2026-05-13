@@ -3,10 +3,10 @@ name: Dev CI
 on:
   push:
     branches:
-      - dev
+      - development
   pull_request:
     branches:
-      - dev
+      - development
 
 jobs:
   backend:
@@ -22,6 +22,7 @@ jobs:
       DB_USERNAME: sa
       DB_PASSWORD: ""
       DB_CLASS_NAME: org.h2.Driver
+      MBAJK_API_KEY: ph
 
     steps:
       - name: Checkout

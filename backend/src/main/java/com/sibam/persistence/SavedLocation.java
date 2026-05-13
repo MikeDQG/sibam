@@ -1,8 +1,9 @@
-package com.sibam.model;
+package com.sibam.persistence;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "saved_locations")
@@ -11,7 +12,8 @@ public class SavedLocation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @Column(columnDefinition = "uuid")
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

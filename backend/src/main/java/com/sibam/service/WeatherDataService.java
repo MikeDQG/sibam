@@ -1,7 +1,7 @@
 package com.sibam.service;
 
 import com.sibam.integration.weather.WeatherClient;
-import com.sibam.model.WeatherSnapshot;
+import com.sibam.persistence.WeatherSnapshot;
 import com.sibam.repository.WeatherSnapshotRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.scheduler.Schedulers;

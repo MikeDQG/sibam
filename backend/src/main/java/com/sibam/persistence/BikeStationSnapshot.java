@@ -1,10 +1,14 @@
-package com.sibam.model;
+package com.sibam.persistence;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+/**
+ * Trenutno stanje razpoložljivosti koles in stojal na postaji MBajk.
+ * Shranjuje se vsakih 5 minut za namen napovedovanja razpoložljivosti.
+ */
 @Entity
 @Table(name = "bike_station_snapshots")
 @Data

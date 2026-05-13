@@ -2,8 +2,8 @@ package com.sibam.service;
 
 import com.sibam.dto.mbajk.BikeStopDto;
 import com.sibam.integration.mbajk.MBajkClient;
-import com.sibam.model.BikeStation;
-import com.sibam.model.BikeStationSnapshot;
+import com.sibam.persistence.BikeStation;
+import com.sibam.persistence.BikeStationSnapshot;
 import com.sibam.repository.BikeStationRepository;
 import com.sibam.repository.BikeStationSnapshotRepository;
 import org.springframework.stereotype.Service;
@@ -26,12 +26,18 @@ public class MBajkDataService {
         this.bikeStationSnapshotRepository = bikeStationSnapshotRepository;
     }
 
+    /**
+     * Pridobi podatke o vseh MBajk postajah in shrani trenutno stanje v bazo.
+     */
     public void ingestBikesData(OffsetDateTime fetchedAt) {
         mbajkClient.getAllBikes()
                 .publishOn(Schedulers.boundedElastic())
                 .subscribe(bikeStops -> bikeStops.forEach(dto -> saveBikeStop(dto, fetchedAt)));
     }
 
+    /**
+     * Shrani postajo (če še ne obstaja) in doda nov posnetek trenutne razpoložljivosti.
+     */
     private void saveBikeStop(BikeStopDto dto, OffsetDateTime fetchedAt) {
         BikeStation station = bikeStationRepository.findByNumber(dto.number())
                 .orElseGet(() -> {

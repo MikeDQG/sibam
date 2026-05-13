@@ -1,26 +1,50 @@
 package com.sibam.persistence;
 
-/**
- * Razred, namenjen shranjevanju podatkov v bazo za namene ML
- * Po potrebi dodaj anotacije
- */
-// @Entity
-// @Table(name = "")
-public class TripEntity {
-    String tripId;
-    String routeId;
-    String vehicleLabel;
-    String vehicleId;
-    double lat;
-    double lon;
-    Float bearing;
-    int current_stop_sequence;
-    String stop_id;
-    Long timestamp;
+import jakarta.persistence.*;
+import lombok.Data;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
-    // če misliš, da nam koristi le zamuda na naslednji postaji, ohrani te "stolpce",
-    // drugače pa ustvari List<StopUpdateEntity> podobno kot /model/trip/StopUpdate
-    int next_stop_sequence;
-    int delay;
-    int uncertainty;
+/**
+ * Trenutno stanje aktivnega avtobusnega potovanja — položaj vozila, pot in trenutna postaja.
+ * Shranjuje se vsakih 30 sekund za namen napovedovanja zamud.
+ */
+@Entity
+@Table(name = "trip_snapshots")
+@Data
+public class TripEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "trip_id")
+    private String tripId;
+
+    @Column(name = "route_id")
+    private String routeId;
+
+    @Column(name = "vehicle_id")
+    private String vehicleId;
+
+    @Column(name = "vehicle_label")
+    private String vehicleLabel;
+
+    @Column(name = "lat")
+    private double lat;
+
+    @Column(name = "lon")
+    private double lon;
+
+    @Column(name = "bearing")
+    private Float bearing;
+
+    @Column(name = "current_stop_sequence")
+    private int currentStopSequence;
+
+    @Column(name = "current_stop_id")
+    private String currentStopId;
+
+    @Column(name = "recorded_at", nullable = false)
+    private OffsetDateTime recordedAt;
 }

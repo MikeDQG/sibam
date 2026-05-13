@@ -5,6 +5,7 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
 import com.sibam.model.trip.StopUpdate;
 import com.sibam.model.trip.Trip;
+
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -77,7 +78,6 @@ public class GTFSRTMapper {
             StopUpdate stopUpdate = new StopUpdate();
 
             stopUpdate.setStopSequence(stopTimeUpdate.getStopSequence());
-            stopUpdate.setStopId(stopTimeUpdate.getStopId());
 
             if (stopTimeUpdate.hasArrival()) {
                 stopUpdate.setDelay(stopTimeUpdate.getArrival().getDelay());

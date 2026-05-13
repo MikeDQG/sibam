@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.util.UUID;
 
+/**
+ * Statični podatki o postaji MBajk kolesarskega sistema.
+ * Vsaka postaja se shrani enkrat — ob prvem zaznanju v sistemu.
+ */
 @Entity
 @Table(name = "bike_stations")
 @Data

@@ -26,12 +26,18 @@ public class MBajkDataService {
         this.bikeStationSnapshotRepository = bikeStationSnapshotRepository;
     }
 
+    /**
+     * Pridobi podatke o vseh MBajk postajah in shrani trenutno stanje v bazo.
+     */
     public void ingestBikesData(OffsetDateTime fetchedAt) {
         mbajkClient.getAllBikes()
                 .publishOn(Schedulers.boundedElastic())
                 .subscribe(bikeStops -> bikeStops.forEach(dto -> saveBikeStop(dto, fetchedAt)));
     }
 
+    /**
+     * Shrani postajo (če še ne obstaja) in doda nov posnetek trenutne razpoložljivosti.
+     */
     private void saveBikeStop(BikeStopDto dto, OffsetDateTime fetchedAt) {
         BikeStation station = bikeStationRepository.findByNumber(dto.number())
                 .orElseGet(() -> {

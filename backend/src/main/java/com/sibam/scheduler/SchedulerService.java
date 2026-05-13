@@ -36,6 +36,22 @@ public class SchedulerService {
     }
 
     /**
+     * Pridobivanje podatkov o zamudah avtobusov v realnem času, vsakih 5 minut
+     */
+
+    @Scheduled(fixedRate = 1000 * 30)
+    public void fetchBusIngestion() {
+        OffsetDateTime fetchedAt = OffsetDateTime.now(ZoneId.of("Europe/Ljubljana"));
+        log.info("Fetching bus delay ingestion at {}", fetchedAt);
+
+        try {
+            gtfsRTDataService.ingestRealtimeTrips(fetchedAt);
+        } catch (Exception e) {
+            log.error("Failed to fetch ingestion data", e);
+        }
+    }
+
+    /**
      * Pridobivanje zamud in lokacij iz ProtoBuf datotek
      */
     @Scheduled(fixedRate = 1000 * 30)

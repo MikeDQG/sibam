@@ -5,6 +5,10 @@ import lombok.Data;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+/**
+ * Vremenski podatki ob trenutku zajema — temperatura, vlaga, veter in padavine.
+ * Shranjuje se vsakih 5 minut za namen napovedovanja zamud in razpoložljivosti koles.
+ */
 @Entity
 @Table(name = "weather_snapshots")
 @Data

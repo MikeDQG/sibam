@@ -67,10 +67,6 @@ public class GTFSRTDataService {
             return gtfsRTMapper.gtfsRTToTrip(vehicle, update);
         }).toList();
 
-        log.info("Loaded {} realtime trips", trips.size());
-
-        trips.stream().limit(3).forEach(trip -> log.info("Trip {} Route {} Vehicle {}", trip.getTripId(), trip.getRouteId(), trip.getVehicleId()));
-
         return trips;
     }
 

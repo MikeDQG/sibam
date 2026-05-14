@@ -25,7 +25,6 @@ public class SchedulerService {
     @Scheduled(fixedRate = 1000 * 60 * 5)
     public void fetchBikeAndWeatherIngestion() {
         OffsetDateTime fetchedAt = OffsetDateTime.now(ZoneId.of("Europe/Ljubljana"));
-        log.info("Fetching ingestion at {}", fetchedAt);
 
         try {
             mbajkDataService.ingestBikesData(fetchedAt);
@@ -42,7 +41,6 @@ public class SchedulerService {
     @Scheduled(fixedRate = 1000 * 30)
     public void fetchBusIngestion() {
         OffsetDateTime fetchedAt = OffsetDateTime.now(ZoneId.of("Europe/Ljubljana"));
-        log.info("Fetching bus delay ingestion at {}", fetchedAt);
 
         try {
             gtfsRTDataService.ingestRealtimeTrips(fetchedAt);
@@ -57,7 +55,6 @@ public class SchedulerService {
     @Scheduled(fixedRate = 1000 * 30)
     public void fetchBusTripsIngestion() {
         System.out.println();
-        log.info("Fetching Vehicle Positions");
 
         try {
             gtfsRTDataService.getRealtimeTrips();

@@ -8,11 +8,13 @@ import { Footer } from "../LandingPageComponents/Footer";
 export const AccountPage = () => {
     const [email, setEmail] = useState<string | null>(null);
     const navigate = useNavigate();
+    const [fullName, setFullName] = useState<string | null>(null);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setEmail(user.email);
+                setFullName(user.displayName?.split(" ")[0] ?? null);
             } else {
                 navigate("/login");
             }
@@ -32,10 +34,10 @@ export const AccountPage = () => {
                 />
                 <div className="w-full max-w-xl bg-neutral-700 rounded-lg p-8 flex flex-col gap-6">
                     <h1 className="text-3xl font-semibold text-white">
-                        Pozdravljeni!
+                        Zdravo{fullName ? `, ${fullName}` : ""}!
                     </h1>
                     <p className="text-neutral-300 text-sm">
-                        Prijavljeni ste kot:{" "}
+                        Uporabljen email:{" "}
                         <span className="text-white font-medium">{email}</span>
                     </p>
 
@@ -45,7 +47,7 @@ export const AccountPage = () => {
                         </h2>
                         <div className="flex flex-col gap-3">
                             <div className="bg-neutral-600 rounded-md p-4 text-neutral-400 text-sm text-center">
-                                Še nimate shranjenih lokacij.
+                                Ni še shranjenih lokacij.
                             </div>
                         </div>
                     </div>

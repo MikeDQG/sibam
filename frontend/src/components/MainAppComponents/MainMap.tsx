@@ -58,7 +58,18 @@ export const MainMap = ({
                 mapId="DEMO_MAP_ID">
                 {markerPosition && <AdvancedMarker position={markerPosition} />}
                 {destinationMarkerPosition && (
-                    <AdvancedMarker position={destinationMarkerPosition} />
+                    <AdvancedMarker position={destinationMarkerPosition}>
+                        <div
+                            style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: "50%",
+                                backgroundColor: "#3b82f6",
+                                border: "3px solid white",
+                                boxShadow: "0 5px 30px rgb(114, 114, 114)",
+                            }}
+                        />
+                    </AdvancedMarker>
                 )}
                 {markerPosition && destinationMarkerPosition && (
                     <FitBounds

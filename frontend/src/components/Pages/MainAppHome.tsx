@@ -95,14 +95,18 @@ export const MainAppHome = () => {
         setZoom(nextZoom);
     }
 
-    function handlePlaceSelect(place: { lat: number; lng: number }) {
+    function handlePlaceSelect(place: { lat: number; lng: number } | null) {
+        if (!place) {
+            setMarkerPosition(null);
+            return;
+        }
         setCenter({ lat: place.lat, lng: place.lng });
         setZoom(16);
         setMarkerPosition({ lat: place.lat, lng: place.lng });
     }
 
-    function handleDestinationSelect(place: { lat: number; lng: number }) {
-        setDestinationMarkerPosition({ lat: place.lat, lng: place.lng });
+    function handleDestinationSelect(place: { lat: number; lng: number } | null) {
+        setDestinationMarkerPosition(place);
     }
 
     if (!apiKey) {

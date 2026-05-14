@@ -44,6 +44,8 @@ export const MainAppHome = () => {
     const [markerPosition, setMarkerPosition] = useState<MapCenter | null>(
         null,
     );
+    const [destinationMarkerPosition, setDestinationMarkerPosition] =
+        useState<MapCenter | null>(null);
 
     // iskanje userjeve lokacije
     function locateUser(zoomToUser = false) {
@@ -99,6 +101,10 @@ export const MainAppHome = () => {
         setMarkerPosition({ lat: place.lat, lng: place.lng });
     }
 
+    function handleDestinationSelect(place: { lat: number; lng: number }) {
+        setDestinationMarkerPosition({ lat: place.lat, lng: place.lng });
+    }
+
     if (!apiKey) {
         return (
             <div className="absolute inset-0 z-0 flex items-center justify-center bg-neutral-800 text-neutral-300">
@@ -115,12 +121,14 @@ export const MainAppHome = () => {
                     zoom={zoom}
                     onCameraChanged={handleCameraChanged}
                     markerPosition={markerPosition}
+                    destinationMarkerPosition={destinationMarkerPosition}
                 />
                 <MainAppControlOverlay
                     onZoomIn={handleZoomIn}
                     onZoomOut={handleZoomOut}
                     onLocate={handleLocate}
                     onPlaceSelect={handlePlaceSelect}
+                    onDestinationSelect={handleDestinationSelect}
                 />
                 <RouteOptions routes={routeOptions} />
             </main>

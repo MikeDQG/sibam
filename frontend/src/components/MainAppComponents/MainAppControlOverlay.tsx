@@ -33,6 +33,7 @@ type MainAppControlOverlayProps = {
     onZoomOut?: () => void;
     onLocate?: () => void;
     onPlaceSelect?: (place: { lat: number; lng: number }) => void;
+    onDestinationSelect?: (place: { lat: number; lng: number }) => void;
 };
 
 export const MainAppControlOverlay = ({
@@ -40,6 +41,7 @@ export const MainAppControlOverlay = ({
     onZoomOut,
     onLocate,
     onPlaceSelect,
+    onDestinationSelect,
 }: MainAppControlOverlayProps) => {
     const navigate = useNavigate();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -50,6 +52,17 @@ export const MainAppControlOverlay = ({
     const [locationError, setLocationError] = useState(false);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    const [selectedPlace, setSelectedPlace] = useState("");
+    const [showDirections, setShowDirections] = useState(false);
+    const [destinationValue, setDestinationValue] = useState("");
+    const [destinationPredictions, setDestinationPredictions] = useState<
+        PlaceSuggestion[]
+    >([]);
+    const [destinationOpen, setDestinationOpen] = useState(false);
+    const destinationDebounceTimer = useRef<ReturnType<
+        typeof setTimeout
+    > | null>(null);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -117,6 +130,65 @@ export const MainAppControlOverlay = ({
         }
     }, []);
 
+    const fetchDestinationPredictions = useCallback(async (value: string) => {
+        if (!value.trim()) {
+            setDestinationPredictions([]);
+            setDestinationOpen(false);
+            return;
+        }
+        try {
+            const res = await fetch(
+                "https://places.googleapis.com/v1/places:autocomplete",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Goog-Api-Key": placesApiKey,
+                    },
+                    body: JSON.stringify({
+                        input: value,
+                        includedRegionCodes: ["si"],
+                        languageCode: "sl",
+                        locationRestriction: { rectangle: MARIBOR_BOUNDS },
+                    }),
+                },
+            );
+            const data = await res.json();
+            const preds: PlaceSuggestion[] = (data.suggestions ?? [])
+                .filter(
+                    (s: { placePrediction?: { placeId?: string } }) =>
+                        s.placePrediction,
+                )
+                .map(
+                    (s: {
+                        placePrediction: {
+                            placeId: string;
+                            structuredFormat?: {
+                                mainText?: { text?: string };
+                                secondaryText?: { text?: string };
+                            };
+                            text?: { text?: string };
+                        };
+                    }) => ({
+                        placeId: s.placePrediction.placeId,
+                        mainText:
+                            s.placePrediction.structuredFormat?.mainText
+                                ?.text ??
+                            s.placePrediction.text?.text ??
+                            "",
+                        secondaryText:
+                            s.placePrediction.structuredFormat?.secondaryText
+                                ?.text ?? "",
+                    }),
+                );
+            setDestinationPredictions(preds);
+            setDestinationOpen(preds.length > 0);
+        } catch {
+            setPredictions([]);
+            setIsOpen(false);
+        }
+    }, []);
+
     function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
         const value = e.target.value;
         setInputValue(value);
@@ -130,6 +202,7 @@ export const MainAppControlOverlay = ({
         setPredictions([]);
         setIsOpen(false);
         setLocationError(false);
+        setSelectedPlace("");
     }
 
     async function handleSelect(prediction: PlaceSuggestion) {
@@ -149,6 +222,7 @@ export const MainAppControlOverlay = ({
             const data = await res.json();
             if (data.location) {
                 setLocationError(false);
+                setSelectedPlace(prediction.mainText);
                 onPlaceSelect?.({
                     lat: data.location.latitude,
                     lng: data.location.longitude,
@@ -159,6 +233,48 @@ export const MainAppControlOverlay = ({
         } catch {
             setLocationError(true);
         }
+    }
+
+    async function handleDestinationSelect(prediction: PlaceSuggestion) {
+        setDestinationValue(prediction.mainText);
+        setDestinationOpen(false);
+        setDestinationPredictions([]);
+        try {
+            const res = await fetch(
+                `https://places.googleapis.com/v1/places/${prediction.placeId}`,
+                {
+                    headers: {
+                        "X-Goog-Api-Key": placesApiKey,
+                        "X-Goog-FieldMask": "location",
+                    },
+                },
+            );
+            const data = await res.json();
+            if (data.location) {
+                setLocationError(false);
+                onDestinationSelect?.({
+                    lat: data.location.latitude,
+                    lng: data.location.longitude,
+                });
+            } else {
+                setLocationError(true);
+            }
+        } catch {
+            setLocationError(true);
+        }
+    }
+
+    function handleDestinationInputChange(
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) {
+        const value = e.target.value;
+        setDestinationValue(value);
+        if (destinationDebounceTimer.current)
+            clearTimeout(destinationDebounceTimer.current);
+        destinationDebounceTimer.current = setTimeout(
+            () => fetchDestinationPredictions(value),
+            300,
+        );
     }
 
     useEffect(() => {
@@ -179,19 +295,73 @@ export const MainAppControlOverlay = ({
         <>
             <div
                 ref={containerRef}
-                className={`absolute left-5 top-4 z-20 flex flex-col gap-2 ${isLoggedIn ? "right-28" : "right-19"}`}>
+                className={`absolute left-15 top-4 z-20 flex flex-col gap-2 ${isLoggedIn ? "right-35" : "right-19"}`}>
+                {showDirections && (
+                    <div className="flex flex-col gap-2">
+                        <div className="relative flex h-11 items-center">
+                            <Search
+                                size={25}
+                                className="pointer-events-none absolute left-5 z-10 shrink-0"
+                            />
+                            <Input
+                                type="text"
+                                value={destinationValue}
+                                onChange={handleDestinationInputChange}
+                                onKeyDown={(e) =>
+                                    e.key === "Escape" &&
+                                    setDestinationOpen(false)
+                                }
+                                placeholder="Kje štartaš?"
+                                className="h-full rounded-lg border-0 bg-neutral-700 pl-24 pr-20 text-xl font-normal shadow-md md:text-xl"
+                                aria-label="Kje štartaš?"
+                            />
+                            {destinationValue && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setDestinationValue("");
+                                        setDestinationPredictions([]);
+                                        setDestinationOpen(false);
+                                    }}
+                                    className="absolute right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full text-neutral-400 hover:text-white"
+                                    aria-label="Počisti">
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+                {destinationOpen && destinationPredictions.length > 0 && (
+                    <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
+                        {destinationPredictions.map((prediction) => (
+                            <li
+                                key={prediction.placeId}
+                                onMouseDown={() =>
+                                    handleDestinationSelect(prediction)
+                                }
+                                className="cursor-pointer border-b border-neutral-600 px-4 py-2.5 last:border-0 hover:bg-neutral-600">
+                                <p className="text-sm font-medium leading-tight text-white">
+                                    {prediction.mainText}
+                                </p>
+                                <p className="mt-0.5 text-xs leading-tight text-neutral-400">
+                                    {prediction.secondaryText}
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
+                )}
                 <div className="relative flex h-11 items-center">
-                    <img
+                    {/* <img
                         src="/logo.svg"
                         alt="ŠibaM"
                         className="pointer-events-auto absolute left-2 z-10 h-8 w-auto cursor-pointer"
                         onClick={() => navigate("/")}
                     />
 
-                    <div className="absolute left-13 z-10 h-6 w-px bg-neutral-500" />
+                    <div className="absolute left-13 z-10 h-6 w-px bg-neutral-500" /> */}
                     <Search
                         size={25}
-                        className="pointer-events-none absolute left-16 z-10 shrink-0"
+                        className="pointer-events-none absolute left-5 z-10 shrink-0"
                     />
                     <Input
                         type="text"
@@ -233,6 +403,61 @@ export const MainAppControlOverlay = ({
                     </ul>
                 )}
 
+                {/* {showDirections && (
+                    <div className="flex flex-col gap-2">
+                        <div className="relative flex h-11 items-center">
+                            <Search
+                                size={25}
+                                className="pointer-events-none absolute left-5 z-10 shrink-0"
+                            />
+                            <Input
+                                type="text"
+                                value={destinationValue}
+                                onChange={handleDestinationInputChange}
+                                onKeyDown={(e) =>
+                                    e.key === "Escape" &&
+                                    setDestinationOpen(false)
+                                }
+                                placeholder="Kje štartaš?"
+                                className="h-full rounded-lg border-0 bg-neutral-700 pl-24 pr-20 text-xl font-normal shadow-md md:text-xl"
+                                aria-label="Kje štartaš?"
+                            />
+                            {destinationValue && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setDestinationValue("");
+                                        setDestinationPredictions([]);
+                                        setDestinationOpen(false);
+                                    }}
+                                    className="absolute right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full text-neutral-400 hover:text-white"
+                                    aria-label="Počisti">
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+                {destinationOpen && destinationPredictions.length > 0 && (
+                    <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
+                        {destinationPredictions.map((prediction) => (
+                            <li
+                                key={prediction.placeId}
+                                onMouseDown={() =>
+                                    handleDestinationSelect(prediction)
+                                }
+                                className="cursor-pointer border-b border-neutral-600 px-4 py-2.5 last:border-0 hover:bg-neutral-600">
+                                <p className="text-sm font-medium leading-tight text-white">
+                                    {prediction.mainText}
+                                </p>
+                                <p className="mt-0.5 text-xs leading-tight text-neutral-400">
+                                    {prediction.secondaryText}
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
+                )} */}
+
                 {locationError && (
                     <p className="rounded-lg bg-neutral-700 px-4 py-2.5 text-sm text-red-400 shadow-lg">
                         Lokacije ni bilo mogoče najti. Prosimo poskusite znova.
@@ -243,9 +468,18 @@ export const MainAppControlOverlay = ({
                     <CloudRain size={20} />
                     <span className="text-sm">15 °C</span>
                 </div>
+                {selectedPlace && (
+                    <Button
+                        onClick={() => setShowDirections(true)}
+                        className="flex h-8 w-fit items-center gap-4 rounded-sm bg-red-700/80 px-4 text-white shadow-lg">
+                        <span className="text-sm font-bold">
+                            Navodila za pot
+                        </span>
+                    </Button>
+                )}
             </div>
 
-            <div className="absolute right-5 top-5 z-20 flex flex-col gap-2">
+            <div className="absolute right-11 top-5 z-20 flex flex-col gap-2">
                 <div className="absolute right-1 top-0 z-20">
                     {isLoggedIn ? (
                         <div className="flex flex-row gap-2">

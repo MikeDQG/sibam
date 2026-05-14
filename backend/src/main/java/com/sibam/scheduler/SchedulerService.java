@@ -53,11 +53,9 @@ public class SchedulerService {
         }
     }
 
-
     /**
      * Pridobivanje podatkov o zamudah avtobusov v realnem času, vsako minuto
      */
-
     @Scheduled(fixedRate = 1000 * 60)
     public void fetchBusIngestion() {
         if (!isWithinOperatingHours()) return;
@@ -67,20 +65,6 @@ public class SchedulerService {
             gtfsRTDataService.ingestRealtimeTrips(fetchedAt);
         } catch (Exception e) {
             log.error("Failed to fetch ingestion data", e);
-        }
-    }
-
-    /**
-     * Pridobivanje zamud in lokacij iz ProtoBuf datotek
-     */
-    @Scheduled(fixedRate = 1000 * 30)
-    public void fetchBusTripsIngestion() {
-        System.out.println();
-
-        try {
-            gtfsRTDataService.getRealtimeTrips();
-        } catch (Exception e) {
-            log.error("Failed to fetch Trips data", e);
         }
     }
 }

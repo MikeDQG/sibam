@@ -121,7 +121,6 @@ export const MainAppHome = () => {
                     onZoomOut={handleZoomOut}
                     onLocate={handleLocate}
                     onPlaceSelect={handlePlaceSelect}
-
                 />
                 <RouteOptions routes={routeOptions} />
             </main>

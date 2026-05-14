@@ -6,6 +6,7 @@ import {
     Search,
     UserRound,
     X,
+    LogOut,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -178,7 +179,7 @@ export const MainAppControlOverlay = ({
         <>
             <div
                 ref={containerRef}
-                className="absolute left-5 right-5 top-3 z-20 flex flex-col gap-2">
+                className={`absolute left-5 top-4 z-20 flex flex-col gap-2 ${isLoggedIn ? "right-28" : "right-19"}`}>
                 <div className="relative flex h-11 items-center">
                     <img
                         src="/logo.svg"
@@ -186,6 +187,7 @@ export const MainAppControlOverlay = ({
                         className="pointer-events-auto absolute left-2 z-10 h-8 w-auto cursor-pointer"
                         onClick={() => navigate("/")}
                     />
+
                     <div className="absolute left-13 z-10 h-6 w-px bg-neutral-500" />
                     <Search
                         size={25}
@@ -206,20 +208,11 @@ export const MainAppControlOverlay = ({
                         <button
                             type="button"
                             onClick={handleClear}
-                            className="absolute right-14 z-10 flex h-6 w-6 items-center justify-center rounded-full text-neutral-400 hover:text-white"
+                            className="absolute right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full text-neutral-400 hover:text-white"
                             aria-label="Počisti">
                             <X size={16} />
                         </button>
                     )}
-                    <button
-                        type="button"
-                        onClick={() =>
-                            navigate(isLoggedIn ? "/account" : "/login")
-                        }
-                        className="absolute right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full"
-                        aria-label="Profil">
-                        <UserRound size={25} strokeWidth={1.7} />
-                    </button>
                 </div>
 
                 {isOpen && predictions.length > 0 && (
@@ -252,28 +245,84 @@ export const MainAppControlOverlay = ({
                 </div>
             </div>
 
-            <div className="absolute right-5 top-18 z-20 flex flex-col gap-2">
-                <Button
-                    type="button"
-                    onClick={onZoomIn}
-                    className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg"
-                    aria-label="Povečaj">
-                    <Plus size={20} />
-                </Button>
-                <Button
-                    type="button"
-                    onClick={onZoomOut}
-                    className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg"
-                    aria-label="Pomanjšaj">
-                    <Minus size={20} />
-                </Button>
-                <Button
-                    type="button"
-                    onClick={onLocate}
-                    className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg"
-                    aria-label="Moja lokacija">
-                    <LocateFixed size={20} />
-                </Button>
+            <div className="absolute right-5 top-5 z-20 flex flex-col gap-2">
+                <div className="absolute right-1 top-0 z-20">
+                    {isLoggedIn ? (
+                        <div className="flex flex-row gap-2">
+                            <Button
+                                type="button"
+                                onClick={() => navigate("/account")}
+                                className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-red-700/80 text-foreground shadow-lg"
+                                aria-label="Profil">
+                                <UserRound strokeWidth={1.7} />
+                            </Button>
+                            <div className="flex flex-col gap-2">
+                                <Button
+                                    type="button"
+                                    onClick={() => {
+                                        auth.signOut();
+                                        navigate("/login");
+                                    }}
+                                    aria-label="Odjava"
+                                    className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-red-700/80 text-foreground shadow-lg">
+                                    <LogOut />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={onZoomIn}
+                                    className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg"
+                                    aria-label="Povečaj">
+                                    <Plus size={20} />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={onZoomOut}
+                                    className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg"
+                                    aria-label="Pomanjšaj">
+                                    <Minus size={20} />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={onLocate}
+                                    className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg"
+                                    aria-label="Moja lokacija">
+                                    <LocateFixed size={20} />
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-2">
+                            <Button
+                                type="button"
+                                onClick={() => navigate("/login")}
+                                className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-red-700/80 text-foreground shadow-lg"
+                                aria-label="Profil">
+                                <UserRound strokeWidth={1.7} />
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={onZoomIn}
+                                className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg"
+                                aria-label="Povečaj">
+                                <Plus size={20} />
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={onZoomOut}
+                                className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg"
+                                aria-label="Pomanjšaj">
+                                <Minus size={20} />
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={onLocate}
+                                className="flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg"
+                                aria-label="Moja lokacija">
+                                <LocateFixed size={20} />
+                            </Button>
+                        </div>
+                    )}
+                </div>
             </div>
         </>
     );

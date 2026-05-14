@@ -53,6 +53,11 @@
             <artifactId>gtfs-realtime-bindings</artifactId>
             <version>0.0.8</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- PostgreSQL driver za Supabase -->
         <dependency>
             <groupId>org.postgresql</groupId>

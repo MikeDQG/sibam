@@ -20,11 +20,7 @@ export const Login = () => {
 
     const handleLogin = async () => {
         try {
-            await signInWithEmailAndPassword(
-                auth,
-                email,
-                password,
-            );
+            await signInWithEmailAndPassword(auth, email, password);
             navigate("/account");
         } catch (error: any) {
             console.error("Napaka pri prijavi:", error.message);
@@ -34,7 +30,15 @@ export const Login = () => {
     const handleGoogleLogin = async () => {
         try {
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
+            const userCredential = await signInWithPopup(auth, provider);
+            const token = await userCredential.user.getIdToken();
+
+            await fetch("http://localhost:8080/api/users/me", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             navigate("/account");
         } catch (error: any) {
             console.error("Napaka pri Google prijavi:", error.message);

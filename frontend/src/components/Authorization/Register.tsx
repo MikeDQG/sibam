@@ -214,10 +214,17 @@ export const Register = () => {
                     <div className="text-medium flex w-[95%] items-center gap-3 px-10 text-white">
                         <Separator className="flex-1 text-white" />
                         <span className="shrink-0 text-sm font-normal">
-                            ali se registriraj z
+                            Ali že imate račun?{" "}
+                            <button
+                                type="button"
+                                onClick={() => navigate("/login")}
+                                className="cursor-pointer font-medium transition-colors hover:underline">
+                                Prijavi se
+                            </button>
                         </span>
                         <Separator className="flex-1 text-white" />
                     </div>
+
                     <Button
                         onClick={handleGoogleRegister}
                         type="submit"
@@ -225,7 +232,7 @@ export const Register = () => {
                         <FaGoogle /> Google
                     </Button>
                     <p className="w-full max-w-75 text-center text-sm text-white">
-                        Ali že imate račun?{" "}
+                        Ali že imaš račun?{" "}
                         <button
                             type="button"
                             onClick={() => navigate("/login")}

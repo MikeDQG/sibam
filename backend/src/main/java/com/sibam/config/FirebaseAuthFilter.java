@@ -28,9 +28,12 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
                 request.setAttribute("uid", decodedToken.getUid());
                 request.setAttribute("email", decodedToken.getEmail());
             } catch (Exception e) {
+                response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+                response.setHeader("Access-Control-Allow-Credentials", "true");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
+
         }
 
         filterChain.doFilter(request, response);

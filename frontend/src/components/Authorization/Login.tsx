@@ -16,6 +16,8 @@ export const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+
     const navigate = useNavigate();
 
     const handleLogin = async () => {
@@ -23,7 +25,19 @@ export const Login = () => {
             await signInWithEmailAndPassword(auth, email, password);
             navigate("/account");
         } catch (error: any) {
-            console.error("Napaka pri prijavi:", error.message);
+            switch (error.code) {
+                case "auth/invalid-credential":
+                    setError("Napačen email ali geslo.");
+                    break;
+                case "auth/invalid-email":
+                    setError("Vnesite veljaven email naslov.");
+                    break;
+                case "auth/too-many-requests":
+                    setError("Preveč neuspešnih poskusov. Poskusite kasneje.");
+                    break;
+                default:
+                    setError("Prišlo je do napake. Poskusite znova.");
+            }
         }
     };
 
@@ -41,7 +55,7 @@ export const Login = () => {
             });
             navigate("/account");
         } catch (error: any) {
-            console.error("Napaka pri Google prijavi:", error.message);
+            setError("Prišlo je do napake pri Google prijavi.");
         }
     };
 
@@ -105,6 +119,11 @@ export const Login = () => {
                             </button>
                         </div>
                     </form>
+                    {error && (
+                        <p className="text-red-400 text-sm text-center w-full max-w-75">
+                            {error}
+                        </p>
+                    )}
                     <Button
                         onClick={handleLogin}
                         className="bg-red-700 hover:bg-red-800 text-white font-semibold py-2 px-4 rounded-md transition-colors">

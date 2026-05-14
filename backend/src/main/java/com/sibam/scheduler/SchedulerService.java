@@ -18,29 +18,50 @@ public class SchedulerService {
     private final MBajkDataService mbajkDataService;
     private final WeatherDataService weatherDataService;
     private final GTFSRTDataService gtfsRTDataService;
+    private static final ZoneId LJUBLJANA = ZoneId.of("Europe/Ljubljana");
+
+    private boolean isWithinOperatingHours() {
+        int hour = OffsetDateTime.now(LJUBLJANA).getHour();
+        return hour >= 5 && hour < 23;
+    }
 
     /**
      * Pridobivanje podatkov MBajk koles in vremena, vsakih 5 minut
      */
     @Scheduled(fixedRate = 1000 * 60 * 5)
-    public void fetchBikeAndWeatherIngestion() {
-        OffsetDateTime fetchedAt = OffsetDateTime.now(ZoneId.of("Europe/Ljubljana"));
-
+    public void fetchBikeIngestion() {
+        OffsetDateTime fetchedAt = OffsetDateTime.now(LJUBLJANA);
+        if (!isWithinOperatingHours()) return;
         try {
             mbajkDataService.ingestBikesData(fetchedAt);
-            weatherDataService.ingestWeatherData(fetchedAt);
         } catch (Exception e) {
             log.error("Failed to fetch ingestion data", e);
         }
     }
 
     /**
-     * Pridobivanje podatkov o zamudah avtobusov v realnem času, vsakih 5 minut
+     * Pridobivanje podatkov vremena, vsako 1 uro
+     */
+    @Scheduled(fixedRate = 1000 * 60 * 60)
+    public void fetchWeatherIngestion() {
+        OffsetDateTime fetchedAt = OffsetDateTime.now(LJUBLJANA);
+        if (!isWithinOperatingHours()) return;
+        try {
+            weatherDataService.ingestWeatherData(fetchedAt);
+        } catch (Exception e) {
+            log.error("Failed to fetch ingestion data", e);
+        }
+    }
+
+
+    /**
+     * Pridobivanje podatkov o zamudah avtobusov v realnem času, vsako minuto
      */
 
-    @Scheduled(fixedRate = 1000 * 30)
+    @Scheduled(fixedRate = 1000 * 60)
     public void fetchBusIngestion() {
-        OffsetDateTime fetchedAt = OffsetDateTime.now(ZoneId.of("Europe/Ljubljana"));
+        if (!isWithinOperatingHours()) return;
+        OffsetDateTime fetchedAt = OffsetDateTime.now(LJUBLJANA);
 
         try {
             gtfsRTDataService.ingestRealtimeTrips(fetchedAt);

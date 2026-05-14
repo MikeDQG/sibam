@@ -18,8 +18,10 @@ public class UserController {
     @PostMapping("/me")
     public ResponseEntity<User> loginOrRegister(
             @RequestAttribute("uid") String uid,
-            @RequestAttribute("email") String email) {
-        User user = userService.getOrCreateUser(uid, email);
+            @RequestAttribute("email") String email,
+            @RequestAttribute(value = "fullName", required = false) String fullName)
+    {
+        User user = userService.getOrCreateUser(uid, email, fullName);
         return ResponseEntity.ok(user);
     }
 
@@ -30,4 +32,6 @@ public class UserController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+
 }

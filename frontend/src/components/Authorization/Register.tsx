@@ -18,6 +18,7 @@ export const Register = () => {
     const [password, setPassword] = useState("");
 
     const [email, setEmail] = useState("");
+    const [fullName, setFullName] = useState("");
     const [repeatedPassword, setRepeatedPassword] = useState("");
 
     const [error, setError] = useState("");
@@ -28,6 +29,11 @@ export const Register = () => {
         const allRequirementsMet = passwordRequirements.every((r) => r.isValid);
         if (!allRequirementsMet) {
             setError("Geslo ne ustreza zahtevam!");
+            return;
+        }
+
+        if (fullName.trim() === "") {
+            setError("Vnesite ime in priimek.");
             return;
         }
 
@@ -54,6 +60,7 @@ export const Register = () => {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    "X-Full-Name": fullName,
                 },
             });
 
@@ -139,6 +146,13 @@ export const Register = () => {
                         Registracija
                     </h1>
                     <form className="flex w-full max-w-75 flex-col items-center gap-5">
+                        <Input
+                            type="text"
+                            placeholder="Ime in priimek"
+                            className="w-full"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                        />
                         <Input
                             type="email"
                             placeholder="Email"

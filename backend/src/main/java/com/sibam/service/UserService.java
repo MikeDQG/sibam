@@ -15,7 +15,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User getOrCreateUser(String firebaseUid, String email) {
+    public User getOrCreateUser(String firebaseUid, String email, String fullName) {
         Optional<User> existingUser = userRepository.findByFirebaseUid(firebaseUid);
 
         if (existingUser.isPresent()) {
@@ -25,6 +25,7 @@ public class UserService {
         User newUser = new User();
         newUser.setFirebaseUid(firebaseUid);
         newUser.setEmail(email);
+        newUser.setFullName(fullName);
         newUser.setCreatedAt(OffsetDateTime.now());
         return userRepository.save(newUser);
     }

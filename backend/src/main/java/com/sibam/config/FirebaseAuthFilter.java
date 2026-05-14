@@ -25,6 +25,13 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             try {
                 FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
+
+                String fullName = decodedToken.getName();
+                if (fullName == null || fullName.isBlank()) {
+                    fullName = request.getHeader("X-Full-Name");
+                }
+                request.setAttribute("fullName", fullName);
+
                 request.setAttribute("uid", decodedToken.getUid());
                 request.setAttribute("email", decodedToken.getEmail());
             } catch (Exception e) {

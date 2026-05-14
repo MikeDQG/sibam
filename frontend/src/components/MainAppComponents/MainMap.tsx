@@ -1,4 +1,5 @@
 import { APIProvider, Map } from "@vis.gl/react-google-maps";
+import { RoutePolyline, type RouteLeg } from "./RoutePolyline";
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -10,10 +11,16 @@ type MapCenter = {
 type MainMapProps = {
   center: MapCenter;
   zoom: number;
+  legs?: RouteLeg[];
   onCameraChanged?: (center: MapCenter, zoom: number) => void;
 };
 
-export const MainMap = ({ center, zoom, onCameraChanged }: MainMapProps) => {
+export const MainMap = ({
+  center,
+  zoom,
+  legs,
+  onCameraChanged,
+}: MainMapProps) => {
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
 
   if (!hasApiKey) {
@@ -36,8 +43,9 @@ export const MainMap = ({ center, zoom, onCameraChanged }: MainMapProps) => {
           colorScheme='DARK'
           gestureHandling='greedy'
           disableDefaultUI
-          reuseMaps
-        />
+          reuseMaps>
+          {legs && <RoutePolyline legs={legs} />}
+        </Map>
       </APIProvider>
     </div>
   );

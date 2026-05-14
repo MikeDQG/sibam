@@ -3,6 +3,7 @@ import { Bike, Bus, Footprints } from "lucide-react";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
 import { MainMap } from "../MainAppComponents/MainMap";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
+import pathMock from "../../mock/pathMock.json";
 
 const routeOptions = [
   {
@@ -93,6 +94,7 @@ export const MainAppHome = () => {
       <MainMap
         center={center}
         zoom={zoom}
+        legs={pathMock.legs}
         onCameraChanged={handleCameraChanged}
       />
 

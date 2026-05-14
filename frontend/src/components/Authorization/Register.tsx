@@ -18,15 +18,36 @@ export const Register = () => {
     const [password, setPassword] = useState("");
 
     const [email, setEmail] = useState("");
+    const [fullName, setFullName] = useState("");
     const [repeatedPassword, setRepeatedPassword] = useState("");
+
+    const [error, setError] = useState("");
 
     const navigate = useNavigate();
 
     const handleRegister = async () => {
-        if (password !== repeatedPassword) {
-            console.error("Gesli se ne ujemata!");
+        const allRequirementsMet = passwordRequirements.every((r) => r.isValid);
+        if (!allRequirementsMet) {
+            setError("Geslo ne ustreza zahtevam!");
             return;
         }
+
+        if (fullName.trim() === "") {
+            setError("Vnesite ime in priimek.");
+            return;
+        }
+
+        if (password !== repeatedPassword) {
+            setError("Gesli se ne ujemata!");
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError("Vnesite veljaven email naslov.");
+            return;
+        }
+
         try {
             const userCredential = await createUserWithEmailAndPassword(
                 auth,
@@ -39,12 +60,25 @@ export const Register = () => {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    "X-Full-Name": fullName,
                 },
             });
 
             navigate("/account");
         } catch (error: any) {
-            console.error("Napaka pri registraciji:", error.message);
+            switch (error.code) {
+                case "auth/email-already-in-use":
+                    setError("Ta email je že registriran.");
+                    break;
+                case "auth/invalid-email":
+                    setError("Vnesite veljaven email naslov.");
+                    break;
+                case "auth/weak-password":
+                    setError("Geslo je prešibko.");
+                    break;
+                default:
+                    setError("Prišlo je do napake. Poskusite znova.");
+            }
         }
     };
 
@@ -63,7 +97,7 @@ export const Register = () => {
 
             navigate("/account");
         } catch (error: any) {
-            console.error("Napaka pri Google registraciji:", error.message);
+            setError("Prišlo je do napake pri Google registraciji.");
         }
     };
 
@@ -112,6 +146,13 @@ export const Register = () => {
                         Registracija
                     </h1>
                     <form className="flex w-full max-w-75 flex-col items-center gap-5">
+                        <Input
+                            type="text"
+                            placeholder="Ime in priimek"
+                            className="w-full"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                        />
                         <Input
                             type="email"
                             placeholder="Email"
@@ -204,6 +245,12 @@ export const Register = () => {
                             </ul>
                         </div>
                     </form>
+                    {error && (
+                        <p className="text-red-400 text-sm text-center w-full max-w-75">
+                            {error}
+                        </p>
+                    )}
+
                     <Button
                         onClick={handleRegister}
                         type="submit"
@@ -218,6 +265,7 @@ export const Register = () => {
                         </span>
                         <Separator className="flex-1 text-white" />
                     </div>
+
                     <Button
                         onClick={handleGoogleRegister}
                         type="submit"
@@ -225,7 +273,7 @@ export const Register = () => {
                         <FaGoogle /> Google
                     </Button>
                     <p className="w-full max-w-75 text-center text-sm text-white">
-                        Ali že imate račun?{" "}
+                        Že imaš račun?{" "}
                         <button
                             type="button"
                             onClick={() => navigate("/login")}

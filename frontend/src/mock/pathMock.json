@@ -1,0 +1,220 @@
+{
+  "status": "success",
+  "origin": {
+    "lat": 46.55947,
+    "lon": 15.64502
+  },
+  "origin_address": "Slomškov trg, Maribor",
+  "destination": {
+    "lat": 46.53331,
+    "lon": 15.60489
+  },
+  "destination_address": "Pohorska vzpenjača, Maribor",
+  "trajanje": "2760000",
+  "dolzina": "7620",
+  "legs": [
+    {
+      "tip": "WALK",
+      "origin": {
+        "lat": 46.55947,
+        "lon": 15.64502
+      },
+      "destination": {
+        "lat": 46.55901,
+        "lon": 15.64405
+      },
+      "trajanje": "180000",
+      "dolzina": "210",
+      "polyline": [
+        {
+          "lat": 46.55947,
+          "lon": 15.64502
+        },
+        {
+          "lat": 46.55924,
+          "lon": 15.64458
+        },
+        {
+          "lat": 46.55901,
+          "lon": 15.64405
+        }
+      ],
+      "prosta_mesta": null,
+      "prosti_bajki": null,
+      "departure": "1715688000000",
+      "arrival": "1715688180000"
+    },
+    {
+      "tip": "BIKE",
+      "origin": {
+        "lat": 46.55901,
+        "lon": 15.64405
+      },
+      "destination": {
+        "lat": 46.55291,
+        "lon": 15.63839
+      },
+      "trajanje": "720000",
+      "dolzina": "2150",
+      "polyline": [
+        {
+          "lat": 46.55901,
+          "lon": 15.64405
+        },
+        {
+          "lat": 46.55858,
+          "lon": 15.64331
+        },
+        {
+          "lat": 46.55782,
+          "lon": 15.64246
+        },
+        {
+          "lat": 46.55674,
+          "lon": 15.64163
+        },
+        {
+          "lat": 46.55539,
+          "lon": 15.64062
+        },
+        {
+          "lat": 46.55418,
+          "lon": 15.63951
+        },
+        {
+          "lat": 46.55291,
+          "lon": 15.63839
+        }
+      ],
+      "prosta_mesta": "9",
+      "prosti_bajki": "4",
+      "departure": "1715688180000",
+      "arrival": "1715688900000"
+    },
+    {
+      "tip": "WALK",
+      "origin": {
+        "lat": 46.55291,
+        "lon": 15.63839
+      },
+      "destination": {
+        "lat": 46.55182,
+        "lon": 15.63702
+      },
+      "trajanje": "240000",
+      "dolzina": "340",
+      "polyline": [
+        {
+          "lat": 46.55291,
+          "lon": 15.63839
+        },
+        {
+          "lat": 46.55248,
+          "lon": 15.63791
+        },
+        {
+          "lat": 46.55212,
+          "lon": 15.63746
+        },
+        {
+          "lat": 46.55182,
+          "lon": 15.63702
+        }
+      ],
+      "prosta_mesta": null,
+      "prosti_bajki": null,
+      "departure": "1715688900000",
+      "arrival": "1715689140000"
+    },
+    {
+      "tip": "BUS",
+      "origin": {
+        "lat": 46.55182,
+        "lon": 15.63702
+      },
+      "destination": {
+        "lat": 46.53618,
+        "lon": 15.60736
+      },
+      "trajanje": "1320000",
+      "dolzina": "4550",
+      "polyline": [
+        {
+          "lat": 46.55182,
+          "lon": 15.63702
+        },
+        {
+          "lat": 46.55071,
+          "lon": 15.63497
+        },
+        {
+          "lat": 46.54892,
+          "lon": 15.63188
+        },
+        {
+          "lat": 46.54691,
+          "lon": 15.62842
+        },
+        {
+          "lat": 46.54486,
+          "lon": 15.62474
+        },
+        {
+          "lat": 46.54233,
+          "lon": 15.62008
+        },
+        {
+          "lat": 46.54011,
+          "lon": 15.61576
+        },
+        {
+          "lat": 46.53821,
+          "lon": 15.61152
+        },
+        {
+          "lat": 46.53618,
+          "lon": 15.60736
+        }
+      ],
+      "prosta_mesta": null,
+      "prosti_bajki": null,
+      "departure": "1715689140000",
+      "arrival": "1715690460000"
+    },
+    {
+      "tip": "WALK",
+      "origin": {
+        "lat": 46.53618,
+        "lon": 15.60736
+      },
+      "destination": {
+        "lat": 46.53331,
+        "lon": 15.60489
+      },
+      "trajanje": "300000",
+      "dolzina": "370",
+      "polyline": [
+        {
+          "lat": 46.53618,
+          "lon": 15.60736
+        },
+        {
+          "lat": 46.53544,
+          "lon": 15.60672
+        },
+        {
+          "lat": 46.53462,
+          "lon": 15.60591
+        },
+        {
+          "lat": 46.53331,
+          "lon": 15.60489
+        }
+      ],
+      "prosta_mesta": null,
+      "prosti_bajki": null,
+      "departure": "1715690460000",
+      "arrival": "1715690760000"
+    }
+  ]
+}

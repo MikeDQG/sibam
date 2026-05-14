@@ -5,6 +5,7 @@ import {
     Plus,
     Search,
     UserRound,
+    X,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -15,15 +16,15 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const placesApiKey = import.meta.env.VITE_PLACES_API_KEY as string;
 
+const MARIBOR_BOUNDS = {
+    low: { latitude: 46.49, longitude: 15.520363 },
+    high: { latitude: 46.63, longitude: 15.76 },
+};
+
 type PlaceSuggestion = {
     placeId: string;
     mainText: string;
     secondaryText: string;
-};
-
-const MARIBOR_BOUNDS = {
-    low: { latitude: 46.49, longitude: 15.520363 },
-    high: { latitude: 46.63, longitude: 15.76 },
 };
 
 type MainAppControlOverlayProps = {
@@ -63,12 +64,6 @@ export const MainAppControlOverlay = ({
             return;
         }
         try {
-            const body: Record<string, unknown> = {
-                input: value,
-                includedRegionCodes: ["si"],
-                languageCode: "sl",
-            };
-            body.locationRestriction = { rectangle: MARIBOR_BOUNDS };
             const res = await fetch(
                 "https://places.googleapis.com/v1/places:autocomplete",
                 {
@@ -77,7 +72,12 @@ export const MainAppControlOverlay = ({
                         "Content-Type": "application/json",
                         "X-Goog-Api-Key": placesApiKey,
                     },
-                    body: JSON.stringify(body),
+                    body: JSON.stringify({
+                        input: value,
+                        includedRegionCodes: ["si"],
+                        languageCode: "sl",
+                        locationRestriction: { rectangle: MARIBOR_BOUNDS },
+                    }),
                 },
             );
             const data = await res.json();
@@ -122,6 +122,13 @@ export const MainAppControlOverlay = ({
         setLocationError(false);
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         debounceTimer.current = setTimeout(() => fetchPredictions(value), 300);
+    }
+
+    function handleClear() {
+        setInputValue("");
+        setPredictions([]);
+        setIsOpen(false);
+        setLocationError(false);
     }
 
     async function handleSelect(prediction: PlaceSuggestion) {
@@ -169,46 +176,54 @@ export const MainAppControlOverlay = ({
 
     return (
         <>
-            {/* search bar */}
             <div
                 ref={containerRef}
-                className="absolute left-5 right-5 top-3 z-20 flex h-11 items-center">
-                <img
-                    src="/logo.svg"
-                    alt="ŠibaM"
-                    className="pointer-events-auto absolute left-2 z-10 h-8 w-auto cursor-pointer"
-                    onClick={() => navigate("/")}
-                />
-                <div className="absolute left-13 z-10 h-6 w-px bg-neutral-500" />
-                <Search
-                    size={25}
-                    className="pointer-events-none absolute left-16 z-10 shrink-0"
-                />
-                <Input
-                    type="text"
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => e.key === "Escape" && setIsOpen(false)}
-                    placeholder="Kam šibaš?"
-                    className="h-full rounded-lg border-0 bg-neutral-700 pl-24 pr-14 text-xl font-normal shadow-md md:text-xl"
-                    aria-label="Kam šibaš?"
-                />
-                <button
-                    type="button"
-                    onClick={() => navigate(isLoggedIn ? "/account" : "/login")}
-                    className="absolute right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full"
-                    aria-label="Profil">
-                    <UserRound size={25} strokeWidth={1.7} />
-                </button>
-
-                {locationError && (
-                    <p className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg bg-neutral-700 px-4 py-2.5 text-sm text-red-400 shadow-lg">
-                        Lokacije ni bilo mogoče najti. Poskusi znova.
-                    </p>
-                )}
+                className="absolute left-5 right-5 top-3 z-20 flex flex-col gap-2">
+                <div className="relative flex h-11 items-center">
+                    <img
+                        src="/logo.svg"
+                        alt="ŠibaM"
+                        className="pointer-events-auto absolute left-2 z-10 h-8 w-auto cursor-pointer"
+                        onClick={() => navigate("/")}
+                    />
+                    <div className="absolute left-13 z-10 h-6 w-px bg-neutral-500" />
+                    <Search
+                        size={25}
+                        className="pointer-events-none absolute left-16 z-10 shrink-0"
+                    />
+                    <Input
+                        type="text"
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        onKeyDown={(e) =>
+                            e.key === "Escape" && setIsOpen(false)
+                        }
+                        placeholder="Kam šibaš?"
+                        className="h-full rounded-lg border-0 bg-neutral-700 pl-24 pr-20 text-xl font-normal shadow-md md:text-xl"
+                        aria-label="Kam šibaš?"
+                    />
+                    {inputValue && (
+                        <button
+                            type="button"
+                            onClick={handleClear}
+                            className="absolute right-14 z-10 flex h-6 w-6 items-center justify-center rounded-full text-neutral-400 hover:text-white"
+                            aria-label="Počisti">
+                            <X size={16} />
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigate(isLoggedIn ? "/account" : "/login")
+                        }
+                        className="absolute right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full"
+                        aria-label="Profil">
+                        <UserRound size={25} strokeWidth={1.7} />
+                    </button>
+                </div>
 
                 {isOpen && predictions.length > 0 && (
-                    <ul className="absolute left-0 right-0 top-full mt-1 z-50 overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
+                    <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
                         {predictions.map((prediction) => (
                             <li
                                 key={prediction.placeId}
@@ -224,15 +239,19 @@ export const MainAppControlOverlay = ({
                         ))}
                     </ul>
                 )}
+
+                {locationError && (
+                    <p className="rounded-lg bg-neutral-700 px-4 py-2.5 text-sm text-red-400 shadow-lg">
+                        Lokacije ni bilo mogoče najti. Prosimo poskusite znova.
+                    </p>
+                )}
+
+                <div className="flex h-8 w-fit items-center gap-4 rounded-sm bg-red-700/80 px-4 text-white shadow-lg">
+                    <CloudRain size={20} />
+                    <span className="text-sm">15 °C</span>
+                </div>
             </div>
 
-            {/* temperatura */}
-            <div className="absolute left-5 top-17 z-20 flex h-8 items-center gap-4 rounded-sm bg-red-700/80 px-4 text-white shadow-lg">
-                <CloudRain size={20} />
-                <span className="text-md 7">15 °C</span>
-            </div>
-
-            {/* controls */}
             <div className="absolute right-5 top-18 z-20 flex flex-col gap-2">
                 <Button
                     type="button"

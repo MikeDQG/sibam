@@ -15,20 +15,10 @@ import { Input } from "../ui/input";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
+import { usePlacesAutocomplete, type PlaceSuggestion } from "../../hooks/usePlacesAutocomplete";
 
 const placesApiKey = import.meta.env.VITE_PLACES_API_KEY as string;
-
-const MARIBOR_BOUNDS = {
-    low: { latitude: 46.49, longitude: 15.520363 },
-    high: { latitude: 46.63, longitude: 15.76 },
-};
-
-type PlaceSuggestion = {
-    placeId: string;
-    mainText: string;
-    secondaryText: string;
-};
 
 type MainAppControlOverlayProps = {
     onZoomIn?: () => void;
@@ -47,33 +37,15 @@ export const MainAppControlOverlay = ({
 }: MainAppControlOverlayProps) => {
     const navigate = useNavigate();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    const [inputValue, setInputValue] = useState("");
-    const [predictions, setPredictions] = useState<PlaceSuggestion[]>([]);
-    const [isOpen, setIsOpen] = useState(false);
     const [locationError, setLocationError] = useState(false);
-    const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-
     const [selectedPlace, setSelectedPlace] = useState("");
     const [showDirections, setShowDirections] = useState(false);
-    const [destinationValue, setDestinationValue] = useState("");
-    const [destinationPredictions, setDestinationPredictions] = useState<
-        PlaceSuggestion[]
-    >([]);
-    const [destinationOpen, setDestinationOpen] = useState(false);
-    const destinationDebounceTimer = useRef<ReturnType<
-        typeof setTimeout
-    > | null>(null);
+    const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
+    const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    const [originCoords, setOriginCoords] = useState<{
-        lat: number;
-        lng: number;
-    } | null>(null);
-    const [destinationCoords, setDestinationCoords] = useState<{
-        lat: number;
-        lng: number;
-    } | null>(null);
+    const origin = usePlacesAutocomplete(placesApiKey);
+    const destination = usePlacesAutocomplete(placesApiKey);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -82,136 +54,8 @@ export const MainAppControlOverlay = ({
         return () => unsubscribe();
     }, []);
 
-    const fetchPredictions = useCallback(async (value: string) => {
-        if (!value.trim()) {
-            setPredictions([]);
-            setIsOpen(false);
-            return;
-        }
-        try {
-            const res = await fetch(
-                "https://places.googleapis.com/v1/places:autocomplete",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Goog-Api-Key": placesApiKey,
-                    },
-                    body: JSON.stringify({
-                        input: value,
-                        includedRegionCodes: ["si"],
-                        languageCode: "sl",
-                        locationRestriction: { rectangle: MARIBOR_BOUNDS },
-                    }),
-                },
-            );
-            const data = await res.json();
-            const preds: PlaceSuggestion[] = (data.suggestions ?? [])
-                .filter(
-                    (s: { placePrediction?: { placeId?: string } }) =>
-                        s.placePrediction,
-                )
-                .map(
-                    (s: {
-                        placePrediction: {
-                            placeId: string;
-                            structuredFormat?: {
-                                mainText?: { text?: string };
-                                secondaryText?: { text?: string };
-                            };
-                            text?: { text?: string };
-                        };
-                    }) => ({
-                        placeId: s.placePrediction.placeId,
-                        mainText:
-                            s.placePrediction.structuredFormat?.mainText
-                                ?.text ??
-                            s.placePrediction.text?.text ??
-                            "",
-                        secondaryText:
-                            s.placePrediction.structuredFormat?.secondaryText
-                                ?.text ?? "",
-                    }),
-                );
-            setPredictions(preds);
-            setIsOpen(preds.length > 0);
-        } catch {
-            setPredictions([]);
-            setIsOpen(false);
-        }
-    }, []);
-
-    const fetchDestinationPredictions = useCallback(async (value: string) => {
-        if (!value.trim()) {
-            setDestinationPredictions([]);
-            setDestinationOpen(false);
-            return;
-        }
-        try {
-            const res = await fetch(
-                "https://places.googleapis.com/v1/places:autocomplete",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Goog-Api-Key": placesApiKey,
-                    },
-                    body: JSON.stringify({
-                        input: value,
-                        includedRegionCodes: ["si"],
-                        languageCode: "sl",
-                        locationRestriction: { rectangle: MARIBOR_BOUNDS },
-                    }),
-                },
-            );
-            const data = await res.json();
-            const preds: PlaceSuggestion[] = (data.suggestions ?? [])
-                .filter(
-                    (s: { placePrediction?: { placeId?: string } }) =>
-                        s.placePrediction,
-                )
-                .map(
-                    (s: {
-                        placePrediction: {
-                            placeId: string;
-                            structuredFormat?: {
-                                mainText?: { text?: string };
-                                secondaryText?: { text?: string };
-                            };
-                            text?: { text?: string };
-                        };
-                    }) => ({
-                        placeId: s.placePrediction.placeId,
-                        mainText:
-                            s.placePrediction.structuredFormat?.mainText
-                                ?.text ??
-                            s.placePrediction.text?.text ??
-                            "",
-                        secondaryText:
-                            s.placePrediction.structuredFormat?.secondaryText
-                                ?.text ?? "",
-                    }),
-                );
-            setDestinationPredictions(preds);
-            setDestinationOpen(preds.length > 0);
-        } catch {
-            setPredictions([]);
-            setIsOpen(false);
-        }
-    }, []);
-
-    function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const value = e.target.value;
-        setInputValue(value);
-        setLocationError(false);
-        if (debounceTimer.current) clearTimeout(debounceTimer.current);
-        debounceTimer.current = setTimeout(() => fetchPredictions(value), 300);
-    }
-
     function handleClear() {
-        setInputValue("");
-        setPredictions([]);
-        setIsOpen(false);
+        origin.clear();
         setLocationError(false);
         setSelectedPlace("");
         setOriginCoords(null);
@@ -219,9 +63,8 @@ export const MainAppControlOverlay = ({
     }
 
     async function handleSelect(prediction: PlaceSuggestion) {
-        setInputValue(prediction.mainText);
-        setIsOpen(false);
-        setPredictions([]);
+        origin.setValue(prediction.mainText);
+        origin.closeDropdown();
         try {
             const res = await fetch(
                 `https://places.googleapis.com/v1/places/${prediction.placeId}`,
@@ -251,9 +94,8 @@ export const MainAppControlOverlay = ({
     }
 
     async function handleDestinationSelect(prediction: PlaceSuggestion) {
-        setDestinationValue(prediction.mainText);
-        setDestinationOpen(false);
-        setDestinationPredictions([]);
+        destination.setValue(prediction.mainText);
+        destination.closeDropdown();
         try {
             const res = await fetch(
                 `https://places.googleapis.com/v1/places/${prediction.placeId}`,
@@ -282,9 +124,9 @@ export const MainAppControlOverlay = ({
     }
 
     function handleSwap() {
-        const tempValue = inputValue;
-        setInputValue(destinationValue);
-        setDestinationValue(tempValue);
+        const tempValue = origin.value;
+        origin.setValue(destination.value);
+        destination.setValue(tempValue);
         if (originCoords && destinationCoords) {
             onPlaceSelect?.(destinationCoords);
             onDestinationSelect?.(originCoords);
@@ -293,26 +135,14 @@ export const MainAppControlOverlay = ({
         }
     }
 
-    function handleDestinationInputChange(
-        e: React.ChangeEvent<HTMLInputElement>,
-    ) {
-        const value = e.target.value;
-        setDestinationValue(value);
-        if (destinationDebounceTimer.current)
-            clearTimeout(destinationDebounceTimer.current);
-        destinationDebounceTimer.current = setTimeout(
-            () => fetchDestinationPredictions(value),
-            300,
-        );
-    }
-
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
             if (
                 containerRef.current &&
                 !containerRef.current.contains(e.target as Node)
             ) {
-                setIsOpen(false);
+                origin.setIsOpen(false);
+                destination.setIsOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -343,23 +173,21 @@ export const MainAppControlOverlay = ({
                                     />
                                     <Input
                                         type="text"
-                                        value={destinationValue}
-                                        onChange={handleDestinationInputChange}
+                                        value={destination.value}
+                                        onChange={destination.handleChange}
                                         onKeyDown={(e) =>
                                             e.key === "Escape" &&
-                                            setDestinationOpen(false)
+                                            destination.setIsOpen(false)
                                         }
                                         placeholder="Kje štartaš?"
                                         className="h-full rounded-none border-0 bg-transparent pl-8 pr-12 text-sm font-normal shadow-none"
                                         aria-label="Kje štartaš?"
                                     />
-                                    {destinationValue && (
+                                    {destination.value && (
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                setDestinationValue("");
-                                                setDestinationPredictions([]);
-                                                setDestinationOpen(false);
+                                                destination.clear();
                                                 setDestinationCoords(null);
                                                 onDestinationSelect?.(null);
                                             }}
@@ -377,17 +205,17 @@ export const MainAppControlOverlay = ({
                                     />
                                     <Input
                                         type="text"
-                                        value={inputValue}
-                                        onChange={handleInputChange}
+                                        value={origin.value}
+                                        onChange={origin.handleChange}
                                         onKeyDown={(e) =>
                                             e.key === "Escape" &&
-                                            setIsOpen(false)
+                                            origin.setIsOpen(false)
                                         }
                                         placeholder="Kam šibaš?"
                                         className="h-full rounded-none border-0 bg-transparent pl-8 pr-12 text-sm font-normal shadow-none"
                                         aria-label="Kam šibaš?"
                                     />
-                                    {inputValue && (
+                                    {origin.value && (
                                         <button
                                             type="button"
                                             onClick={handleClear}
@@ -406,10 +234,10 @@ export const MainAppControlOverlay = ({
                                 <ArrowUpDown size={16} />
                             </button>
                         </div>
-                        {destinationOpen &&
-                            destinationPredictions.length > 0 && (
+                        {destination.isOpen &&
+                            destination.predictions.length > 0 && (
                                 <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
-                                    {destinationPredictions.map(
+                                    {destination.predictions.map(
                                         (prediction) => (
                                             <li
                                                 key={prediction.placeId}
@@ -430,9 +258,9 @@ export const MainAppControlOverlay = ({
                                     )}
                                 </ul>
                             )}
-                        {isOpen && predictions.length > 0 && (
+                        {origin.isOpen && origin.predictions.length > 0 && (
                             <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
-                                {predictions.map((prediction) => (
+                                {origin.predictions.map((prediction) => (
                                     <li
                                         key={prediction.placeId}
                                         onMouseDown={() =>
@@ -459,16 +287,16 @@ export const MainAppControlOverlay = ({
                             />
                             <Input
                                 type="text"
-                                value={inputValue}
-                                onChange={handleInputChange}
+                                value={origin.value}
+                                onChange={origin.handleChange}
                                 onKeyDown={(e) =>
-                                    e.key === "Escape" && setIsOpen(false)
+                                    e.key === "Escape" && origin.setIsOpen(false)
                                 }
                                 placeholder="Kam šibaš?"
                                 className={`h-full rounded-lg border-0 bg-neutral-700 pl-8 text-sm font-normal shadow-md ${selectedPlace ? "pr-14" : "pr-8"}`}
                                 aria-label="Kam šibaš?"
                             />
-                            {inputValue && (
+                            {origin.value && (
                                 <button
                                     type="button"
                                     onClick={handleClear}
@@ -487,9 +315,9 @@ export const MainAppControlOverlay = ({
                                 </button>
                             )}
                         </div>
-                        {isOpen && predictions.length > 0 && (
+                        {origin.isOpen && origin.predictions.length > 0 && (
                             <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
-                                {predictions.map((prediction) => (
+                                {origin.predictions.map((prediction) => (
                                     <li
                                         key={prediction.placeId}
                                         onMouseDown={() =>

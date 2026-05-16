@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useMap } from "@vis.gl/react-google-maps";
 
 declare const google: {
@@ -25,6 +25,16 @@ declare const google: {
       }[];
     }) => {
       setMap: (map: unknown | null) => void;
+      addListener: (
+        eventName: "click",
+        handler: (event: {
+          latLng?: {
+            toJSON: () => MapPoint;
+          };
+        }) => void,
+      ) => {
+        remove: () => void;
+      };
     };
     LatLngBounds: new () => {
       extend: (point: { lat: number; lng: number }) => void;
@@ -36,8 +46,17 @@ declare const google: {
   };
 };
 
+export type MapPoint = {
+  lat: number;
+  lng: number;
+};
+
 export type RouteLeg = {
   tip: string;
+  trajanje?: string;
+  dolzina?: string;
+  prosta_mesta?: string | null;
+  prosti_bajki?: string | null;
   polyline: {
     lat: number;
     lon: number;
@@ -46,6 +65,7 @@ export type RouteLeg = {
 
 type RoutePolylineProps = {
   legs: RouteLeg[];
+  onLegClick?: (leg: RouteLeg, position: MapPoint) => void;
 };
 
 const legColors: Record<string, string> = {
@@ -54,8 +74,13 @@ const legColors: Record<string, string> = {
   BUS: "#721121",
 };
 
-export const RoutePolyline = ({ legs }: RoutePolylineProps) => {
+export const RoutePolyline = ({ legs, onLegClick }: RoutePolylineProps) => {
   const map = useMap();
+  const onLegClickRef = useRef(onLegClick);
+
+  useEffect(() => {
+    onLegClickRef.current = onLegClick;
+  }, [onLegClick]);
 
   // funkcija da prikazem različne stile linij glede na tip poti
   const getLineOptions = (tip: string, color: string) => {
@@ -109,7 +134,7 @@ export const RoutePolyline = ({ legs }: RoutePolylineProps) => {
     const polylines = legs.map((leg) => {
       const color = legColors[leg.tip] ?? "#ffffff";
 
-      return new google.maps.Polyline({
+      const polyline = new google.maps.Polyline({
         map,
         path: leg.polyline.map((point) => ({
           lat: point.lat,
@@ -120,6 +145,24 @@ export const RoutePolyline = ({ legs }: RoutePolylineProps) => {
         geodesic: true,
         ...getLineOptions(leg.tip, color),
       });
+
+      const clickListener = polyline.addListener("click", (event) => {
+        const clickedPosition = event.latLng?.toJSON();
+        if (clickedPosition) {
+          onLegClickRef.current?.(leg, clickedPosition);
+          return;
+        }
+
+        const fallbackPoint = leg.polyline[0];
+        if (!fallbackPoint) return;
+
+        onLegClickRef.current?.(leg, {
+          lat: fallbackPoint.lat,
+          lng: fallbackPoint.lon,
+        });
+      });
+
+      return { polyline, clickListener };
     });
 
     const bounds = new google.maps.LatLngBounds();
@@ -138,7 +181,10 @@ export const RoutePolyline = ({ legs }: RoutePolylineProps) => {
     }
 
     return () => {
-      polylines.forEach((polyline) => polyline.setMap(null));
+      polylines.forEach(({ polyline, clickListener }) => {
+        clickListener.remove();
+        polyline.setMap(null);
+      });
     };
   }, [map, legs]);
 

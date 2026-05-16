@@ -3,6 +3,7 @@ import { Bike, Bus, Footprints } from "lucide-react";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
 import { MainMap } from "../MainAppComponents/MainMap";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
+import type { MapPoint, RouteLeg } from "../MainAppComponents/RoutePolyline";
 import pathMock from "../../mock/pathMock.json";
 
 const routeOptions = [
@@ -39,6 +40,10 @@ type MapCenter = {
 export const MainAppHome = () => {
   const [center, setCenter] = useState<MapCenter>(fallbackCenter);
   const [zoom, setZoom] = useState(14);
+  const [selectedLeg, setSelectedLeg] = useState<{
+    leg: RouteLeg;
+    position: MapPoint;
+  } | null>(null);
 
   // iskanje userjeve lokacije
   function locateUser(zoomToUser = false) {
@@ -88,6 +93,10 @@ export const MainAppHome = () => {
     setZoom(nextZoom);
   }
 
+  function handleLegClick(leg: RouteLeg, position: MapPoint) {
+    setSelectedLeg({ leg, position });
+  }
+
   return (
     <main className='relative min-h-screen overflow-hidden'>
       {/* map */}
@@ -95,6 +104,9 @@ export const MainAppHome = () => {
         center={center}
         zoom={zoom}
         legs={pathMock.legs}
+        selectedLeg={selectedLeg}
+        onLegClick={handleLegClick}
+        onRoutePopupClose={() => setSelectedLeg(null)}
         onCameraChanged={handleCameraChanged}
       />
 

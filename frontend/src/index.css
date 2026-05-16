@@ -141,7 +141,7 @@
 
 .animate-ride-bus {
     animation: ride-bus 2s linear infinite;
-    animation-delay: 0.9s;
+    animation-delay: -1.1s;
 }
 
 @layer base {

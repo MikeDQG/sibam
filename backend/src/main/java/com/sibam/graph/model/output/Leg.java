@@ -1,6 +1,6 @@
-package com.sibam.model;
+package com.sibam.graph.model.output;
 
-import com.sibam.model.graph.Mode;
+import com.sibam.graph.model.Mode;
 
 import java.time.LocalTime;
 

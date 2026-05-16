@@ -1,4 +1,4 @@
-package com.sibam.model.graph;
+package com.sibam.graph.model;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.sibam.model.trip;
+package com.sibam.graph.model.trip;
 
 import lombok.Data;
 

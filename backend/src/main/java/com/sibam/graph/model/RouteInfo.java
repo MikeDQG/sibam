@@ -1,4 +1,4 @@
-package com.sibam.model.graph;
+package com.sibam.graph.model;
 
 public record RouteInfo(
         int lineId,

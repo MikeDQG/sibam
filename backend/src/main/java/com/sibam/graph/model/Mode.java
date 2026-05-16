@@ -1,4 +1,4 @@
-package com.sibam.model.graph;
+package com.sibam.graph.model;
 
 public enum Mode {
     WALKING("WALKING"), BUS("BUS"), BIKING("BIKING");

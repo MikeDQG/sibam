@@ -1,5 +1,6 @@
 import {
-    CloudRain,
+    Bike,
+    Bus,
     LocateFixed,
     Minus,
     Route,
@@ -10,13 +11,18 @@ import {
     LogOut,
     ArrowUpDown,
 } from "lucide-react";
+import { WeatherWidget } from "./WeatherWidget";
+import { RouteLoadingOverlay } from "./RouteLoadingOverlay";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useState, useEffect, useRef } from "react";
-import { usePlacesAutocomplete, type PlaceSuggestion } from "../../hooks/usePlacesAutocomplete";
+import {
+    usePlacesAutocomplete,
+    type PlaceSuggestion,
+} from "../../hooks/usePlacesAutocomplete";
 
 const placesApiKey = import.meta.env.VITE_PLACES_API_KEY as string;
 
@@ -40,8 +46,22 @@ export const MainAppControlOverlay = ({
     const [locationError, setLocationError] = useState(false);
     const [selectedPlace, setSelectedPlace] = useState("");
     const [showDirections, setShowDirections] = useState(false);
-    const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
-    const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
+    const [originCoords, setOriginCoords] = useState<{
+        lat: number;
+        lng: number;
+    } | null>(null);
+    const [destinationCoords, setDestinationCoords] = useState<{
+        lat: number;
+        lng: number;
+    } | null>(null);
+    const [useBus, setUseBus] = useState(true);
+    const [useBike, setUseBike] = useState(true);
+    const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+    const [timeMode, setTimeMode] = useState<"depart" | "arrive">("depart");
+    const [selectedTime, setSelectedTime] = useState(() => {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    });
     const containerRef = useRef<HTMLDivElement>(null);
 
     const origin = usePlacesAutocomplete(placesApiKey);
@@ -151,6 +171,8 @@ export const MainAppControlOverlay = ({
     }, []);
 
     return (
+        <>
+        {isLoadingRoute && <RouteLoadingOverlay onDismiss={() => setIsLoadingRoute(false)} />}
         <div className="absolute inset-x-4 top-4 z-20 flex flex-row items-start gap-2">
             {/* logotip */}
             <img
@@ -277,6 +299,58 @@ export const MainAppControlOverlay = ({
                                 ))}
                             </ul>
                         )}
+                        <div className="flex gap-2 items-center">
+                            <button
+                                type="button"
+                                onClick={() => setUseBus((v) => !v)}
+                                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBus ? "bg-red-700/80 text-white" : "bg-neutral-700 text-neutral-400"}`}>
+                                <Bus size={14} />
+                                Bus
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setUseBike((v) => !v)}
+                                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBike ? "bg-red-700/80 text-white" : "bg-neutral-700 text-neutral-400"}`}>
+                                <Bike size={14} />
+                                Kolo
+                            </button>
+                            <div className="flex overflow-hidden rounded-lg bg-neutral-700 shadow-md">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setTimeMode((m) =>
+                                            m === "depart"
+                                                ? "arrive"
+                                                : "depart",
+                                        )
+                                    }
+                                    className="px-3 py-1.5 text-sm text-white transition-colors hover:bg-neutral-600 whitespace-nowrap">
+                                    {timeMode === "depart"
+                                        ? "Odhod ob"
+                                        : "Prihod do"}
+                                </button>
+                                <div className="w-px bg-neutral-600" />
+                                <input
+                                    type="time"
+                                    value={selectedTime}
+                                    onChange={(e) =>
+                                        setSelectedTime(e.target.value)
+                                    }
+                                    className="bg-transparent px-2 py-1.5 text-sm text-white focus:outline-none"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (originCoords && destinationCoords) {
+                                        setIsLoadingRoute(true);
+                                    }
+                                }}
+                                disabled={!originCoords || !destinationCoords}
+                                className="ml-auto flex items-center gap-1.5 rounded-md bg-neutral-200 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
+                                Najdi pot
+                            </button>
+                        </div>
                     </>
                 ) : (
                     <>
@@ -290,7 +364,8 @@ export const MainAppControlOverlay = ({
                                 value={origin.value}
                                 onChange={origin.handleChange}
                                 onKeyDown={(e) =>
-                                    e.key === "Escape" && origin.setIsOpen(false)
+                                    e.key === "Escape" &&
+                                    origin.setIsOpen(false)
                                 }
                                 placeholder="Kam šibaš?"
                                 className={`h-full rounded-lg border-0 bg-neutral-700 pl-8 text-sm font-normal shadow-md ${selectedPlace ? "pr-14" : "pr-8"}`}
@@ -344,10 +419,7 @@ export const MainAppControlOverlay = ({
             </div>
 
             {/* vreme */}
-            <div className="mt-4 flex h-9 shrink-0 items-center gap-2 rounded-lg bg-red-700/80 px-3 text-white shadow-md">
-                <CloudRain size={16} />
-                <span className="text-sm">15 °C</span>
-            </div>
+            <WeatherWidget />
 
             {/* Spacer */}
             <div className="flex-1" />
@@ -429,5 +501,6 @@ export const MainAppControlOverlay = ({
                 </div>
             )}
         </div>
+        </>
     );
 };

@@ -57,6 +57,8 @@ export type RouteLeg = {
   dolzina?: string;
   prosta_mesta?: string | null;
   prosti_bajki?: string | null;
+  departure?: string;
+  arrival?: string;
   polyline: {
     lat: number;
     lon: number;

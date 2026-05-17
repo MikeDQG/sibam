@@ -4,6 +4,9 @@ import { APIProvider } from "@vis.gl/react-google-maps";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
 import { MainMap } from "../MainAppComponents/MainMap";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
+import type { RoutePopupSelection } from "../MainAppComponents/RoutePopup";
+import type { MapPoint, RouteLeg } from "../MainAppComponents/RoutePolyline";
+import pathMock from "../../mock/pathMock.json";
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 
@@ -39,28 +42,32 @@ type MapCenter = {
 };
 
 export const MainAppHome = () => {
-    const [center, setCenter] = useState<MapCenter>(fallbackCenter);
-    const [zoom, setZoom] = useState(14);
-    const [markerPosition, setMarkerPosition] = useState<MapCenter | null>(
+  const [center, setCenter] = useState<MapCenter>(fallbackCenter);
+  const [zoom, setZoom] = useState(14);
+  const [selectedLeg, setSelectedLeg] = useState<RoutePopupSelection | null>(
+    null,
+  );
+    
+  const [markerPosition, setMarkerPosition] = useState<MapCenter | null>(
         null,
     );
-    const [destinationMarkerPosition, setDestinationMarkerPosition] =
+  const [destinationMarkerPosition, setDestinationMarkerPosition] =
         useState<MapCenter | null>(null);
 
-    // iskanje userjeve lokacije
-    function locateUser(zoomToUser = false) {
-        if (!navigator.geolocation) return;
+  // iskanje userjeve lokacije
+  function locateUser(zoomToUser = false) {
+    if (!navigator.geolocation) return;
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setCenter({
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCenter({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
 
-                if (zoomToUser) {
-                    setZoom(16);
-                }
+        if (zoomToUser) {
+          setZoom(16);
+          }
             },
             () => {
                 setCenter(fallbackCenter);
@@ -71,38 +78,6 @@ export const MainAppHome = () => {
                 maximumAge: 60000,
             },
         );
-    }
-
-    useEffect(() => {
-        locateUser();
-    }, []);
-
-    // handlanje overlay kontrol
-    function handleZoomIn() {
-        setZoom((currentZoom) => Math.min(currentZoom + 1, 20));
-    }
-
-    function handleZoomOut() {
-        setZoom((currentZoom) => Math.max(currentZoom - 1, 3));
-    }
-
-    function handleLocate() {
-        locateUser(true);
-    }
-
-    function handleCameraChanged(nextCenter: MapCenter, nextZoom: number) {
-        setCenter(nextCenter);
-        setZoom(nextZoom);
-    }
-
-    function handlePlaceSelect(place: { lat: number; lng: number } | null) {
-        if (!place) {
-            setMarkerPosition(null);
-            return;
-        }
-        setCenter({ lat: place.lat, lng: place.lng });
-        setZoom(16);
-        setMarkerPosition({ lat: place.lat, lng: place.lng });
     }
 
     function handleDestinationSelect(place: { lat: number; lng: number } | null) {
@@ -117,25 +92,91 @@ export const MainAppHome = () => {
         );
     }
 
-    return (
-        <APIProvider apiKey={apiKey} region="SI" language="sl">
-            <main className="relative min-h-screen overflow-hidden">
-                <MainMap
-                    center={center}
-                    zoom={zoom}
-                    onCameraChanged={handleCameraChanged}
-                    markerPosition={markerPosition}
+    
+  }
+
+  useEffect(() => {
+    locateUser();
+  }, []);
+
+  // handlanje overlay kontrol
+  function handleZoomIn() {
+    setZoom((currentZoom) => Math.min(currentZoom + 1, 20));
+  }
+
+  function handleZoomOut() {
+    setZoom((currentZoom) => Math.max(currentZoom - 1, 3));
+  }
+
+  function handleLocate() {
+    locateUser(true);
+  }
+
+  function handleCameraChanged(nextCenter: MapCenter, nextZoom: number) {
+    setCenter(nextCenter);
+    setZoom(nextZoom);
+  }
+
+  function handleLegClick(leg: RouteLeg, position: MapPoint) {
+    setSelectedLeg({ leg, position, source: "path" });
+  }
+
+  function handleBusIconClick(
+    leg: RouteLeg,
+    position: MapPoint,
+    previousLeg?: RouteLeg,
+  ) {
+    setSelectedLeg({ leg, position, previousLeg, source: "busIcon" });
+  }
+
+  function handleBikeIconClick(
+    leg: RouteLeg,
+    position: MapPoint,
+    source: "bikePickupIcon" | "bikeReturnIcon",
+  ) {
+    setSelectedLeg({ leg, position, source });
+  }
+            
+  function handlePlaceSelect(place: { lat: number; lng: number } | null) {
+      if (!place) {
+          setMarkerPosition(null);
+          return;
+      }
+
+      setCenter({ lat: place.lat, lng: place.lng });
+      setZoom(16);
+      setMarkerPosition({ lat: place.lat, lng: place.lng });
+   }
+
+  return (
+    <main className='relative min-h-screen overflow-hidden'>
+      {/* map */}
+      <MainMap
+        center={center}
+        zoom={zoom}
+        legs={pathMock.legs}
+        selectedLeg={selectedLeg}
+        onLegClick={handleLegClick}
+        onBusIconClick={handleBusIconClick}
+        onBikeIconClick={handleBikeIconClick}
+        onRoutePopupClose={() => setSelectedLeg(null)}
+        onCameraChanged={handleCameraChanged}
+        
+        markerPosition={markerPosition}
                     destinationMarkerPosition={destinationMarkerPosition}
-                />
-                <MainAppControlOverlay
+      />
+
+      {/* control overlay */}
+      <MainAppControlOverlay
                     onZoomIn={handleZoomIn}
                     onZoomOut={handleZoomOut}
                     onLocate={handleLocate}
                     onPlaceSelect={handlePlaceSelect}
                     onDestinationSelect={handleDestinationSelect}
                 />
-                <RouteOptions routes={routeOptions} />
-            </main>
-        </APIProvider>
-    );
+
+      {/* route options */}
+      <RouteOptions routes={routeOptions} />
+    </main>
+  );
 };

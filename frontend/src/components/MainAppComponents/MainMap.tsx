@@ -64,6 +64,7 @@ export const MainMap = ({
           colorScheme='DARK'
           gestureHandling='greedy'
           disableDefaultUI
+          clickableIcons={false}
           mapId={mapId}
           reuseMaps>
           {legs && <RoutePolyline legs={legs} onLegClick={onLegClick} />}

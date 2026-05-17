@@ -5,7 +5,7 @@ import type { MapPoint, RouteLeg } from "./RoutePolyline";
 export type RoutePopupSelection = {
   leg: RouteLeg;
   position: MapPoint;
-  source: "path" | "busIcon";
+  source: "path" | "busIcon" | "bikePickupIcon" | "bikeReturnIcon";
   previousLeg?: RouteLeg;
 };
 
@@ -57,7 +57,13 @@ const formatTime = (timestamp?: string) => {
 export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
   const showPathDetails = selectedLeg.source === "path";
   const showBusIconDetails = selectedLeg.source === "busIcon";
-  const showBajkReturnPlaces =
+  const showBikePickupPlaces = selectedLeg.source === "bikePickupIcon";
+
+  // pokazemo ce je izbran return bike ikona
+  const showBikeReturnIconPlaces = selectedLeg.source === "bikeReturnIcon";
+
+  // pokazemo ce je izbran bus ikona in je prejsna pot kolesarska --> bus po vrnitvi kolesa
+  const showBusAfterBikeReturnPlaces =
     showBusIconDetails && selectedLeg.previousLeg?.tip === "BIKE";
 
   return (
@@ -93,10 +99,15 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
           <RoutePopupRow
             label='Mesta za oddajo Bajka'
             value={
-              showBajkReturnPlaces
-                ? selectedLeg.previousLeg?.prosta_mesta
+              showBusAfterBikeReturnPlaces || showBikeReturnIconPlaces
+                ? (selectedLeg.previousLeg?.prosta_mesta ??
+                  selectedLeg.leg.prosta_mesta)
                 : null
             }
+          />
+          <RoutePopupRow
+            label='Prosti Bajki'
+            value={showBikePickupPlaces ? selectedLeg.leg.prosti_bajki : null}
           />
           <RoutePopupRow
             label='Trajanje'

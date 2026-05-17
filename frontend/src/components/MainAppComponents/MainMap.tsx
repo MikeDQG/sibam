@@ -1,4 +1,5 @@
 import { APIProvider, AdvancedMarker, Map } from "@vis.gl/react-google-maps";
+import { Fragment } from "react";
 import { RoutePopup, type RoutePopupSelection } from "./RoutePopup";
 import { RoutePolyline, type MapPoint, type RouteLeg } from "./RoutePolyline";
 
@@ -21,6 +22,11 @@ type MainMapProps = {
     position: MapPoint,
     previousLeg?: RouteLeg,
   ) => void;
+  onBikeIconClick?: (
+    leg: RouteLeg,
+    position: MapPoint,
+    source: "bikePickupIcon" | "bikeReturnIcon",
+  ) => void;
   onRoutePopupClose?: () => void;
   onCameraChanged?: (center: MapCenter, zoom: number) => void;
 };
@@ -32,6 +38,7 @@ export const MainMap = ({
   selectedLeg,
   onLegClick,
   onBusIconClick,
+  onBikeIconClick,
   onRoutePopupClose,
   onCameraChanged,
 }: MainMapProps) => {
@@ -64,38 +71,81 @@ export const MainMap = ({
             const firstPoint = leg.polyline[0];
             if (!firstPoint || leg.tip === "WALK") return null;
 
+            const nextLeg = legs[index + 1];
+            const lastPoint = leg.polyline.at(-1);
+            const showBikeReturnMarker =
+              leg.tip === "BIKE" && nextLeg?.tip !== "BUS" && lastPoint;
             const markerPosition = {
               lat: firstPoint.lat,
               lng: firstPoint.lon,
             };
 
             return (
-              <AdvancedMarker
-                key={index}
-                position={markerPosition}
-                clickable={leg.tip === "BUS"}
-                onClick={() => {
-                  if (leg.tip !== "BUS") return;
+              <Fragment key={index}>
+                <AdvancedMarker
+                  position={markerPosition}
+                  clickable={true}
+                  onClick={() => {
+                    if (leg.tip === "BIKE") {
+                      onBikeIconClick?.(
+                        leg,
+                        {
+                          lat: firstPoint.lat - 0.00002,
+                          lng: firstPoint.lon,
+                        },
+                        "bikePickupIcon",
+                      );
+                    } else {
+                      onBusIconClick?.(
+                        leg,
+                        {
+                          lat: firstPoint.lat - 0.00002,
+                          lng: firstPoint.lon,
+                        },
+                        legs[index - 1],
+                      );
+                    }
+                  }}>
+                  <img
+                    src={
+                      leg.tip === "BIKE"
+                        ? "pathIcons/mBajk.png"
+                        : "pathIcons/marprom.png"
+                    }
+                    alt={
+                      leg.tip === "BIKE"
+                        ? "Bajk postaja za prevzem"
+                        : "Avtobusna postaja"
+                    }
+                    className='h-7 w-7 rounded-full'
+                  />
+                </AdvancedMarker>
 
-                  onBusIconClick?.(
-                    leg,
-                    {
-                      lat: firstPoint.lat - 0.00002,
-                      lng: firstPoint.lon,
-                    },
-                    legs[index - 1],
-                  );
-                }}>
-                <img
-                  src={
-                    leg.tip === "BIKE"
-                      ? "pathIcons/mBajk.png"
-                      : "pathIcons/marprom.png"
-                  }
-                  alt='Slomškov trg'
-                  className='h-7 w-7 rounded-full'
-                />
-              </AdvancedMarker>
+                {showBikeReturnMarker && (
+                  <AdvancedMarker
+                    position={{
+                      lat: lastPoint.lat,
+                      lng: lastPoint.lon,
+                    }}
+                    clickable={true}
+                    onClick={() => {
+                      onBikeIconClick?.(
+                        leg,
+                        {
+                          lat: lastPoint.lat - 0.00002,
+                          lng: lastPoint.lon,
+                        },
+                        "bikeReturnIcon",
+                      );
+                    }}>
+                    <img
+                      src='pathIcons/mBajk.png'
+                      alt='Bajk postaja za oddajo'
+                      className='h-7 w-7 rounded-full'
+                    />
+                  </AdvancedMarker>
+                )}
+              </Fragment>
             );
           })}
           {selectedLeg && (

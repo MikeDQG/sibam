@@ -105,6 +105,14 @@ export const MainAppHome = () => {
     setSelectedLeg({ leg, position, previousLeg, source: "busIcon" });
   }
 
+  function handleBikeIconClick(
+    leg: RouteLeg,
+    position: MapPoint,
+    source: "bikePickupIcon" | "bikeReturnIcon",
+  ) {
+    setSelectedLeg({ leg, position, source });
+  }
+
   return (
     <main className='relative min-h-screen overflow-hidden'>
       {/* map */}
@@ -115,6 +123,7 @@ export const MainAppHome = () => {
         selectedLeg={selectedLeg}
         onLegClick={handleLegClick}
         onBusIconClick={handleBusIconClick}
+        onBikeIconClick={handleBikeIconClick}
         onRoutePopupClose={() => setSelectedLeg(null)}
         onCameraChanged={handleCameraChanged}
       />

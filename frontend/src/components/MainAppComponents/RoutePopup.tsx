@@ -97,7 +97,7 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
             }
           />
           <RoutePopupRow
-            label='Mesta za oddajo Bajka'
+            label='Mesta za oddajo kolesa'
             value={
               showBusAfterBikeReturnPlaces || showBikeReturnIconPlaces
                 ? (selectedLeg.previousLeg?.prosta_mesta ??
@@ -106,7 +106,7 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
             }
           />
           <RoutePopupRow
-            label='Prosti Bajki'
+            label='Prosta kolesa'
             value={showBikePickupPlaces ? selectedLeg.leg.prosti_bajki : null}
           />
           <RoutePopupRow

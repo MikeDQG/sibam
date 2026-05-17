@@ -25,12 +25,22 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             try {
                 FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
+
+                String fullName = decodedToken.getName();
+                if (fullName == null || fullName.isBlank()) {
+                    fullName = request.getHeader("X-Full-Name");
+                }
+                request.setAttribute("fullName", fullName);
+
                 request.setAttribute("uid", decodedToken.getUid());
                 request.setAttribute("email", decodedToken.getEmail());
             } catch (Exception e) {
+                response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+                response.setHeader("Access-Control-Allow-Credentials", "true");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
+
         }
 
         filterChain.doFilter(request, response);

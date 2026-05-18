@@ -41,4 +41,10 @@ public class GraphBootstrap {
 
         System.out.println("Graph initialized successfully.");
     }
+
+    public void ensureInitialized() {
+        if (graphStore.getGraph() == null) {
+            init();
+        }
+    }
 }

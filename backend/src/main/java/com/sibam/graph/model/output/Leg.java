@@ -1,14 +1,21 @@
 package com.sibam.graph.model.output;
 
-import com.sibam.graph.model.Mode;
+import com.sibam.graph.model.GeoPoint;
 
-import java.time.LocalTime;
+import java.util.List;
 
 public record Leg(
-        Mode mode,
-        String fromNodeName,
-        String toNodeName,
-        LocalTime departureTime,
-        LocalTime arrivalTime,
-        Integer lineId // null, če je pešačenje
-) {}
+        String mode,
+        GeoPoint origin,
+        GeoPoint destination,
+        String duration,
+        String distance,
+        List<GeoPoint> polyline,
+        String code,
+        String headsignName,
+        Integer freeStands,
+        Integer freeBikes,
+        String departure,
+        String arrival
+) {
+}

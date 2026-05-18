@@ -13,8 +13,8 @@ public record Leg(
         List<GeoPoint> polyline,
         String code,
         String headsignName,
-        Integer freeStands,
-        Integer freeBikes,
+        String freeStands,
+        String freeBikes,
         String departure,
         String arrival
 ) {

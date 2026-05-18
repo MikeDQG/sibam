@@ -47,4 +47,10 @@ public class GraphBootstrap {
             init();
         }
     }
+
+    public void refresh() {
+        Graph graph = graphBuilder.build();
+        graphSerializer.save(graph);
+        graphStore.replaceGraph(graph);
+    }
 }

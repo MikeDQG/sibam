@@ -1,5 +1,6 @@
 package com.sibam.graph.routing;
 
+import com.sibam.graph.model.BikeNode;
 import com.sibam.graph.model.Edge;
 import com.sibam.graph.model.EdgeType;
 import com.sibam.graph.model.GeoPoint;
@@ -58,7 +59,7 @@ public class AStarRouter {
             double destinationLat,
             double destinationLon
     ) {
-        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, LocalTime.now());
+        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, LocalTime.now(), true, true);
     }
 
     public Journey findJourney(
@@ -68,7 +69,7 @@ public class AStarRouter {
             double destinationLon,
             LocalTime startTime
     ) {
-        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, startTime);
+        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, startTime, true, true);
     }
 
     public Journey findJourney(
@@ -79,6 +80,30 @@ public class AStarRouter {
             String originAddress,
             String destinationAddress,
             LocalTime startTime
+    ) {
+        return findJourney(
+                originLat,
+                originLon,
+                destinationLat,
+                destinationLon,
+                originAddress,
+                destinationAddress,
+                startTime,
+                true,
+                true
+        );
+    }
+
+    public Journey findJourney(
+            double originLat,
+            double originLon,
+            double destinationLat,
+            double destinationLon,
+            String originAddress,
+            String destinationAddress,
+            LocalTime startTime,
+            boolean allowBike,
+            boolean allowBus
     ) {
         Graph graph = requireGraph();
         List<Node> originStops = spatialSearchService.findNearest(graph, originLat, originLon, NEAREST_STOP_LIMIT);
@@ -100,7 +125,7 @@ public class AStarRouter {
                 destinationStops
         );
 
-        PathResult pathResult = findPath(routingGraph, ORIGIN_NODE_ID, DESTINATION_NODE_ID);
+        PathResult pathResult = findPath(routingGraph, ORIGIN_NODE_ID, DESTINATION_NODE_ID, allowBike, allowBus);
         if (pathResult == null) {
             return null;
         }
@@ -117,10 +142,10 @@ public class AStarRouter {
     }
 
     public PathResult findPath(int startNodeId, int goalNodeId) {
-        return findPath(requireGraph(), startNodeId, goalNodeId);
+        return findPath(requireGraph(), startNodeId, goalNodeId, true, true);
     }
 
-    private PathResult findPath(Graph graph, int startNodeId, int goalNodeId) {
+    private PathResult findPath(Graph graph, int startNodeId, int goalNodeId, boolean allowBike, boolean allowBus) {
         PriorityQueue<NodeRecord> openSet =
                 new PriorityQueue<>(Comparator.comparingDouble(NodeRecord::fScore));
 
@@ -142,6 +167,10 @@ public class AStarRouter {
             }
 
             for (Edge edge : graph.getNeighbors(current.nodeId())) {
+                if (!isAllowed(edge, allowBike, allowBus)) {
+                    continue;
+                }
+
                 int tentative = gScore.get(current.nodeId()) + edge.getCostSeconds();
 
                 if (tentative < gScore.getOrDefault(edge.getToNodeId(), Integer.MAX_VALUE)) {
@@ -157,6 +186,18 @@ public class AStarRouter {
         }
 
         return null;
+    }
+
+    private boolean isAllowed(Edge edge, boolean allowBike, boolean allowBus) {
+        if (edge.getEdgeType() == EdgeType.BIKE) {
+            return allowBike;
+        }
+
+        if (edge.getEdgeType() == EdgeType.BUS) {
+            return allowBus;
+        }
+
+        return true;
     }
 
     private PathResult reconstruct(
@@ -297,8 +338,8 @@ public class AStarRouter {
                 polyline(graph, edges, firstEdge, lastEdge),
                 routeInfo == null ? null : routeInfo.lineCode(),
                 routeInfo == null ? null : routeInfo.headsignName(),
-                null,
-                null,
+                freeStands(graph, firstEdge, lastEdge),
+                freeBikes(graph, firstEdge),
                 String.valueOf(departureMillis),
                 String.valueOf(arrivalMillis)
         );
@@ -310,6 +351,32 @@ public class AStarRouter {
             case BIKE -> "BIKE";
             case WALK, TRANSFER -> "WALK";
         };
+    }
+
+    private String freeBikes(Graph graph, Edge firstEdge) {
+        if (firstEdge.getEdgeType() != EdgeType.BIKE) {
+            return null;
+        }
+
+        Node node = graph.getNodes().get(firstEdge.getFromNodeId());
+        if (node instanceof BikeNode bikeNode) {
+            return String.valueOf(bikeNode.getFreeBikes());
+        }
+
+        return null;
+    }
+
+    private String freeStands(Graph graph, Edge firstEdge, Edge lastEdge) {
+        if (firstEdge.getEdgeType() != EdgeType.BIKE) {
+            return null;
+        }
+
+        Node node = graph.getNodes().get(lastEdge.getToNodeId());
+        if (node instanceof BikeNode bikeNode) {
+            return String.valueOf(bikeNode.getFreeStands());
+        }
+
+        return null;
     }
 
     private GeoPoint nodePoint(Graph graph, int nodeId) {

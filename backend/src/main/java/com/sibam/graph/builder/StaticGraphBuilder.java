@@ -1,11 +1,13 @@
 package com.sibam.graph.builder;
 
 import com.sibam.engine.VaoSerializer;
+import com.sibam.engine.vao.BikeStationVao;
 import com.sibam.engine.vao.BusStopVao;
 import com.sibam.engine.vao.RouteVao;
 import com.sibam.engine.vao.ShapeNodeVao;
 import com.sibam.graph.model.*;
 import com.sibam.graph.spatial.HelperService;
+import com.sibam.service.MBajkDataService;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -14,14 +16,23 @@ import java.util.*;
 public class StaticGraphBuilder implements GraphBuilder {
 
     private static final double BUS_SPEED_MPS = 6.0;
+    private static final double BIKE_SPEED_MPS = 4.5;
+    private static final int BIKE_NODE_ID_OFFSET = 1_000_000;
 
     private final VaoSerializer vaoSerializer;
+    private final MBajkDataService mBajkDataService;
     private final HelperService helperService;
     private final BusEdgeBuilder busEdgeBuilder = new BusEdgeBuilder();
+    private final BikeEdgeBuilder bikeEdgeBuilder = new BikeEdgeBuilder();
     private final WalkingEdgeBuilder walkingEdgeBuilder;
 
-    public StaticGraphBuilder(VaoSerializer vaoSerializer, HelperService helperService) {
+    public StaticGraphBuilder(
+            VaoSerializer vaoSerializer,
+            MBajkDataService mBajkDataService,
+            HelperService helperService
+    ) {
         this.vaoSerializer = vaoSerializer;
+        this.mBajkDataService = mBajkDataService;
         this.helperService = helperService;
         this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
     }
@@ -45,7 +56,68 @@ public class StaticGraphBuilder implements GraphBuilder {
         }
 
         addBusEdges(nodes, adjacencyList);
-        // Simple graph: create walking edges between stops within max walking distance
+        addBikeNodes(nodes, adjacencyList);
+        addBikeEdges(nodes, adjacencyList);
+        addWalkingEdges(nodes, adjacencyList);
+
+        return new Graph(nodes, adjacencyList);
+    }
+
+    private void addBikeNodes(Map<Integer, Node> nodes, Map<Integer, List<Edge>> adjacencyList) {
+        List<BikeStationVao> bikeStations = mBajkDataService.getBikeStationVaos();
+        for (BikeStationVao station : bikeStations) {
+            int nodeId = toBikeNodeId(station.number());
+            int freeBikes = station.availability() == null ? 0 : station.availability().freeBikes();
+            int freeStands = station.availability() == null ? 0 : station.availability().freeStands();
+            BikeNode node = new BikeNode(
+                    nodeId,
+                    station.lat(),
+                    station.lon(),
+                    station.name(),
+                    station.number(),
+                    freeBikes,
+                    freeStands
+            );
+            nodes.put(node.getId(), node);
+            adjacencyList.put(node.getId(), new ArrayList<>());
+        }
+    }
+
+    private void addBikeEdges(Map<Integer, Node> nodes, Map<Integer, List<Edge>> adjacencyList) {
+        List<BikeNode> bikeNodes = nodes.values().stream()
+                .filter(BikeNode.class::isInstance)
+                .map(BikeNode.class::cast)
+                .toList();
+
+        for (BikeNode from : bikeNodes) {
+            if (from.getFreeBikes() <= 0) {
+                continue;
+            }
+
+            for (BikeNode to : bikeNodes) {
+                if (from.getId() == to.getId() || to.getFreeStands() <= 0) {
+                    continue;
+                }
+
+                int distanceMeters = (int) Math.max(1, Math.round(helperService.haversineMeters(
+                        from.getLat(),
+                        from.getLon(),
+                        to.getLat(),
+                        to.getLon()
+                )));
+                int travelTimeSeconds = (int) Math.max(1, Math.round(distanceMeters / BIKE_SPEED_MPS));
+
+                adjacencyList.get(from.getId()).add(bikeEdgeBuilder.build(
+                        from.getId(),
+                        to.getId(),
+                        distanceMeters,
+                        travelTimeSeconds
+                ));
+            }
+        }
+    }
+
+    private void addWalkingEdges(Map<Integer, Node> nodes, Map<Integer, List<Edge>> adjacencyList) {
         List<Node> nodeList = new ArrayList<>(nodes.values());
         int maxWalkM = helperService.getMaxWalkingDistanceMeters();
 
@@ -61,8 +133,6 @@ public class StaticGraphBuilder implements GraphBuilder {
                 }
             }
         }
-
-        return new Graph(nodes, adjacencyList);
     }
 
     private void addBusEdges(Map<Integer, Node> nodes, Map<Integer, List<Edge>> adjacencyList) {
@@ -134,5 +204,9 @@ public class StaticGraphBuilder implements GraphBuilder {
                 shapeSincePreviousStop.add(new GeoPoint(current.lat(), current.lon()));
             }
         }
+    }
+
+    private int toBikeNodeId(int stationNumber) {
+        return BIKE_NODE_ID_OFFSET + stationNumber;
     }
 }

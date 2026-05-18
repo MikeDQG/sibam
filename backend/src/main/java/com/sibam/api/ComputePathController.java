@@ -45,7 +45,11 @@ public class ComputePathController {
             @RequestParam boolean bus,
             @RequestParam String userId
             ) {
-        graphBootstrap.ensureInitialized();
+        if (bike) {
+            graphBootstrap.refresh();
+        } else {
+            graphBootstrap.ensureInitialized();
+        }
 
         LocalTime startTime = resolveStartTime(leaveNow, leaveAt);
         String resolvedOriginAddress = resolveAddress(originAddress, originAddressSnake);
@@ -57,7 +61,9 @@ public class ComputePathController {
                 destinationLon,
                 resolvedOriginAddress,
                 resolvedDestinationAddress,
-                startTime
+                startTime,
+                bike,
+                bus
         );
 
         if (journey == null) {

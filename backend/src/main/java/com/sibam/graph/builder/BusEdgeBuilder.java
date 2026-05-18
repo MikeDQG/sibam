@@ -15,7 +15,8 @@ public class BusEdgeBuilder {
             int distanceMeters,
             int travelTimeSeconds,
             RouteInfo routeInfo,
-            List<GeoPoint> polyline
+            List<GeoPoint> polyline,
+            Integer scheduleStopPointId
     ) {
         return new Edge(
                 fromNodeId,
@@ -24,7 +25,8 @@ public class BusEdgeBuilder {
                 distanceMeters,
                 travelTimeSeconds,
                 routeInfo,
-                polyline
+                polyline,
+                scheduleStopPointId
         );
     }
 }

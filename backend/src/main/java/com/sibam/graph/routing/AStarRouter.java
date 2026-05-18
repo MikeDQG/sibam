@@ -14,12 +14,19 @@ import com.sibam.graph.builder.WalkingEdgeBuilder;
 import com.sibam.graph.spatial.HelperService;
 import com.sibam.graph.spatial.SpatialSearchService;
 import com.sibam.graph.storage.GraphStore;
+import com.sibam.engine.VaoSerializer;
+import com.sibam.engine.vao.LineScheduleVao;
+import com.sibam.engine.vao.RouteScheduleVao;
+import com.sibam.engine.vao.StopScheduleVao;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,20 +43,24 @@ public class AStarRouter {
     private static final int DESTINATION_NODE_ID = -2;
     private static final int NEAREST_STOP_LIMIT = 5;
     private static final double HEURISTIC_MAX_SPEED_MPS = 30.0;
+    private static final DateTimeFormatter DEPARTURE_TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
 
     private final GraphStore graphStore;
     private final SpatialSearchService spatialSearchService;
     private final HelperService helperService;
+    private final VaoSerializer vaoSerializer;
     private final WalkingEdgeBuilder walkingEdgeBuilder;
 
     public AStarRouter(
             GraphStore graphStore,
             SpatialSearchService spatialSearchService,
-            HelperService helperService
+            HelperService helperService,
+            VaoSerializer vaoSerializer
     ) {
         this.graphStore = graphStore;
         this.spatialSearchService = spatialSearchService;
         this.helperService = helperService;
+        this.vaoSerializer = vaoSerializer;
         this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
     }
 
@@ -125,7 +136,15 @@ public class AStarRouter {
                 destinationStops
         );
 
-        PathResult pathResult = findPath(routingGraph, ORIGIN_NODE_ID, DESTINATION_NODE_ID, allowBike, allowBus);
+        long startMillis = toEpochMillis(startTime);
+        PathResult pathResult = findPath(
+                routingGraph,
+                ORIGIN_NODE_ID,
+                DESTINATION_NODE_ID,
+                allowBike,
+                allowBus,
+                startMillis
+        );
         if (pathResult == null) {
             return null;
         }
@@ -142,16 +161,24 @@ public class AStarRouter {
     }
 
     public PathResult findPath(int startNodeId, int goalNodeId) {
-        return findPath(requireGraph(), startNodeId, goalNodeId, true, true);
+        return findPath(requireGraph(), startNodeId, goalNodeId, true, true, toEpochMillis(LocalTime.now()));
     }
 
-    private PathResult findPath(Graph graph, int startNodeId, int goalNodeId, boolean allowBike, boolean allowBus) {
+    private PathResult findPath(
+            Graph graph,
+            int startNodeId,
+            int goalNodeId,
+            boolean allowBike,
+            boolean allowBus,
+            long startMillis
+    ) {
         PriorityQueue<NodeRecord> openSet =
                 new PriorityQueue<>(Comparator.comparingDouble(NodeRecord::fScore));
 
         Map<Integer, Integer> gScore = new HashMap<>();
         Map<Integer, Integer> cameFrom = new HashMap<>();
         Map<Integer, Edge> cameFromEdge = new HashMap<>();
+        Map<Integer, PathStepTiming> cameFromTiming = new HashMap<>();
 
         gScore.put(startNodeId, 0);
         openSet.add(new NodeRecord(startNodeId, heuristicSeconds(graph, startNodeId, goalNodeId)));
@@ -163,7 +190,13 @@ public class AStarRouter {
             }
 
             if (current.nodeId() == goalNodeId) {
-                return reconstruct(cameFrom, cameFromEdge, current.nodeId(), gScore.get(goalNodeId));
+                return reconstruct(
+                        cameFrom,
+                        cameFromEdge,
+                        cameFromTiming,
+                        current.nodeId(),
+                        gScore.get(goalNodeId)
+                );
             }
 
             for (Edge edge : graph.getNeighbors(current.nodeId())) {
@@ -171,11 +204,22 @@ public class AStarRouter {
                     continue;
                 }
 
-                int tentative = gScore.get(current.nodeId()) + edge.getCostSeconds();
+                int currentCostSeconds = gScore.get(current.nodeId());
+                EdgeRelaxation relaxation = relaxEdge(
+                        graph,
+                        edge,
+                        cameFromEdge.get(current.nodeId()),
+                        startMillis + secondsToMillis(currentCostSeconds)
+                );
+                int tentative = currentCostSeconds + relaxation.costSeconds();
 
                 if (tentative < gScore.getOrDefault(edge.getToNodeId(), Integer.MAX_VALUE)) {
                     cameFrom.put(edge.getToNodeId(), current.nodeId());
                     cameFromEdge.put(edge.getToNodeId(), edge);
+                    cameFromTiming.put(edge.getToNodeId(), new PathStepTiming(
+                            relaxation.departureMillis(),
+                            relaxation.arrivalMillis()
+                    ));
                     gScore.put(edge.getToNodeId(), tentative);
                     openSet.add(new NodeRecord(
                             edge.getToNodeId(),
@@ -186,6 +230,131 @@ public class AStarRouter {
         }
 
         return null;
+    }
+
+    private EdgeRelaxation relaxEdge(Graph graph, Edge edge, Edge previousEdge, long currentMillis) {
+        if (edge.getEdgeType() != EdgeType.BUS) {
+            long arrivalMillis = currentMillis + secondsToMillis(edge.getCostSeconds());
+            return new EdgeRelaxation(edge.getCostSeconds(), currentMillis, arrivalMillis);
+        }
+
+        if (previousEdge != null
+                && previousEdge.getEdgeType() == EdgeType.BUS
+                && Objects.equals(previousEdge.getRouteInfo(), edge.getRouteInfo())) {
+            long arrivalMillis = currentMillis + secondsToMillis(edge.getCostSeconds());
+            return new EdgeRelaxation(edge.getCostSeconds(), currentMillis, arrivalMillis);
+        }
+
+        long departureMillis = nextBusDepartureMillis(edge, currentMillis);
+        long arrivalMillis = departureMillis + secondsToMillis(edge.getCostSeconds());
+        int costSeconds = (int) Math.max(1, Math.round((arrivalMillis - currentMillis) / 1000.0));
+        return new EdgeRelaxation(costSeconds, departureMillis, arrivalMillis);
+    }
+
+    private long nextBusDepartureMillis(Edge edge, long currentMillis) {
+        RouteInfo routeInfo = edge.getRouteInfo();
+        if (routeInfo == null) {
+            return currentMillis;
+        }
+
+        ensureSchedulesLoaded();
+
+        int scheduleStopPointId = edge.getScheduleStopPointId() == null
+                ? edge.getFromNodeId()
+                : edge.getScheduleStopPointId();
+        StopScheduleVao stopSchedule = vaoSerializer.getSchedulesMap().get(scheduleStopPointId);
+        if (stopSchedule == null || stopSchedule.scheduleForLine() == null) {
+            return currentMillis;
+        }
+
+        return stopSchedule.scheduleForLine().stream()
+                .filter(lineSchedule -> lineSchedule.lineId() == routeInfo.lineId())
+                .flatMap(lineSchedule -> matchingRouteSchedules(lineSchedule, routeInfo).stream())
+                .flatMap(routeSchedule -> routeSchedule.departures().stream())
+                .map(departure -> departureMillis(departure, currentMillis))
+                .filter(Objects::nonNull)
+                .min(Long::compareTo)
+                .orElse(currentMillis);
+    }
+
+    private List<RouteScheduleVao> matchingRouteSchedules(LineScheduleVao lineSchedule, RouteInfo routeInfo) {
+        if (lineSchedule.routeAndSchedules() == null || lineSchedule.routeAndSchedules().isEmpty()) {
+            return List.of();
+        }
+
+        String headsign = normalize(routeInfo.headsignName());
+        List<RouteScheduleVao> matching = lineSchedule.routeAndSchedules().stream()
+                .filter(routeSchedule -> {
+                    String direction = normalize(routeSchedule.direction());
+                    return !headsign.isBlank()
+                            && (direction.contains(headsign)
+                            || headsign.contains(direction)
+                            || directionContainsDestination(direction, headsign));
+                })
+                .toList();
+
+        if (!matching.isEmpty()) {
+            return matching;
+        }
+
+        return lineSchedule.routeAndSchedules();
+    }
+
+    private boolean directionContainsDestination(String direction, String headsign) {
+        String[] tokens = headsign.split(" ");
+        for (int i = tokens.length - 1; i >= 0; i--) {
+            String token = tokens[i];
+            if (token.length() >= 4) {
+                return direction.contains(token);
+            }
+        }
+
+        return false;
+    }
+
+    private Long departureMillis(String departure, long currentMillis) {
+        try {
+            LocalTime departureTime = LocalTime.parse(departure, DEPARTURE_TIME_FORMATTER);
+            LocalDate currentDate = LocalDateTime.ofInstant(
+                    java.time.Instant.ofEpochMilli(currentMillis),
+                    ZoneId.systemDefault()
+            ).toLocalDate();
+            long candidate = currentDate.atTime(departureTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
+
+            if (candidate < currentMillis) {
+                candidate = currentDate.plusDays(1)
+                        .atTime(departureTime)
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli();
+            }
+
+            return candidate;
+        } catch (DateTimeParseException ignored) {
+            return null;
+        }
+    }
+
+    private void ensureSchedulesLoaded() {
+        if (vaoSerializer.getSchedulesMap() == null || vaoSerializer.getSchedulesMap().isEmpty()) {
+            vaoSerializer.fetchData();
+        }
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        String withoutDiacritics = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return withoutDiacritics
+                .toLowerCase()
+                .replaceAll("[^a-z0-9]+", " ")
+                .trim();
     }
 
     private boolean isAllowed(Edge edge, boolean allowBike, boolean allowBus) {
@@ -203,24 +372,28 @@ public class AStarRouter {
     private PathResult reconstruct(
             Map<Integer, Integer> cameFrom,
             Map<Integer, Edge> cameFromEdge,
+            Map<Integer, PathStepTiming> cameFromTiming,
             int current,
             int totalCost
     ) {
         List<Integer> path = new ArrayList<>();
         List<Edge> edges = new ArrayList<>();
+        List<PathStepTiming> timings = new ArrayList<>();
 
         path.add(current);
 
         while (cameFrom.containsKey(current)) {
             edges.add(cameFromEdge.get(current));
+            timings.add(cameFromTiming.get(current));
             current = cameFrom.get(current);
             path.add(current);
         }
 
         Collections.reverse(path);
         Collections.reverse(edges);
+        Collections.reverse(timings);
 
-        return new PathResult(path, edges, totalCost);
+        return new PathResult(path, edges, timings, totalCost);
     }
 
     private Journey toJourney(
@@ -239,54 +412,48 @@ public class AStarRouter {
         List<Leg> legs = new ArrayList<>();
         Edge legStartEdge = pathResult.getEdges().getFirst();
         Edge previousEdge = legStartEdge;
-        int legCostSeconds = previousEdge.getCostSeconds();
         int legDistanceMeters = previousEdge.getDistanceMeters();
         int legStartIndex = 0;
-        LocalTime legDeparture = startTime;
-        long legDepartureMillis = toEpochMillis(startTime);
 
         for (int i = 1; i < pathResult.getEdges().size(); i++) {
             Edge currentEdge = pathResult.getEdges().get(i);
 
             if (canMerge(previousEdge, currentEdge)) {
-                legCostSeconds += currentEdge.getCostSeconds();
                 legDistanceMeters += currentEdge.getDistanceMeters();
                 previousEdge = currentEdge;
                 continue;
             }
 
-            LocalTime legArrival = legDeparture.plusSeconds(legCostSeconds);
-            long legArrivalMillis = legDepartureMillis + secondsToMillis(legCostSeconds);
+            PathStepTiming firstTiming = pathResult.getTimings().get(legStartIndex);
+            PathStepTiming lastTiming = pathResult.getTimings().get(i - 1);
             legs.add(toLeg(
                     graph,
                     pathResult.getEdges().subList(legStartIndex, i),
                     legStartEdge,
                     previousEdge,
-                    legCostSeconds,
+                    durationSeconds(firstTiming, lastTiming),
                     legDistanceMeters,
-                    legDepartureMillis,
-                    legArrivalMillis
+                    firstTiming.departureMillis(),
+                    lastTiming.arrivalMillis()
             ));
 
             legStartEdge = currentEdge;
             previousEdge = currentEdge;
-            legCostSeconds = currentEdge.getCostSeconds();
             legDistanceMeters = currentEdge.getDistanceMeters();
             legStartIndex = i;
-            legDeparture = legArrival;
-            legDepartureMillis = legArrivalMillis;
         }
 
-        long legArrivalMillis = legDepartureMillis + secondsToMillis(legCostSeconds);
+        PathStepTiming firstTiming = pathResult.getTimings().get(legStartIndex);
+        PathStepTiming lastTiming = pathResult.getTimings().getLast();
         legs.add(toLeg(
                 graph,
                 pathResult.getEdges().subList(legStartIndex, pathResult.getEdges().size()),
                 legStartEdge,
                 previousEdge,
-                legCostSeconds,
+                durationSeconds(firstTiming, lastTiming),
                 legDistanceMeters,
-                legDepartureMillis,
-                legArrivalMillis
+                firstTiming.departureMillis(),
+                lastTiming.arrivalMillis()
         ));
 
         int totalDistanceMeters = pathResult.getEdges().stream()
@@ -315,6 +482,10 @@ public class AStarRouter {
         }
 
         return Objects.equals(previousEdge.getRouteInfo(), currentEdge.getRouteInfo());
+    }
+
+    private int durationSeconds(PathStepTiming firstTiming, PathStepTiming lastTiming) {
+        return (int) Math.max(0, Math.round((lastTiming.arrivalMillis() - firstTiming.departureMillis()) / 1000.0));
     }
 
     private Leg toLeg(
@@ -482,5 +653,8 @@ public class AStarRouter {
     }
 
     private record NodeRecord(int nodeId, double fScore) {
+    }
+
+    private record EdgeRelaxation(int costSeconds, long departureMillis, long arrivalMillis) {
     }
 }

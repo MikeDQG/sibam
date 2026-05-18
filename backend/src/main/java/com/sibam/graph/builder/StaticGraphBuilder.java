@@ -170,14 +170,14 @@ public class StaticGraphBuilder implements GraphBuilder {
                     shapeSincePreviousStop.add(new GeoPoint(current.lat(), current.lon()));
                 }
 
-                if (!current.isBusStop() || current.stopId() == null || !nodes.containsKey(current.stopId())) {
+                if (!current.isBusStop() || current.stopPointId() == null || !nodes.containsKey(current.stopPointId())) {
                     previousShapeNode = current;
                     continue;
                 }
 
                 if (previousStop != null
-                        && !previousStop.stopId().equals(current.stopId())
-                        && nodes.containsKey(previousStop.stopId())) {
+                        && !previousStop.stopPointId().equals(current.stopPointId())
+                        && nodes.containsKey(previousStop.stopPointId())) {
                     int distanceMeters = (int) Math.max(1, Math.round(distanceSincePreviousStop));
                     int travelTimeSeconds = (int) Math.max(1, Math.round(distanceMeters / BUS_SPEED_MPS));
                     RouteInfo routeInfo = new RouteInfo(
@@ -187,13 +187,14 @@ public class StaticGraphBuilder implements GraphBuilder {
                             route.code()
                     );
 
-                    adjacencyList.get(previousStop.stopId()).add(busEdgeBuilder.build(
-                            previousStop.stopId(),
-                            current.stopId(),
+                    adjacencyList.get(previousStop.stopPointId()).add(busEdgeBuilder.build(
+                            previousStop.stopPointId(),
+                            current.stopPointId(),
                             distanceMeters,
                             travelTimeSeconds,
                             routeInfo,
-                            shapeSincePreviousStop
+                            shapeSincePreviousStop,
+                            previousStop.stopPointId()
                     ));
                 }
 

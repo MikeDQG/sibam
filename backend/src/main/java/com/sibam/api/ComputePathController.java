@@ -81,24 +81,7 @@ public class ComputePathController {
 
         return journey;
     }
-    
-    @GetMapping("/busMap")
-    public String getBusStopsMap() {
-//        log.info("GET: /compute");
-        if (vaoSerializer.getBusStopsMap() == null || vaoSerializer.getBusStopsMap().isEmpty()) {
-            vaoSerializer.fetchData();
-        }
-        return String.valueOf(vaoSerializer.getBusStopsMap());
-    }
 
-    @GetMapping("/routesMap")
-    public String getRoutesMap() {
-//        log.info("GET: /compute");
-        if (vaoSerializer.getRoutesMap() == null || vaoSerializer.getRoutesMap().isEmpty()) {
-            vaoSerializer.fetchData();
-        }
-        return String.valueOf(vaoSerializer.getRoutesMap());
-    }
 
     private LocalTime resolveStartTime(boolean leaveNow, String leaveAt) {
         if (leaveNow || leaveAt == null || leaveAt.isBlank()) {

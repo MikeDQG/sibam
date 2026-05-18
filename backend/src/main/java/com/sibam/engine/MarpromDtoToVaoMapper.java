@@ -64,9 +64,9 @@ public class MarpromDtoToVaoMapper {
             List<BusStopVao> busStops = new ArrayList<>();
             for (MarpromShapeNodeDto shapeNode : shapeNodes) {
                 shapeNodeVaos.add(new ShapeNodeVao(
-                        shapeNode.sequenceNo(), shapeNode.lat(), shapeNode.lon(), shapeNode.stopPointId(), shapeNode.stopId()));
+                        shapeNode.sequenceNo(), shapeNode.lat(), shapeNode.lon(), shapeNode.stopPointId()));
                 if (shapeNode.isBusStop()) {
-                    BusStopVao bs = busStopsMap.get(shapeNode.stopId());
+                    BusStopVao bs = busStopsMap.get(shapeNode.stopPointId());
                     if (bs != null) {
                         busStops.add(bs);
                     }

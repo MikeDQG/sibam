@@ -8,6 +8,7 @@ public class Edge {
     private final EdgeType edgeType;
     private final RouteInfo routeInfo;
     private final List<GeoPoint> polyline;
+    private final Integer scheduleStopPointId;
 
     private final int distanceMeters;
     private final int costSeconds;
@@ -42,6 +43,19 @@ public class Edge {
             RouteInfo routeInfo,
             List<GeoPoint> polyline
     ) {
+        this(fromNodeId, toNodeId, edgeType, distanceMeters, costSeconds, routeInfo, polyline, null);
+    }
+
+    public Edge(
+            int fromNodeId,
+            int toNodeId,
+            EdgeType edgeType,
+            int distanceMeters,
+            int costSeconds,
+            RouteInfo routeInfo,
+            List<GeoPoint> polyline,
+            Integer scheduleStopPointId
+    ) {
         this.fromNodeId = fromNodeId;
         this.toNodeId = toNodeId;
         this.edgeType = edgeType;
@@ -49,6 +63,7 @@ public class Edge {
         this.costSeconds = costSeconds;
         this.routeInfo = routeInfo;
         this.polyline = polyline == null ? List.of() : List.copyOf(polyline);
+        this.scheduleStopPointId = scheduleStopPointId;
     }
 
 
@@ -78,5 +93,9 @@ public class Edge {
 
     public List<GeoPoint> getPolyline() {
         return polyline;
+    }
+
+    public Integer getScheduleStopPointId() {
+        return scheduleStopPointId;
     }
 }

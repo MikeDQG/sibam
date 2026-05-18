@@ -162,200 +162,200 @@ export const MainAppControlOverlay = ({
 
   return (
     <div className='pointer-events-none absolute inset-x-4 top-4 z-20 flex flex-row items-start gap-2'>
-      {/* logotip */}
-      <img
-        src='/logo.svg'
-        alt='ŠibaM'
-        className={`pointer-events-auto ${showDirections ? "mt-6" : "mt-0"} h-15 w-auto shrink-0 cursor-pointer`}
-        onClick={() => navigate("/")}
-      />
-
-      {/* searchbar */}
-      <div
-        ref={containerRef}
-        className='pointer-events-auto mt-3 flex w-110 flex-col gap-1'>
-        {showDirections ? (
-          <>
-            <div className='relative'>
-              <div className='overflow-hidden rounded-lg bg-neutral-700 shadow-md'>
-                <div className='relative flex h-10 items-center'>
-                  <Search
-                    size={16}
-                    className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
-                  />
-                  <Input
-                    type='text'
-                    value={destination.value}
-                    onChange={destination.handleChange}
-                    onKeyDown={(e) =>
-                      e.key === "Escape" && destination.setIsOpen(false)
-                    }
-                    placeholder='Kje štartaš?'
-                    className='h-full rounded-none border-0 bg-transparent pl-8 pr-12 text-sm font-normal shadow-none'
-                    aria-label='Kje štartaš?'
-                  />
-                  {destination.value && (
-                    <button
-                      type='button'
-                      onClick={() => {
-                        destination.clear();
-                        setDestinationCoords(null);
-                        onDestinationSelect?.(null);
-                      }}
-                      className='absolute right-10 z-10 flex h-5 w-5 items-center justify-center rounded-full text-neutral-400 hover:text-white'
-                      aria-label='Počisti'>
-                      <X size={13} />
-                    </button>
-                  )}
+      <div className='mt-3 flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-start'>
+        {/* logotip */}
+        <img
+          src='/logo.svg'
+          alt='ŠibaM'
+          className={`pointer-events-auto h-10 w-auto shrink-0 cursor-pointer`}
+          onClick={() => navigate("/")}
+        />
+        {/* searchbar */}
+        <div
+          ref={containerRef}
+          className='pointer-events-auto flex w-full min-w-0 flex-col gap-1 sm:w-110 sm:shrink-0'>
+          {showDirections ? (
+            <>
+              <div className='relative'>
+                <div className='overflow-hidden rounded-lg bg-neutral-700 shadow-md'>
+                  <div className='relative flex h-10 items-center pr-10'>
+                    <Search
+                      size={16}
+                      className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
+                    />
+                    <Input
+                      type='text'
+                      value={destination.value}
+                      onChange={destination.handleChange}
+                      onKeyDown={(e) =>
+                        e.key === "Escape" && destination.setIsOpen(false)
+                      }
+                      placeholder='Kje štartaš?'
+                      className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
+                      aria-label='Kje štartaš?'
+                    />
+                    {destination.value && (
+                      <button
+                        type='button'
+                        onClick={() => {
+                          destination.clear();
+                          setDestinationCoords(null);
+                          onDestinationSelect?.(null);
+                        }}
+                        className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
+                        aria-label='Počisti'>
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
+                  <div className='h-px bg-neutral-600' />
+                  <div className='relative flex h-10 items-center pr-10'>
+                    <Search
+                      size={16}
+                      className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
+                    />
+                    <Input
+                      type='text'
+                      value={origin.value}
+                      onChange={origin.handleChange}
+                      onKeyDown={(e) =>
+                        e.key === "Escape" && origin.setIsOpen(false)
+                      }
+                      placeholder='Kam šibaš?'
+                      className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
+                      aria-label='Kam šibaš?'
+                    />
+                    {origin.value && (
+                      <button
+                        type='button'
+                        onClick={handleClear}
+                        className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
+                        aria-label='Počisti'>
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className='h-px bg-neutral-600' />
-                <div className='relative flex h-10 items-center'>
-                  <Search
-                    size={16}
-                    className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
-                  />
-                  <Input
-                    type='text'
-                    value={origin.value}
-                    onChange={origin.handleChange}
-                    onKeyDown={(e) =>
-                      e.key === "Escape" && origin.setIsOpen(false)
-                    }
-                    placeholder='Kam šibaš?'
-                    className='h-full rounded-none border-0 bg-transparent pl-8 pr-12 text-sm font-normal shadow-none'
-                    aria-label='Kam šibaš?'
-                  />
-                  {origin.value && (
-                    <button
-                      type='button'
-                      onClick={handleClear}
-                      className='absolute right-10 z-10 flex h-5 w-5 items-center justify-center rounded-full text-neutral-400 hover:text-white'
-                      aria-label='Počisti'>
-                      <X size={13} />
-                    </button>
-                  )}
-                </div>
+                <button
+                  type='button'
+                  onClick={handleSwap}
+                  className='absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-neutral-600 text-neutral-300 shadow-md transition-colors hover:text-white'
+                  aria-label='Zamenjaj smeri'>
+                  <ArrowUpDown size={16} />
+                </button>
               </div>
-              <button
-                type='button'
-                onClick={handleSwap}
-                className='absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-neutral-600 text-neutral-300 shadow-md transition-colors hover:text-white'
-                aria-label='Zamenjaj smeri'>
-                <ArrowUpDown size={16} />
-              </button>
-            </div>
-            {destination.isOpen && destination.predictions.length > 0 && (
-              <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
-                {destination.predictions.map((prediction) => (
-                  <li
-                    key={prediction.placeId}
-                    onMouseDown={() => handleDestinationSelect(prediction)}
-                    className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
-                    <p className='text-sm font-medium leading-tight text-white'>
-                      {prediction.mainText}
-                    </p>
-                    <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
-                      {prediction.secondaryText}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {origin.isOpen && origin.predictions.length > 0 && (
-              <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
-                {origin.predictions.map((prediction) => (
-                  <li
-                    key={prediction.placeId}
-                    onMouseDown={() => handleSelect(prediction)}
-                    className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
-                    <p className='text-sm font-medium leading-tight text-white'>
-                      {prediction.mainText}
-                    </p>
-                    <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
-                      {prediction.secondaryText}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        ) : (
-          <>
-            <div className='relative flex h-10 items-center'>
-              <Search
-                size={16}
-                className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
-              />
-              <Input
-                type='text'
-                value={origin.value}
-                onChange={origin.handleChange}
-                onKeyDown={(e) => e.key === "Escape" && origin.setIsOpen(false)}
-                placeholder='Kam šibaš?'
-                className={`h-full rounded-lg border-0 bg-neutral-700 pl-8 text-sm font-normal shadow-md ${selectedPlace ? "pr-14" : "pr-8"}`}
-                aria-label='Kam šibaš?'
-              />
-              {origin.value && (
-                <button
-                  type='button'
-                  onClick={handleClear}
-                  className={`absolute z-10 flex h-5 w-5 items-center justify-center rounded-full text-neutral-400 hover:text-white ${selectedPlace ? "right-10" : "right-2"}`}
-                  aria-label='Počisti'>
-                  <X size={13} />
-                </button>
+              {destination.isOpen && destination.predictions.length > 0 && (
+                <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
+                  {destination.predictions.map((prediction) => (
+                    <li
+                      key={prediction.placeId}
+                      onMouseDown={() => handleDestinationSelect(prediction)}
+                      className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
+                      <p className='text-sm font-medium leading-tight text-white'>
+                        {prediction.mainText}
+                      </p>
+                      <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
+                        {prediction.secondaryText}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               )}
-              {selectedPlace && !showDirections && (
-                <button
-                  type='button'
-                  onClick={() => setShowDirections(true)}
-                  className='absolute right-2 z-10 flex h-6 w-6 rotate-45 items-center rounded-sm justify-center bg-red-700/80 text-white shadow-sm transition-colors hover:bg-red-600'
-                  aria-label='Navodila za pot'>
-                  <Route size={14} className='-rotate-45' />
-                </button>
+              {origin.isOpen && origin.predictions.length > 0 && (
+                <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
+                  {origin.predictions.map((prediction) => (
+                    <li
+                      key={prediction.placeId}
+                      onMouseDown={() => handleSelect(prediction)}
+                      className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
+                      <p className='text-sm font-medium leading-tight text-white'>
+                        {prediction.mainText}
+                      </p>
+                      <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
+                        {prediction.secondaryText}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               )}
-            </div>
-            {origin.isOpen && origin.predictions.length > 0 && (
-              <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
-                {origin.predictions.map((prediction) => (
-                  <li
-                    key={prediction.placeId}
-                    onMouseDown={() => handleSelect(prediction)}
-                    className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
-                    <p className='text-sm font-medium leading-tight text-white'>
-                      {prediction.mainText}
-                    </p>
-                    <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
-                      {prediction.secondaryText}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        )}
-        {locationError && (
-          <p className='rounded-lg bg-neutral-700 px-3 py-2 text-xs text-red-400 shadow-lg'>
-            Lokacije ni bilo mogoče najti. Prosimo poskusite znova.
-          </p>
-        )}
-      </div>
+            </>
+          ) : (
+            <>
+              <div className='relative flex h-10 items-center rounded-lg bg-neutral-700 shadow-md'>
+                <Search
+                  size={16}
+                  className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
+                />
+                <Input
+                  type='text'
+                  value={origin.value}
+                  onChange={origin.handleChange}
+                  onKeyDown={(e) =>
+                    e.key === "Escape" && origin.setIsOpen(false)
+                  }
+                  placeholder='Kam šibaš?'
+                  className='h-full w-auto flex-1 rounded-lg border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
+                  aria-label='Kam šibaš?'
+                />
+                {origin.value && (
+                  <button
+                    type='button'
+                    onClick={handleClear}
+                    className='mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
+                    aria-label='Počisti'>
+                    <X size={13} />
+                  </button>
+                )}
+                {selectedPlace && !showDirections && (
+                  <button
+                    type='button'
+                    onClick={() => setShowDirections(true)}
+                    className='mr-2 flex h-6 w-6 shrink-0 rotate-45 items-center justify-center rounded-sm bg-red-700 text-white shadow-sm transition-colors hover:bg-red-600'
+                    aria-label='Navodila za pot'>
+                    <Route size={14} className='-rotate-45' />
+                  </button>
+                )}
+              </div>
+              {origin.isOpen && origin.predictions.length > 0 && (
+                <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
+                  {origin.predictions.map((prediction) => (
+                    <li
+                      key={prediction.placeId}
+                      onMouseDown={() => handleSelect(prediction)}
+                      className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
+                      <p className='text-sm font-medium leading-tight text-white'>
+                        {prediction.mainText}
+                      </p>
+                      <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
+                        {prediction.secondaryText}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+          {locationError && (
+            <p className='rounded-lg bg-neutral-700 px-3 py-2 text-xs text-red-400 shadow-lg'>
+              Lokacije ni bilo mogoče najti. Prosimo poskusite znova.
+            </p>
+          )}
+        </div>
 
-      {/* vreme */}
-      <div className='pointer-events-auto mt-4 flex h-9 z-10 shrink-0 items-center gap-2 rounded-lg bg-red-700/80 px-3 text-white shadow-md'>
-        <CloudRain size={16} />
-        <span className='text-sm'>15 °C</span>
+        {/* vreme */}
+        <div className='pointer-events-auto z-10 flex h-10 shrink-0 items-center gap-2 rounded-lg bg-red-700 px-3 text-white shadow-md'>
+          <CloudRain size={16} />
+          <span className='text-sm'>15 °C</span>
+        </div>
       </div>
-
-      {/* Spacer */}
-      <div className='flex-1' />
 
       {/* Desni panel */}
       {isLoggedIn ? (
-        <div className='pointer-events-auto mt-4 flex shrink-0 flex-row gap-2'>
+        <div className='pointer-events-auto absolute right-0 top-4 flex shrink-0 flex-row gap-2'>
           <Button
             type='button'
             onClick={() => navigate("/account")}
-            className='flex h-9 w-9 items-center justify-center rounded-md bg-red-700/80 text-foreground shadow-lg hover:text-red-200'
+            className='flex h-9 w-9 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'
             aria-label='Profil'>
             <UserRound strokeWidth={1.7} />
           </Button>
@@ -367,7 +367,7 @@ export const MainAppControlOverlay = ({
                 navigate("/login");
               }}
               aria-label='Odjava'
-              className='flex h-9 w-9 items-center justify-center rounded-md bg-red-700/80 text-foreground shadow-lg hover:text-red-200'>
+              className='flex h-9 w-9 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'>
               <LogOut />
             </Button>
             <Button
@@ -394,11 +394,11 @@ export const MainAppControlOverlay = ({
           </div>
         </div>
       ) : (
-        <div className='pointer-events-auto flex shrink-0 flex-col gap-2'>
+        <div className='pointer-events-auto absolute right-0 top-3 flex shrink-0 flex-col gap-2'>
           <Button
             type='button'
             onClick={() => navigate("/login")}
-            className='flex h-9 w-9 items-center justify-center rounded-md bg-red-700/80 text-foreground shadow-lg hover:text-red-200'
+            className='flex h-9 w-9 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'
             aria-label='Profil'>
             <UserRound strokeWidth={1.7} />
           </Button>

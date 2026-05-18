@@ -3,8 +3,8 @@ package com.sibam.integration.gtfsRT;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
-import com.sibam.model.trip.StopUpdate;
-import com.sibam.model.trip.Trip;
+import com.sibam.graph.model.trip.StopUpdate;
+import com.sibam.graph.model.trip.Trip;
 
 import org.springframework.stereotype.Component;
 

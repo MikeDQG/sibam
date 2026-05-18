@@ -1,20 +1,22 @@
 package com.sibam.service;
 
 import com.sibam.dto.marprom.lines.MarpromLineDto;
-import com.sibam.dto.marprom.lines.MarpromRouteShortDto;
+import com.sibam.dto.marprom.lines.MarpromLinesResponse;
 import com.sibam.dto.marprom.routes.MarpromRouteDto;
+import com.sibam.dto.marprom.routes.MarpromRoutesResponseDto;
 import com.sibam.dto.marprom.schedules.MarpromLineScheduleDto;
 import com.sibam.dto.marprom.schedules.MarpromRouteScheduleDto;
+import com.sibam.dto.marprom.schedules.MarpromScheduleResponse;
 import com.sibam.dto.marprom.schedules.MarpromStopScheduleDto;
 import com.sibam.dto.marprom.stops.MarpromStopDto;
+import com.sibam.dto.marprom.stops.MarpromStopsResponse;
 import com.sibam.dto.marprom.trips.MarpromTripDto;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import com.sibam.dto.marprom.trips.MarpromTripsResponseDto;
 import org.springframework.stereotype.Service;
 import com.sibam.integration.marprom.MarpromClient;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class TransitDataService {
@@ -25,98 +27,122 @@ public class TransitDataService {
         this.marpromClient = marpromClient;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    private void onAppReady() {
-        System.out.println("Application ready");
-        testDataIngestion();
-        testGetLines();
-        testGetRoutes();
-        testGetStopScheduleForLine();
-        testGetTrips();
+    public List<MarpromStopDto> getBusStops() {
+
+        MarpromStopsResponse response = marpromClient.getAllStops().block();
+        if (response == null) {
+            System.out.println("Ni najdenih postaj");
+            return null;
+        }
+
+        System.out.println("\n--- ŠibaM: Začenjam prevzem podatkov ---");
+
+        List<MarpromStopDto> stopPoints = response.stops();
+
+        System.out.println("Število najdenih postajališč: " + stopPoints.size());
+
+        // Izpis prvih treh za kontrolo
+        stopPoints.stream().limit(3).forEach(s -> {
+            System.out.printf("Postaja: %s (ID: %s) na [%s, %s]%n",
+                    s.name(), s.id(), s.lat(), s.lon());
+        });
+        return stopPoints;
     }
 
-    public void testDataIngestion() {
+    public List<MarpromLineDto> getLines() {
+        MarpromLinesResponse response = marpromClient.getLines().block();
+        if (response == null) {
+            System.out.println("Ni najdenih linij.");
+            return null;
+        }
 
-        marpromClient.getAllStops().subscribe(response -> {
-            System.out.println("\n--- ŠibaM: Začenjam testni prevzem podatkov ---");
+        System.out.println("\n--- ŠibaM: Začenjam prevzem linij ---");
 
-            List<MarpromStopDto> stopPoints = response.stops();
+        List<MarpromLineDto> lines = response.lines();
 
-            System.out.println("Število najdenih postajališč: " + stopPoints.size());
+        System.out.println("Število najdenih linij: " + lines.size());
 
-            // Izpis prvih treh za kontrolo
-            stopPoints.stream().limit(3).forEach(s -> {
-                System.out.printf("Postaja: %s (ID: %s) na [%s, %s]%n",
-                        s.name(), s.id(), s.lat(), s.lon());
-            });
+        // Izpis prvih treh za kontrolo
+        lines.stream().limit(3).forEach(s -> {
+            System.out.printf("Linija: %s (ID: %s) %s%n",
+                    s.code(), s.lineId(), s.destination());
         });
+
+        return lines;
     }
 
-    public void testGetLines() {
-        marpromClient.getLines().subscribe(response -> {
-            System.out.println("\n--- ŠibaM: Začenjam testni prevzem linij ---");
 
-            List<MarpromLineDto> lines = response.lines();
-
-            System.out.println("Število najdenih linij: " + lines.size());
-
-            // Izpis prvih treh za kontrolo
-            lines.stream().limit(3).forEach(s -> {
-                System.out.printf("Linija: %s (ID: %s) %s%n",
-                        s.code(), s.lineId(), s.destination());
-            });
+    public List<MarpromRouteDto> getAllRoutes() {
+        List<MarpromLineDto> lines = getLines();
+        List<MarpromRouteDto> routes = new ArrayList<>();
+        lines.forEach(l -> {
+            routes.addAll(getRoutes(l.lineId()));
         });
+        return routes;
     }
 
-    public void testGetRoutes() {
-        int lineId = 67;    // test, 67 je Tezno
+    public List<MarpromRouteDto> getRoutes(int lineId) {
 
-        marpromClient.getRoutes(lineId).subscribe(response -> {
-            System.out.println("\n--- ŠibaM: Začenjam testni prevzem tras ---");
+        MarpromRoutesResponseDto response = marpromClient.getRoutes(lineId).block();
 
-            List<MarpromRouteDto> routes = response.routes();
+        if (response == null) {
+            System.out.println("Ni najdenih tras.");
+            return null;
+        }
+        System.out.println("\n--- ŠibaM: Začenjam prevzem tras ---");
 
-            System.out.println("Število najdenih tras: " + routes.size());
+        List<MarpromRouteDto> routes = response.routes();
 
-            // Izpis prvih treh za kontrolo
-            routes.stream().limit(3).forEach(s -> {
-                System.out.printf("Trasa: %s (LineId: %s; RouteId: %s) %n",
-                        s.headsignName(), s.lineId(), s.routeId());
-            });
+        System.out.println("Število najdenih tras: " + routes.size());
+
+        // Izpis prvih treh za kontrolo
+        routes.stream().limit(3).forEach(s -> {
+            System.out.printf("Trasa: %s (LineId: %s; RouteId: %s) %n",
+                    s.headsignName(), s.lineId(), s.routeId());
         });
+
+        return routes;
     }
 
-    public void testGetStopScheduleForLine() {
-        int lineId = 67;    // test, 67 je Tezno
+    public List<MarpromStopScheduleDto> getStopScheduleForLine(int lineId) {
 
-        marpromClient.getStopScheduleForLine(lineId).subscribe(response -> {
-            System.out.println("\n--- ŠibaM: Začenjam testni prevzem voznega reda ---");
+        MarpromScheduleResponse response = marpromClient.getStopScheduleForLine(lineId).block();
+        if (response == null) {
+            System.out.println("Ni najdenih voznih redov.");
+            return null;
+        }
+        System.out.println("\n--- ŠibaM: Začenjam prevzem voznega reda ---");
 
-            List<MarpromStopScheduleDto> schedules = response.schedules();
+        List<MarpromStopScheduleDto> schedules = response.schedules();
 
-            MarpromStopScheduleDto schedule = schedules.getFirst();
-            System.out.printf("Postajalisce: %s (Ime: %s; Naslov: %s) %n",schedule.stopPoint().id(),schedule.stopPoint().name(), schedule.stopPoint().address());
-            MarpromLineScheduleDto scheduleForLine = schedule.scheduleForLine().getFirst();
-            MarpromRouteScheduleDto s = scheduleForLine.routeAndSchedules().getFirst();
-            System.out.printf("Vozni red za linijo: %s; Smer: %s; Prvi odhod: %s %n",scheduleForLine.lineId(),s.direction(),s.departures().getFirst());
-        });
+        MarpromStopScheduleDto schedule = schedules.getFirst();
+        System.out.printf("Postajalisce: %s (Ime: %s; Naslov: %s) %n",schedule.stopPoint().id(),schedule.stopPoint().name(), schedule.stopPoint().address());
+        MarpromLineScheduleDto scheduleForLine = schedule.scheduleForLine().getFirst();
+        MarpromRouteScheduleDto s = scheduleForLine.routeAndSchedules().getFirst();
+        System.out.printf("Vozni red za linijo: %s; Smer: %s; Prvi odhod: %s %n",scheduleForLine.lineId(),s.direction(),s.departures().getFirst());
+
+        return schedules;
     }
 
-    public void testGetTrips() {
-        int lineId = 67;    // test, 67 je Tezno
+    public List<MarpromTripDto> getTrips(int lineId) {
 
-        marpromClient.getTrips(lineId).subscribe(response -> {
-            System.out.println("\n--- ŠibaM: Začenjam testni prevzem potovanj ---");
+        MarpromTripsResponseDto response = marpromClient.getTrips(lineId).block();
+        if (response == null) {
+            System.out.println("Ni najdenih potovanj.");
+            return null;
+        }
+        System.out.println("\n--- ŠibaM: Začenjam prevzem potovanj ---");
 
-            List<MarpromTripDto> trips = response.trips();
+        List<MarpromTripDto> trips = response.trips();
 
-            System.out.println("Število najdenih potovanj: " + trips.size());
+        System.out.println("Število najdenih potovanj: " + trips.size());
 
-            // Izpis prvih treh za kontrolo
-            trips.stream().limit(3).forEach(s -> {
-                System.out.printf("Potovanje: %s (LineId: %s; RouteId: %s) %n",
-                        s.tripId(), s.lineId(), s.routeId());
-            });
+        // Izpis prvih treh za kontrolo
+        trips.stream().limit(3).forEach(s -> {
+            System.out.printf("Potovanje: %s (LineId: %s; RouteId: %s) %n",
+                    s.tripId(), s.lineId(), s.routeId());
         });
+
+        return trips;
     }
 }

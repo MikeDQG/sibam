@@ -3,6 +3,9 @@ import { Bike, Bus, Footprints } from "lucide-react";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
 import { MainMap } from "../MainAppComponents/MainMap";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
+import type { RoutePopupSelection } from "../MainAppComponents/RoutePopup";
+import type { MapPoint, RouteLeg } from "../MainAppComponents/RoutePolyline";
+import pathMock from "../../mock/pathMock.json";
 
 const routeOptions = [
   {
@@ -38,6 +41,12 @@ type MapCenter = {
 export const MainAppHome = () => {
   const [center, setCenter] = useState<MapCenter>(fallbackCenter);
   const [zoom, setZoom] = useState(14);
+  const [selectedLeg, setSelectedLeg] = useState<RoutePopupSelection | null>(
+    null,
+  );
+  const [markerPosition, setMarkerPosition] = useState<MapCenter | null>(null);
+  const [destinationMarkerPosition, setDestinationMarkerPosition] =
+    useState<MapCenter | null>(null);
 
   // iskanje userjeve lokacije
   function locateUser(zoomToUser = false) {
@@ -87,13 +96,56 @@ export const MainAppHome = () => {
     setZoom(nextZoom);
   }
 
+  function handleLegClick(leg: RouteLeg, position: MapPoint) {
+    setSelectedLeg({ leg, position, source: "path" });
+  }
+
+  function handleBusIconClick(
+    leg: RouteLeg,
+    position: MapPoint,
+    previousLeg?: RouteLeg,
+  ) {
+    setSelectedLeg({ leg, position, previousLeg, source: "busIcon" });
+  }
+
+  function handleBikeIconClick(
+    leg: RouteLeg,
+    position: MapPoint,
+    source: "bikePickupIcon" | "bikeReturnIcon",
+  ) {
+    setSelectedLeg({ leg, position, source });
+  }
+
+  function handlePlaceSelect(place: { lat: number; lng: number } | null) {
+    if (!place) {
+      setMarkerPosition(null);
+      return;
+    }
+
+    setCenter({ lat: place.lat, lng: place.lng });
+    setZoom(16);
+    setMarkerPosition({ lat: place.lat, lng: place.lng });
+  }
+
+  function handleDestinationSelect(place: { lat: number; lng: number } | null) {
+    setDestinationMarkerPosition(place);
+  }
+
   return (
     <main className='relative min-h-screen overflow-hidden'>
       {/* map */}
       <MainMap
         center={center}
         zoom={zoom}
+        legs={pathMock.legs}
+        selectedLeg={selectedLeg}
+        onLegClick={handleLegClick}
+        onBusIconClick={handleBusIconClick}
+        onBikeIconClick={handleBikeIconClick}
+        onRoutePopupClose={() => setSelectedLeg(null)}
         onCameraChanged={handleCameraChanged}
+        markerPosition={markerPosition}
+        destinationMarkerPosition={destinationMarkerPosition}
       />
 
       {/* control overlay */}
@@ -101,6 +153,8 @@ export const MainAppHome = () => {
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onLocate={handleLocate}
+        onPlaceSelect={handlePlaceSelect}
+        onDestinationSelect={handleDestinationSelect}
       />
 
       {/* route options */}

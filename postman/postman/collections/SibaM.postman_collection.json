@@ -6,20 +6,80 @@
   },
   "item": [
     {
-      "name": "/simple-api/test",
+      "name": "/compute",
       "id": "86e1c15a-6748-4f0b-ad85-abcbe10e02af",
       "request": {
         "method": "GET",
         "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
         "url": {
-          "raw": "localhost:8080/simple-api/test",
+          "raw": "localhost:8080/compute?originLat= 0.1&originLon= 0.1&destinationLat= 0.1&destinationLon= 0.1&leaveNow= true &leaveAt= 293892389893 &arriveBy= 293892389893 &bike= true &bus= true &userId= sjdfb7e4tfg74g74",
           "host": [
             "localhost"
           ],
           "port": "8080",
           "path": [
-            "simple-api",
-            "test"
+            "compute"
+          ],
+          "query": [
+            {
+              "key": "originLat",
+              "value": " 0.1",
+              "type": "text"
+            },
+            {
+              "key": "originLon",
+              "value": " 0.1",
+              "type": "text"
+            },
+            {
+              "key": "destinationLat",
+              "value": " 0.1",
+              "type": "text"
+            },
+            {
+              "key": "destinationLon",
+              "value": " 0.1",
+              "type": "text"
+            },
+            {
+              "key": "leaveNow",
+              "value": " true ",
+              "type": "text"
+            },
+            {
+              "key": "leaveAt",
+              "value": " 293892389893 ",
+              "type": "text"
+            },
+            {
+              "key": "arriveBy",
+              "value": " 293892389893 ",
+              "type": "text"
+            },
+            {
+              "key": "bike",
+              "value": " true ",
+              "type": "text"
+            },
+            {
+              "key": "bus",
+              "value": " true ",
+              "type": "text"
+            },
+            {
+              "key": "userId",
+              "value": " sjdfb7e4tfg74g74",
+              "type": "text"
+            }
           ]
         }
       },
@@ -76,7 +136,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67&Date=2026-05-08&IncludeShape=true",
+          "raw": "https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67&IncludeShape=true",
           "protocol": "https",
           "host": [
             "marprom-proxy",
@@ -94,14 +154,15 @@
               "uuid": "373eaf0f-5de3-4145-817b-3b5dcc542cfd"
             },
             {
-              "key": "Date",
-              "value": "2026-05-08",
-              "uuid": "be0a02f9-c4f6-4478-9042-dd6f2a043c92"
-            },
-            {
               "key": "IncludeShape",
               "value": "true",
               "uuid": "dab4b1aa-e194-42ce-962a-af7a0c788e1b"
+            },
+            {
+              "key": "Date",
+              "value": "2026-05-08",
+              "uuid": "be0a02f9-c4f6-4478-9042-dd6f2a043c92",
+              "disabled": true
             }
           ]
         }
@@ -115,7 +176,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "https://marprom-proxy.derp.si/OBA/GetStopPointSheduleForLine?lineId=67&Date=2026-05-08",
+          "raw": "https://marprom-proxy.derp.si/OBA/GetStopPointSheduleForLine?lineId=67",
           "protocol": "https",
           "host": [
             "marprom-proxy",
@@ -129,11 +190,14 @@
           "query": [
             {
               "key": "lineId",
-              "value": "67"
+              "value": "67",
+              "uuid": "6a15018c-1503-44d9-9928-7d44950308e7"
             },
             {
               "key": "Date",
-              "value": "2026-05-08"
+              "value": "2026-05-08",
+              "uuid": "3bde32bc-8eff-4963-b848-7cbf6e5b6704",
+              "disabled": true
             }
           ]
         }
@@ -147,7 +211,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67&Date=2026-05-08&IncludeShape=true",
+          "raw": "https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67&IncludeShape=true",
           "protocol": "https",
           "host": [
             "marprom-proxy",
@@ -161,15 +225,18 @@
           "query": [
             {
               "key": "lineId",
-              "value": "67"
-            },
-            {
-              "key": "Date",
-              "value": "2026-05-08"
+              "value": "67",
+              "uuid": "c0644dac-bd14-4b1a-adb5-6a05bc5de84a"
             },
             {
               "key": "IncludeShape",
-              "value": "true"
+              "value": "true",
+              "uuid": "f1ba3c9f-f428-4084-ac53-86d949c6092e"
+            },
+            {
+              "key": "Date",
+              "value": "2026-05-08",
+              "disabled": true
             }
           ]
         }
@@ -210,6 +277,18 @@
               "uuid": "f898ae1a-bca1-4034-872f-b1108a134c03"
             }
           ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "getBusStopsMap",
+      "id": "797d4cbe-18b2-4d17-8315-3ad25864c0e9",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": ""
         }
       },
       "response": []

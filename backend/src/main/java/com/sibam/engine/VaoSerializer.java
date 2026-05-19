@@ -4,6 +4,7 @@ import com.sibam.engine.vao.BusStopVao;
 import com.sibam.engine.vao.RouteVao;
 import com.sibam.engine.vao.StopScheduleVao;
 import com.sibam.service.TransitDataService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ import java.util.Map;
 public class VaoSerializer {
 
     private final MarpromDtoToVaoMapper marpromDtoToVaoMapper;
+
+    @Value("${app.ml-only-scheduled-ingestion:false}")
+    private boolean mlOnlyScheduledIngestion;
 
     private Map<Integer, BusStopVao> busStopsMap = new HashMap<>();
     private Map<Integer, RouteVao> routesMap = new HashMap<>();
@@ -40,6 +44,10 @@ public class VaoSerializer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void fetchData() {
+        if (mlOnlyScheduledIngestion) {
+            System.out.println("ML-only mode enabled: skipping VAO graph-data ingestion.");
+            return;
+        }
         // Try to load from cache first
         if (cacheExists() && loadFromDisk()) {
             System.out.println("VAO cache loaded from disk.");

@@ -60,7 +60,7 @@ export const WeatherWidget = () => {
     if (!weather) return null;
 
     return (
-        <div className="mt-4 flex h-9 shrink-0 items-center gap-2 rounded-lg bg-red-700/80 px-3 text-white shadow-md">
+        <div className="pointer-events-auto z-10 flex h-10 shrink-0 items-center gap-2 rounded-lg bg-red-700 px-3 text-white shadow-md">
             {getWeatherIcon(weather.condition)}
             <span className="text-sm">{weather.temp} °C</span>
         </div>

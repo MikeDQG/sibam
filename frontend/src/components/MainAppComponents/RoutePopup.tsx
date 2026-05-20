@@ -64,7 +64,7 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
 
   // pokazemo ce je izbran bus ikona in je prejsna pot kolesarska --> bus po vrnitvi kolesa
   const showBusAfterBikeReturnPlaces =
-    showBusIconDetails && selectedLeg.previousLeg?.mode === "BIKE";
+    showBusIconDetails && selectedLeg.previousLeg?.tip === "BIKE";
 
   return (
     <AdvancedMarker
@@ -83,42 +83,42 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
         </button>
 
         <strong className='block pr-8 text-base font-semibold'>
-          {opcijeNaslov[selectedLeg.leg.mode as keyof typeof opcijeNaslov] ||
-            selectedLeg.leg.mode}
+          {opcijeNaslov[selectedLeg.leg.tip as keyof typeof opcijeNaslov] ||
+            selectedLeg.leg.tip}
         </strong>
 
         <div className='mt-2 space-y-1.5'>
           <RoutePopupRow
             label='Odhod avtobusa'
             value={
-              showBusIconDetails && selectedLeg.leg.mode === "BUS"
+              showBusIconDetails && selectedLeg.leg.tip === "BUS"
                 ? formatTime(selectedLeg.leg.departure)
                 : null
             }
           />
           <RoutePopupRow
-            label='Mesta za oddajo Bajka'
+            label='Mesta za oddajo kolesa'
             value={
               showBusAfterBikeReturnPlaces || showBikeReturnIconPlaces
-                ? (selectedLeg.previousLeg?.freeStands ??
-                  selectedLeg.leg.freeStands)
+                ? (selectedLeg.previousLeg?.prosta_mesta ??
+                  selectedLeg.leg.prosta_mesta)
                 : null
             }
           />
           <RoutePopupRow
-            label='Prosti Bajki'
-            value={showBikePickupPlaces ? selectedLeg.leg.freeBikes : null}
+            label='Prosta kolesa'
+            value={showBikePickupPlaces ? selectedLeg.leg.prosti_bajki : null}
           />
           <RoutePopupRow
             label='Trajanje'
             value={
-              showPathDetails ? formatDuration(selectedLeg.leg.duration) : null
+              showPathDetails ? formatDuration(selectedLeg.leg.trajanje) : null
             }
           />
           <RoutePopupRow
             label='Pot'
             value={
-              showPathDetails ? formatDistance(selectedLeg.leg.distance) : null
+              showPathDetails ? formatDistance(selectedLeg.leg.dolzina) : null
             }
           />
         </div>

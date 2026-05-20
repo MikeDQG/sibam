@@ -55,8 +55,8 @@ export type RouteLeg = {
   mode: string;
   duration?: string;
   distance?: string;
-  code?: string;
-  headsignName?: string;
+  code?: string | null;
+  headsignName?: string | null;
   freeStands?: string | null;
   freeBikes?: string | null;
   departure?: string;

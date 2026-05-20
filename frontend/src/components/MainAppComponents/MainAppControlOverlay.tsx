@@ -1,4 +1,6 @@
 import {
+  Bike,
+  Bus,
   CloudRain,
   LocateFixed,
   Minus,
@@ -10,6 +12,8 @@ import {
   LogOut,
   ArrowUpDown,
 } from "lucide-react";
+import { WeatherWidget } from "./WeatherWidget";
+import { RouteLoadingOverlay } from "./RouteLoadingOverlay";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useNavigate } from "react-router-dom";
@@ -38,25 +42,28 @@ export const MainAppControlOverlay = ({
   onPlaceSelect,
   onDestinationSelect,
 }: MainAppControlOverlayProps) => {
-  const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [locationError, setLocationError] = useState(false);
-  const [selectedPlace, setSelectedPlace] = useState("");
-  const [showDirections, setShowDirections] = useState(false);
-  const [originCoords, setOriginCoords] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [destinationCoords, setDestinationCoords] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const origin = usePlacesAutocomplete(placesApiKey);
-  const destination = usePlacesAutocomplete(placesApiKey);
-  const { setIsOpen: setOriginIsOpen } = origin;
-  const { setIsOpen: setDestinationIsOpen } = destination;
+    const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [locationError, setLocationError] = useState(false);
+    const [selectedPlace, setSelectedPlace] = useState("");
+    const [showDirections, setShowDirections] = useState(false);
+    const [originCoords, setOriginCoords] = useState<{
+        lat: number;
+        lng: number;
+    } | null>(null);
+    const [destinationCoords, setDestinationCoords] = useState<{
+        lat: number;
+        lng: number;
+    } | null>(null);
+    const [useBus, setUseBus] = useState(true);
+    const [useBike, setUseBike] = useState(true);
+    const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+    const [timeMode, setTimeMode] = useState<"depart" | "arrive">("depart");
+    const [selectedTime, setSelectedTime] = useState(() => {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    });
+    const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -160,151 +167,262 @@ export const MainAppControlOverlay = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [setDestinationIsOpen, setOriginIsOpen]);
 
-  return (
-    <div className='pointer-events-none absolute inset-x-4 top-4 z-20 flex flex-row items-start gap-2'>
-      <div className='mt-3 flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-start'>
-        {/* logotip */}
-        <img
-          src='/logo.svg'
-          alt='ŠibaM'
-          className={`pointer-events-auto h-10 w-auto shrink-0 cursor-pointer`}
-          onClick={() => navigate("/")}
-        />
-        {/* searchbar */}
-        <div
-          ref={containerRef}
-          className='pointer-events-auto flex w-full min-w-0 flex-col gap-1 sm:w-110 sm:shrink-0'>
-          {showDirections ? (
-            <>
-              <div className='relative'>
-                <div className='overflow-hidden rounded-lg bg-neutral-700 shadow-md'>
-                  <div className='relative flex h-10 items-center pr-10'>
-                    <Search
-                      size={16}
-                      className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
-                    />
-                    <Input
-                      type='text'
-                      value={destination.value}
-                      onChange={destination.handleChange}
-                      onKeyDown={(e) =>
-                        e.key === "Escape" && destination.setIsOpen(false)
-                      }
-                      placeholder='Kje štartaš?'
-                      className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
-                      aria-label='Kje štartaš?'
-                    />
-                    {destination.value && (
-                      <button
-                        type='button'
-                        onClick={() => {
-                          destination.clear();
-                          setDestinationCoords(null);
-                          onDestinationSelect?.(null);
-                        }}
-                        className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
-                        aria-label='Počisti'>
-                        <X size={13} />
-                      </button>
-                    )}
-                  </div>
-                  <div className='h-px bg-neutral-600' />
-                  <div className='relative flex h-10 items-center pr-10'>
-                    <Search
-                      size={16}
-                      className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
-                    />
-                    <Input
-                      type='text'
-                      value={origin.value}
-                      onChange={origin.handleChange}
-                      onKeyDown={(e) =>
-                        e.key === "Escape" && origin.setIsOpen(false)
-                      }
-                      placeholder='Kam šibaš?'
-                      className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
-                      aria-label='Kam šibaš?'
-                    />
-                    {origin.value && (
-                      <button
-                        type='button'
-                        onClick={handleClear}
-                        className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
-                        aria-label='Počisti'>
-                        <X size={13} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <button
-                  type='button'
-                  onClick={handleSwap}
-                  className='absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-neutral-600 text-neutral-300 shadow-md transition-colors hover:text-white'
-                  aria-label='Zamenjaj smeri'>
-                  <ArrowUpDown size={16} />
-                </button>
-              </div>
-              {destination.isOpen && destination.predictions.length > 0 && (
-                <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
-                  {destination.predictions.map((prediction) => (
-                    <li
-                      key={prediction.placeId}
-                      onMouseDown={() => handleDestinationSelect(prediction)}
-                      className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
-                      <p className='text-sm font-medium leading-tight text-white'>
-                        {prediction.mainText}
-                      </p>
-                      <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
-                        {prediction.secondaryText}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {origin.isOpen && origin.predictions.length > 0 && (
-                <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
-                  {origin.predictions.map((prediction) => (
-                    <li
-                      key={prediction.placeId}
-                      onMouseDown={() => handleSelect(prediction)}
-                      className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
-                      <p className='text-sm font-medium leading-tight text-white'>
-                        {prediction.mainText}
-                      </p>
-                      <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
-                        {prediction.secondaryText}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
-          ) : (
-            <>
-              <div className='relative flex h-10 items-center rounded-lg bg-neutral-700 shadow-md'>
-                <Search
-                  size={16}
-                  className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
-                />
-                <Input
-                  type='text'
-                  value={origin.value}
-                  onChange={origin.handleChange}
-                  onKeyDown={(e) =>
-                    e.key === "Escape" && origin.setIsOpen(false)
-                  }
-                  placeholder='Kam šibaš?'
-                  className='h-full w-auto flex-1 rounded-lg border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
-                  aria-label='Kam šibaš?'
-                />
-                {origin.value && (
-                  <button
-                    type='button'
-                    onClick={handleClear}
-                    className='mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
-                    aria-label='Počisti'>
-                    <X size={13} />
-                  </button>
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (
+                containerRef.current &&
+                !containerRef.current.contains(e.target as Node)
+            ) {
+                origin.setIsOpen(false);
+                destination.setIsOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () =>
+            document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    return (
+        <div className='pointer-events-none absolute inset-x-4 top-4 z-20 flex flex-row items-start gap-2'>
+          <div className='mt-3 flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-start'>
+            {/* logotip */}
+            <img
+              src='/logo.svg'
+              alt='ŠibaM'
+              className={`pointer-events-auto h-10 w-auto shrink-0 cursor-pointer`}
+              onClick={() => navigate("/")}
+            />  
+
+            {/* searchbar */}
+            <div 
+              ref={containerRef} 
+              className='pointer-events-auto flex w-full min-w-0 flex-col gap-1 sm:w-110 sm:shrink-0'>
+                {showDirections ? (
+                    <>
+                        <div className="relative">
+                            <div className="overflow-hidden rounded-lg bg-neutral-700 shadow-md">
+                                <div className='relative flex h-10 items-center pr-10'>
+                                    <Search
+                                        size={16}
+                                        className="pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400"
+                                    />
+                                    <Input
+                                        type="text"
+                                        value={destination.value}
+                                        onChange={destination.handleChange}
+                                        onKeyDown={(e) =>
+                                            e.key === "Escape" &&
+                                            destination.setIsOpen(false)
+                                        }
+                                        placeholder="Kje štartaš?"
+                                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
+                                        aria-label="Kje štartaš?"
+                                    />
+                                    {destination.value && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                destination.clear();
+                                                setDestinationCoords(null);
+                                                onDestinationSelect?.(null);
+                                            }}
+                                            className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
+                                            aria-label="Počisti">
+                                            <X size={13} />
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="h-px bg-neutral-600" />
+                                <div className='relative flex h-10 items-center pr-10'>
+                                    <Search
+                                        size={16}
+                                        className="pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400"
+                                    />
+                                    <Input
+                                        type="text"
+                                        value={origin.value}
+                                        onChange={origin.handleChange}
+                                        onKeyDown={(e) =>
+                                            e.key === "Escape" &&
+                                            origin.setIsOpen(false)
+                                        }
+                                        placeholder="Kam šibaš?"
+                                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
+                                        aria-label="Kam šibaš?"
+                                    />
+                                    {origin.value && (
+                                        <button
+                                            type="button"
+                                            onClick={handleClear}
+                                            className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
+                                            aria-label="Počisti">
+                                            <X size={13} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleSwap}
+                                className="absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-neutral-600 text-neutral-300 shadow-md transition-colors hover:text-white"
+                                aria-label="Zamenjaj smeri">
+                                <ArrowUpDown size={16} />
+                            </button>
+                        </div>
+                        {destination.isOpen &&
+                            destination.predictions.length > 0 && (
+                                <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
+                                    {destination.predictions.map(
+                                        (prediction) => (
+                                            <li
+                                                key={prediction.placeId}
+                                                onMouseDown={() =>
+                                                    handleDestinationSelect(
+                                                        prediction,
+                                                    )
+                                                }
+                                                className="cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600">
+                                                <p className="text-sm font-medium leading-tight text-white">
+                                                    {prediction.mainText}
+                                                </p>
+                                                <p className="mt-0.5 text-xs leading-tight text-neutral-400">
+                                                    {prediction.secondaryText}
+                                                </p>
+                                            </li>
+                                        ),
+                                    )}
+                                </ul>
+                            )}
+                        {origin.isOpen && origin.predictions.length > 0 && (
+                            <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
+                                {origin.predictions.map((prediction) => (
+                                    <li
+                                        key={prediction.placeId}
+                                        onMouseDown={() =>
+                                            handleSelect(prediction)
+                                        }
+                                        className="cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600">
+                                        <p className="text-sm font-medium leading-tight text-white">
+                                            {prediction.mainText}
+                                        </p>
+                                        <p className="mt-0.5 text-xs leading-tight text-neutral-400">
+                                            {prediction.secondaryText}
+                                        </p>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        <div className="flex gap-2 items-center">
+                            <button
+                                type="button"
+                                onClick={() => setUseBus((v) => !v)}
+                                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBus ? "bg-red-700/80 text-white" : "bg-neutral-700 text-neutral-400"}`}>
+                                <Bus size={14} />
+                                Bus
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setUseBike((v) => !v)}
+                                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBike ? "bg-red-700/80 text-white" : "bg-neutral-700 text-neutral-400"}`}>
+                                <Bike size={14} />
+                                Kolo
+                            </button>
+                            <div className="flex overflow-hidden rounded-lg bg-neutral-700 shadow-md">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setTimeMode((m) =>
+                                            m === "depart"
+                                                ? "arrive"
+                                                : "depart",
+                                        )
+                                    }
+                                    className="px-3 py-1.5 text-sm text-white transition-colors hover:bg-neutral-600 whitespace-nowrap">
+                                    {timeMode === "depart"
+                                        ? "Odhod ob"
+                                        : "Prihod do"}
+                                </button>
+                                <div className="w-px bg-neutral-600" />
+                                <input
+                                    type="time"
+                                    value={selectedTime}
+                                    onChange={(e) =>
+                                        setSelectedTime(e.target.value)
+                                    }
+                                    className="bg-transparent px-2 py-1.5 text-sm text-white focus:outline-none"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (originCoords && destinationCoords) {
+                                        setIsLoadingRoute(true);
+                                    }
+                                }}
+                                disabled={!originCoords || !destinationCoords}
+                                className="ml-auto flex items-center gap-1.5 rounded-md bg-neutral-200 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
+                                Najdi pot
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className='relative flex h-10 items-center rounded-lg bg-neutral-700 shadow-md'>
+                            <Search
+                                size={16}
+                                className="pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400"
+                            />
+                            <Input
+                                type="text"
+                                value={origin.value}
+                                onChange={origin.handleChange}
+                                onKeyDown={(e) =>
+                                    e.key === "Escape" &&
+                                    origin.setIsOpen(false)
+                                }
+                                placeholder="Kam šibaš?"
+                                className='h-full w-auto flex-1 rounded-lg border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
+                                aria-label="Kam šibaš?"
+                            />
+                            {origin.value && (
+                                <button
+                                    type="button"
+                                    onClick={handleClear}
+                                    className='mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
+                                    aria-label="Počisti">
+                                    <X size={13} />
+                                </button>
+                            )}
+                            {selectedPlace && !showDirections && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDirections(true)}
+                                    className="absolute right-2 z-10 flex h-6 w-6 rotate-45 items-center rounded-sm justify-center bg-red-700/80 text-white shadow-sm transition-colors hover:bg-red-600"
+                                    aria-label="Navodila za pot">
+                                    <Route size={14} className="-rotate-45" />
+                                </button>
+                            )}
+                        </div>
+                        {origin.isOpen && origin.predictions.length > 0 && (
+                            <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
+                                {origin.predictions.map((prediction) => (
+                                    <li
+                                        key={prediction.placeId}
+                                        onMouseDown={() =>
+                                            handleSelect(prediction)
+                                        }
+                                        className="cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600">
+                                        <p className="text-sm font-medium leading-tight text-white">
+                                            {prediction.mainText}
+                                        </p>
+                                        <p className="mt-0.5 text-xs leading-tight text-neutral-400">
+                                            {prediction.secondaryText}
+                                        </p>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
                 )}
                 {selectedPlace && !showDirections && (
                   <button
@@ -315,6 +433,10 @@ export const MainAppControlOverlay = ({
                     <Route size={14} className='-rotate-45' />
                   </button>
                 )}
+              </div>
+
+            {/* vreme */}
+            <WeatherWidget />
               </div>
               {origin.isOpen && origin.predictions.length > 0 && (
                 <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
@@ -342,12 +464,6 @@ export const MainAppControlOverlay = ({
           )}
         </div>
 
-        {/* vreme */}
-        <div className='pointer-events-auto z-10 flex h-10 shrink-0 items-center gap-2 rounded-lg bg-red-700 px-3 text-white shadow-md'>
-          <CloudRain size={16} />
-          <span className='text-sm'>15 °C</span>
-        </div>
-      </div>
 
       {/* Desni panel */}
       {isLoggedIn ? (

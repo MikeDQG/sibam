@@ -43,7 +43,7 @@ public class ComputePathController {
             @RequestParam(required = false) String arriveBy,
             @RequestParam boolean bike,
             @RequestParam boolean bus,
-            @RequestParam String userId
+            @RequestParam(required = false) String userId
             ) {
         if (bike) {
             graphBootstrap.refresh();

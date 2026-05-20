@@ -99,9 +99,8 @@ export const MainMap = ({
           mapId={mapId}
           reuseMaps>
           {/* zacetek in konec poti */}
-          {markerPosition && <AdvancedMarker position={markerPosition} />}
-          {destinationMarkerPosition && (
-            <AdvancedMarker position={destinationMarkerPosition}>
+          {markerPosition && (
+            <AdvancedMarker position={markerPosition}>
               <div
                 style={{
                   width: 24,
@@ -113,6 +112,9 @@ export const MainMap = ({
                 }}
               />
             </AdvancedMarker>
+          )}
+          {destinationMarkerPosition && (
+            <AdvancedMarker position={destinationMarkerPosition} />
           )}
           {markerPosition && destinationMarkerPosition && (
             <FitBounds

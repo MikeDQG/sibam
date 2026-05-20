@@ -30,6 +30,9 @@ public class SchedulerService {
     @Value("${schedulers.fetch-bus-ingestion.on}")
     private boolean fetchBusIngestion;
 
+    @Value("${app.ml-only-scheduled-logs-on}")
+    private boolean mlOnlyScheduledLogs;
+
     private boolean isWithinOperatingHours() {
         int hour = OffsetDateTime.now(LJUBLJANA).getHour();
         return hour >= 5 && hour < 23;
@@ -42,16 +45,16 @@ public class SchedulerService {
     public void fetchBikeIngestion() {
         OffsetDateTime fetchedAt = OffsetDateTime.now(LJUBLJANA);
         if (!isWithinOperatingHours()) {
-            log.info("Skipping bike ingestion, not within operating hours");
+            if (mlOnlyScheduledLogs) log.info("Skipping bike ingestion, not within operating hours");
             return;
         }
         if (!fetchBikeIngestion) {
-            log.info("Skipping bike ingestion, blocked by config");
+            if (mlOnlyScheduledLogs) log.info("Skipping bike ingestion, blocked by config");
             return;
         }
         try {
             mbajkDataService.ingestBikesData(fetchedAt);
-            log.info("MBajk ingestion completed");
+            if (mlOnlyScheduledLogs) log.info("MBajk ingestion completed");
         } catch (Exception e) {
             log.error("Failed to fetch ingestion data", e);
         }
@@ -64,16 +67,16 @@ public class SchedulerService {
     public void fetchWeatherIngestion() {
         OffsetDateTime fetchedAt = OffsetDateTime.now(LJUBLJANA);
         if (!isWithinOperatingHours()) {
-            log.info("Skipping weather ingestion, not within operating hours");
+            if (mlOnlyScheduledLogs) log.info("Skipping weather ingestion, not within operating hours");
             return;
         }
         if (!fetchWeatherIngestion) {
-            log.info("Skipping weather ingestion, blocked by config");
+            if (mlOnlyScheduledLogs) log.info("Skipping weather ingestion, blocked by config");
             return;
         }
         try {
             weatherDataService.ingestWeatherData(fetchedAt);
-            log.info("Weather ingestion completed");
+            if (mlOnlyScheduledLogs) log.info("Weather ingestion completed");
         } catch (Exception e) {
             log.error("Failed to fetch ingestion data", e);
         }
@@ -85,18 +88,18 @@ public class SchedulerService {
     @Scheduled(fixedRate = 1000 * 60)
     public void fetchBusIngestion() {
         if (!isWithinOperatingHours()) {
-            log.info("Skipping bus trips ingestion, not within operating hours");
+            if (mlOnlyScheduledLogs) log.info("Skipping bus trips ingestion, not within operating hours");
             return;
         }
         if (!fetchBusIngestion) {
-            log.info("Skipping bus trips ingestion, blocked by config");
+            if (mlOnlyScheduledLogs) log.info("Skipping bus trips ingestion, blocked by config");
             return;
         }
         OffsetDateTime fetchedAt = OffsetDateTime.now(LJUBLJANA);
 
         try {
             gtfsRTDataService.ingestRealtimeTrips(fetchedAt);
-            log.info("Bus trips ingestion completed");
+            if (mlOnlyScheduledLogs) log.info("Bus trips ingestion completed");
         } catch (Exception e) {
             log.error("Failed to fetch ingestion data", e);
         }

@@ -52,11 +52,13 @@ export type MapPoint = {
 };
 
 export type RouteLeg = {
-  tip: string;
-  trajanje?: string;
-  dolzina?: string;
-  prosta_mesta?: string | null;
-  prosti_bajki?: string | null;
+  mode: string;
+  duration?: string;
+  distance?: string;
+  code?: string;
+  headsignName?: string;
+  freeStands?: string | null;
+  freeBikes?: string | null;
   departure?: string;
   arrival?: string;
   polyline: {
@@ -134,7 +136,7 @@ export const RoutePolyline = ({ legs, onLegClick }: RoutePolylineProps) => {
     if (!map || legs.length === 0) return;
 
     const polylines = legs.map((leg) => {
-      const color = legColors[leg.tip] ?? "#ffffff";
+      const color = legColors[leg.mode] ?? "#ffffff";
 
       const polyline = new google.maps.Polyline({
         map,
@@ -145,7 +147,7 @@ export const RoutePolyline = ({ legs, onLegClick }: RoutePolylineProps) => {
         strokeColor: color,
         strokeWeight: 5,
         geodesic: true,
-        ...getLineOptions(leg.tip, color),
+        ...getLineOptions(leg.mode, color),
       });
 
       const clickListener = polyline.addListener("click", (event) => {

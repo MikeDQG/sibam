@@ -125,12 +125,12 @@ export const MainMap = ({
           {legs && <RoutePolyline legs={legs} onLegClick={onLegClick} />}
           {legs?.map((leg, index) => {
             const firstPoint = leg.polyline[0];
-            if (!firstPoint || leg.tip === "WALK") return null;
+            if (!firstPoint || leg.mode === "WALK") return null;
 
             const nextLeg = legs[index + 1];
             const lastPoint = leg.polyline.at(-1);
             const showBikeReturnMarker =
-              leg.tip === "BIKE" && nextLeg?.tip !== "BUS" && lastPoint;
+              leg.mode === "BIKE" && nextLeg?.mode !== "BUS" && lastPoint;
             const markerPosition = {
               lat: firstPoint.lat,
               lng: firstPoint.lon,
@@ -142,7 +142,7 @@ export const MainMap = ({
                   position={markerPosition}
                   clickable={true}
                   onClick={() => {
-                    if (leg.tip === "BIKE") {
+                    if (leg.mode === "BIKE") {
                       onBikeIconClick?.(
                         leg,
                         {
@@ -164,12 +164,12 @@ export const MainMap = ({
                   }}>
                   <img
                     src={
-                      leg.tip === "BIKE"
+                      leg.mode === "BIKE"
                         ? "pathIcons/mBajk.png"
                         : "pathIcons/marprom.png"
                     }
                     alt={
-                      leg.tip === "BIKE"
+                      leg.mode === "BIKE"
                         ? "Bajk postaja za prevzem"
                         : "Avtobusna postaja"
                     }

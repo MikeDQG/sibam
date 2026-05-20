@@ -60,6 +60,7 @@ export const MainAppControlOverlay = ({
     const [timeMode, setTimeMode] = useState<"depart" | "arrive">("depart");
     const [selectedTime, setSelectedTime] = useState(() => {
         const now = new Date();
+        now.setMinutes(now.getMinutes() + 1);
         return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
     });
     const containerRef = useRef<HTMLDivElement>(null);
@@ -204,6 +205,34 @@ export const MainAppControlOverlay = ({
                                             />
                                             <Input
                                                 type="text"
+                                                value={origin.value}
+                                                onChange={origin.handleChange}
+                                                onKeyDown={(e) =>
+                                                    e.key === "Escape" &&
+                                                    origin.setIsOpen(false)
+                                                }
+                                                placeholder="Kje štartaš?"
+                                                className="h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none"
+                                                aria-label="Kje štartaš?"
+                                            />
+                                            {origin.value && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleClear}
+                                                    className="mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white"
+                                                    aria-label="Počisti">
+                                                    <X size={13} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="h-px bg-neutral-600" />
+                                        <div className="relative flex h-10 items-center pr-10">
+                                            <Search
+                                                size={16}
+                                                className="pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400"
+                                            />
+                                            <Input
+                                                type="text"
                                                 value={destination.value}
                                                 onChange={
                                                     destination.handleChange
@@ -212,9 +241,9 @@ export const MainAppControlOverlay = ({
                                                     e.key === "Escape" &&
                                                     destination.setIsOpen(false)
                                                 }
-                                                placeholder="Kje štartaš?"
+                                                placeholder="Kam šibaš?"
                                                 className="h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none"
-                                                aria-label="Kje štartaš?"
+                                                aria-label="Kam šibaš?"
                                             />
                                             {destination.value && (
                                                 <button
@@ -234,34 +263,6 @@ export const MainAppControlOverlay = ({
                                                 </button>
                                             )}
                                         </div>
-                                        <div className="h-px bg-neutral-600" />
-                                        <div className="relative flex h-10 items-center pr-10">
-                                            <Search
-                                                size={16}
-                                                className="pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400"
-                                            />
-                                            <Input
-                                                type="text"
-                                                value={origin.value}
-                                                onChange={origin.handleChange}
-                                                onKeyDown={(e) =>
-                                                    e.key === "Escape" &&
-                                                    origin.setIsOpen(false)
-                                                }
-                                                placeholder="Kam šibaš?"
-                                                className="h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none"
-                                                aria-label="Kam šibaš?"
-                                            />
-                                            {origin.value && (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleClear}
-                                                    className="mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white"
-                                                    aria-label="Počisti">
-                                                    <X size={13} />
-                                                </button>
-                                            )}
-                                        </div>
                                     </div>
                                     <button
                                         type="button"
@@ -271,15 +272,15 @@ export const MainAppControlOverlay = ({
                                         <ArrowUpDown size={16} />
                                     </button>
                                 </div>
-                                {destination.isOpen &&
-                                    destination.predictions.length > 0 && (
+                                {origin.isOpen &&
+                                    origin.predictions.length > 0 && (
                                         <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
-                                            {destination.predictions.map(
+                                            {origin.predictions.map(
                                                 (prediction) => (
                                                     <li
                                                         key={prediction.placeId}
                                                         onMouseDown={() =>
-                                                            handleDestinationSelect(
+                                                            handleSelect(
                                                                 prediction,
                                                             )
                                                         }
@@ -299,15 +300,15 @@ export const MainAppControlOverlay = ({
                                             )}
                                         </ul>
                                     )}
-                                {origin.isOpen &&
-                                    origin.predictions.length > 0 && (
+                                {destination.isOpen &&
+                                    destination.predictions.length > 0 && (
                                         <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
-                                            {origin.predictions.map(
+                                            {destination.predictions.map(
                                                 (prediction) => (
                                                     <li
                                                         key={prediction.placeId}
                                                         onMouseDown={() =>
-                                                            handleSelect(
+                                                            handleDestinationSelect(
                                                                 prediction,
                                                             )
                                                         }
@@ -369,12 +370,60 @@ export const MainAppControlOverlay = ({
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => {
+                                        onClick={async () => {
                                             if (
-                                                originCoords &&
-                                                destinationCoords
-                                            ) {
-                                                setIsLoadingRoute(true);
+                                                !originCoords ||
+                                                !destinationCoords
+                                            )
+                                                return;
+                                            setIsLoadingRoute(true);
+                                            try {
+                                                const params =
+                                                    new URLSearchParams({
+                                                        originLat: String(
+                                                            originCoords.lat,
+                                                        ),
+                                                        originLon: String(
+                                                            originCoords.lng,
+                                                        ),
+                                                        destinationLat: String(
+                                                            destinationCoords.lat,
+                                                        ),
+                                                        destinationLon: String(
+                                                            destinationCoords.lng,
+                                                        ),
+                                                        originAddress:
+                                                            origin.value,
+                                                        destinationAddress:
+                                                            destination.value,
+                                                        leaveNow: "false",
+                                                        bike: String(useBike),
+                                                        bus: String(useBus),
+                                                    });
+                                                if (timeMode === "depart")
+                                                    params.set(
+                                                        "leaveAt",
+                                                        selectedTime,
+                                                    );
+                                                else
+                                                    params.set(
+                                                        "arriveBy",
+                                                        selectedTime,
+                                                    );
+                                                if (auth.currentUser?.uid)
+                                                    params.set(
+                                                        "userId",
+                                                        auth.currentUser.uid,
+                                                    );
+
+                                                const res = await fetch(
+                                                    `${import.meta.env.VITE_API_URL}/compute?${params}`,
+                                                );
+                                                const journey =
+                                                    await res.json();
+                                                console.log(journey);
+                                            } finally {
+                                                setIsLoadingRoute(false);
                                             }
                                         }}
                                         disabled={

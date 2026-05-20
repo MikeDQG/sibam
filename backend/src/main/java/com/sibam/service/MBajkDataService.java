@@ -1,6 +1,8 @@
 package com.sibam.service;
 
 import com.sibam.dto.mbajk.BikeStopDto;
+import com.sibam.engine.vao.BikeAvailabilityVao;
+import com.sibam.engine.vao.BikeStationVao;
 import com.sibam.integration.mbajk.MBajkClient;
 import com.sibam.persistence.BikeStation;
 import com.sibam.persistence.BikeStationSnapshot;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Service
 public class MBajkDataService {
@@ -60,5 +63,35 @@ public class MBajkDataService {
         snapshot.setElectricalBikes(dto.totalStands().availabilities().electricalBikes());
         snapshot.setRecordedAt(fetchedAt);
         bikeStationSnapshotRepository.save(snapshot);
+    }
+
+    public List<BikeStationVao> getBikeStationVaos() {
+        return bikeStationRepository.findAll().stream()
+                .map(this::toVao)
+                .toList();
+    }
+
+    private BikeStationVao toVao(BikeStation station) {
+        BikeAvailabilityVao availability = bikeStationSnapshotRepository
+                .findFirstByStationOrderByRecordedAtDesc(station)
+                .map(snapshot -> new BikeAvailabilityVao(
+                        snapshot.getBikes(),
+                        snapshot.getStands(),
+                        snapshot.getMechanicalBikes(),
+                        snapshot.getElectricalBikes(),
+                        snapshot.getStatus(),
+                        snapshot.getRecordedAt()
+                ))
+                .orElse(new BikeAvailabilityVao(0, 0, 0, 0, null, null));
+
+        return new BikeStationVao(
+                station.getNumber(),
+                station.getName(),
+                station.getAddress(),
+                station.getLatitude(),
+                station.getLongitude(),
+                station.getCapacity(),
+                availability
+        );
     }
 }

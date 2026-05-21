@@ -132,6 +132,7 @@ export const MainAppControlOverlay = ({
             const data = await res.json();
             if (data.location) {
                 setLocationError(false);
+                setSelectedPlace(prediction.mainText);
                 const coords = {
                     lat: data.location.latitude,
                     lng: data.location.longitude,
@@ -443,20 +444,25 @@ export const MainAppControlOverlay = ({
                                     />
                                     <Input
                                         type="text"
-                                        value={origin.value}
-                                        onChange={origin.handleChange}
+                                        value={destination.value}
+                                        onChange={destination.handleChange}
                                         onKeyDown={(e) =>
                                             e.key === "Escape" &&
-                                            origin.setIsOpen(false)
+                                            destination.setIsOpen(false)
                                         }
                                         placeholder="Kam šibaš?"
                                         className="h-full w-auto flex-1 rounded-lg border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none"
                                         aria-label="Kam šibaš?"
                                     />
-                                    {origin.value && (
+                                    {destination.value && (
                                         <button
                                             type="button"
-                                            onClick={handleClear}
+                                            onClick={() => {
+                                                destination.clear();
+                                                setSelectedPlace("");
+                                                setDestinationCoords(null);
+                                                onDestinationSelect?.(null);
+                                            }}
                                             className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white"
                                             aria-label="Počisti">
                                             <X size={13} />
@@ -477,15 +483,15 @@ export const MainAppControlOverlay = ({
                                         </button>
                                     )}
                                 </div>
-                                {origin.isOpen &&
-                                    origin.predictions.length > 0 && (
+                                {destination.isOpen &&
+                                    destination.predictions.length > 0 && (
                                         <ul className="overflow-hidden rounded-lg bg-neutral-700 shadow-lg">
-                                            {origin.predictions.map(
+                                            {destination.predictions.map(
                                                 (prediction) => (
                                                     <li
                                                         key={prediction.placeId}
                                                         onMouseDown={() =>
-                                                            handleSelect(
+                                                            handleDestinationSelect(
                                                                 prediction,
                                                             )
                                                         }

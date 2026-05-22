@@ -67,6 +67,11 @@ export type RouteLeg = {
   }[];
 };
 
+export type RoutePath = {
+  legs: RouteLeg[];
+  [key: string]: unknown;
+};
+
 type RoutePolylineProps = {
   legs: RouteLeg[];
   onLegClick?: (leg: RouteLeg, position: MapPoint) => void;

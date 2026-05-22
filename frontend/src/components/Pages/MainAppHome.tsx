@@ -4,8 +4,11 @@ import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverla
 import { MainMap } from "../MainAppComponents/MainMap";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
 import type { RoutePopupSelection } from "../MainAppComponents/RoutePopup";
-import type { MapPoint, RouteLeg } from "../MainAppComponents/RoutePolyline";
-import pathMock from "../../mock/pathMock.json";
+import type {
+  MapPoint,
+  RouteLeg,
+  RoutePath,
+} from "../MainAppComponents/RoutePolyline";
 
 const routeOptions = [
   {
@@ -47,6 +50,7 @@ export const MainAppHome = () => {
   const [markerPosition, setMarkerPosition] = useState<MapCenter | null>(null);
   const [destinationMarkerPosition, setDestinationMarkerPosition] =
     useState<MapCenter | null>(null);
+  const [routePath, setRoutePath] = useState<RoutePath | null>(null);
 
   // iskanje userjeve lokacije
   function locateUser(zoomToUser = false) {
@@ -117,6 +121,9 @@ export const MainAppHome = () => {
   }
 
   function handlePlaceSelect(place: { lat: number; lng: number } | null) {
+    setRoutePath(null);
+    setSelectedLeg(null);
+
     if (!place) {
       setMarkerPosition(null);
       return;
@@ -128,7 +135,14 @@ export const MainAppHome = () => {
   }
 
   function handleDestinationSelect(place: { lat: number; lng: number } | null) {
+    setRoutePath(null);
+    setSelectedLeg(null);
     setDestinationMarkerPosition(place);
+  }
+
+  function handlePathReceive(path: RoutePath) {
+    setRoutePath(path);
+    setSelectedLeg(null);
   }
 
   return (
@@ -137,7 +151,7 @@ export const MainAppHome = () => {
       <MainMap
         center={center}
         zoom={zoom}
-        legs={pathMock.legs}
+        legs={routePath?.legs}
         selectedLeg={selectedLeg}
         onLegClick={handleLegClick}
         onBusIconClick={handleBusIconClick}
@@ -155,6 +169,7 @@ export const MainAppHome = () => {
         onLocate={handleLocate}
         onPlaceSelect={handlePlaceSelect}
         onDestinationSelect={handleDestinationSelect}
+        onPathReceive={handlePathReceive}
       />
 
       {/* route options */}

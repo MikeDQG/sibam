@@ -223,7 +223,7 @@ export const MainAppControlOverlay = ({
         <RouteLoadingOverlay onDismiss={() => setIsLoadingRoute(false)} />
       )}
       <div className='pointer-events-none absolute inset-x-4 top-4 z-20 flex flex-row items-start gap-2'>
-        <div className='mt-3 flex min-w-0 flex-1 flex-col gap-2 max-[700px]:w-[80vw] max-[700px]:flex-none min-[700px]:flex-row min-[700px]:items-start'>
+        <div className='mt-3 flex min-w-0 flex-1 flex-row items-start gap-2 max-[699px]:w-full max-[699px]:flex-none'>
           {/* logotip */}
           <img
             src='/logo.svg'
@@ -235,7 +235,7 @@ export const MainAppControlOverlay = ({
           {/* searchbar */}
           <div
             ref={containerRef}
-            className='pointer-events-auto flex w-full min-w-0 flex-col gap-1 min-[700px]:w-110 min-[700px]:shrink-0'>
+            className='pointer-events-auto flex min-w-0 flex-1 flex-col gap-1 min-[700px]:w-110 min-[700px]:flex-none'>
             {showDirections ? (
               <>
                 <div className='relative'>
@@ -457,11 +457,12 @@ export const MainAppControlOverlay = ({
 
         {/* Desni panel */}
         {isLoggedIn ? (
-          <div className='pointer-events-auto absolute right-0 top-4 flex shrink-0 flex-row gap-2'>
+          <div
+            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-row gap-2 min-[700px]:top-3 ${showDirections ? "max-[699px]:top-24" : "max-[699px]:top-14"}`}>
             <Button
               type='button'
               onClick={() => navigate("/account")}
-              className='flex h-9 w-9 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'
               aria-label='Profil'>
               <UserRound strokeWidth={1.7} />
             </Button>
@@ -473,59 +474,60 @@ export const MainAppControlOverlay = ({
                   navigate("/login");
                 }}
                 aria-label='Odjava'
-                className='flex h-9 w-9 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'>
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'>
                 <LogOut />
               </Button>
               <Button
                 type='button'
                 onClick={onZoomIn}
-                className='flex h-9 w-9 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
                 aria-label='Povečaj'>
                 <Plus size={20} />
               </Button>
               <Button
                 type='button'
                 onClick={onZoomOut}
-                className='flex h-9 w-9 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
                 aria-label='Pomanjšaj'>
                 <Minus size={20} />
               </Button>
               <Button
                 type='button'
                 onClick={onLocate}
-                className='flex h-9 w-9 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
                 aria-label='Moja lokacija'>
                 <LocateFixed size={20} />
               </Button>
             </div>
           </div>
         ) : (
-          <div className='pointer-events-auto absolute right-0 top-3 flex shrink-0 flex-col gap-2'>
+          <div
+            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-col gap-2 min-[700px]:top-2 ${showDirections ? "max-[699px]:top-24" : "max-[699px]:top-14"}`}>
             <Button
               type='button'
               onClick={() => navigate("/login")}
-              className='flex h-9 w-9 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'
               aria-label='Profil'>
               <UserRound strokeWidth={1.7} />
             </Button>
             <Button
               type='button'
               onClick={onZoomIn}
-              className='flex h-9 w-9 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
               aria-label='Povečaj'>
               <Plus size={20} />
             </Button>
             <Button
               type='button'
               onClick={onZoomOut}
-              className='flex h-9 w-9 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
               aria-label='Pomanjšaj'>
               <Minus size={20} />
             </Button>
             <Button
               type='button'
               onClick={onLocate}
-              className='flex h-9 w-9 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
               aria-label='Moja lokacija'>
               <LocateFixed size={20} />
             </Button>

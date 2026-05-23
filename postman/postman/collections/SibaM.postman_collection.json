@@ -292,6 +292,50 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "ComputeRoutes google test",
+      "id": "c678fd0d-9cbf-4765-96c2-4048d7b8ded9",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Goog-FieldMask",
+            "value": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
+            "type": "text",
+            "uuid": "2ba9a8ac-7d54-4585-a503-5672b62ebed3"
+          },
+          {
+            "key": "X-Goog-Api-Key",
+            "value": "AIzaSyA-SHJIN3LLY70A0hZJ1wWlEuDwJq92_ow",
+            "type": "text",
+            "uuid": "cc6b383d-f2d7-41bc-9126-6027f311f85b"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"origin\": {\r\n        \"location\": {\r\n            \"latLng\": {\r\n                \"latitude\": 46.538077,\r\n                \"longitude\": 15.60352\r\n            }\r\n        }\r\n    },\r\n    \"destination\": {\r\n        \"location\": {\r\n            \"latLng\": {\r\n                \"latitude\": 46.538493,\r\n                \"longitude\": 15.611431\r\n            }\r\n        }\r\n    }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://routes.googleapis.com/directions/v2:computeRoutes",
+          "protocol": "https",
+          "host": [
+            "routes",
+            "googleapis",
+            "com"
+          ],
+          "path": [
+            "directions",
+            "v2:computeRoutes"
+          ]
+        }
+      },
+      "response": []
     }
   ]
 }

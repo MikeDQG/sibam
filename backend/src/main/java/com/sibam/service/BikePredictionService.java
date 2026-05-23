@@ -70,16 +70,7 @@ public class BikePredictionService {
             return output[0][0];
         }
     }
-
-//    private double runClassifier(OrtSession session, float[] features) throws OrtException {
-//        OnnxTensor tensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(features), new long[]{1, 7});
-//        try (var result = session.run(Map.of("float_input", tensor))) {
-//            // classifier returns probabilities for [class0, class1]
-//            float[][][] output = (float[][][]) result.get(1).getValue();
-//            return output[0][0][1]; // probability that bikes/stands ARE available
-//        }
-//    }
-
+    
     @SuppressWarnings("unchecked")
     private double runClassifier(OrtSession session, float[] features) throws OrtException {
         OnnxTensor tensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(features), new long[]{1, 7});

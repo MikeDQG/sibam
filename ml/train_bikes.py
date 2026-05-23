@@ -4,11 +4,12 @@ import numpy as np
 from supabase import create_client
 from dotenv import load_dotenv
 import io
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
+from sklearn.metrics import roc_auc_score
 
 
 load_dotenv()
@@ -26,6 +27,9 @@ def build_features(df):
     df["hour"]        = df["recorded_at_local"].dt.hour
     df["day_of_week"] = df["recorded_at_local"].dt.dayofweek
     df["is_weekend"]  = (df["day_of_week"] >= 5).astype(int)
+    df["bike_available"] = (df["bikes"] >= 2).astype(int)
+    df["stand_available"] = (df["stands"] >= 2).astype(int)
+
     return df
 
 FEATURES = ["number", "hour", "day_of_week", "is_weekend",
@@ -33,8 +37,10 @@ FEATURES = ["number", "hour", "day_of_week", "is_weekend",
 
 TARGET_BIKES  = "bikes"
 TARGET_STANDS = "stands"
+TARGET_AVAILABLE_BIKE = "bike_available"
+TARGET_AVAILABLE_STAND = "stand_available"
 
-
+# napoveduje koliko koles/prostorov za kolesa
 def train_and_export(df, target, output_path):
     X = df[FEATURES].astype(np.float32)
     y = df[target].astype(np.float32)
@@ -54,6 +60,29 @@ def train_and_export(df, target, output_path):
         f.write(onnx_model.SerializeToString())
     print(f"Saved -> {output_path}")
 
+# napoveduje verjetnost da bo vsaj eno prosto kolo/mesto
+def train_and_export_classifier(df, target, output_path):
+    X = df[FEATURES].astype(np.float32)
+    y = df[target].astype(int)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    model = GradientBoostingClassifier(n_estimators=200, max_depth=4, learning_rate=0.05)
+
+    model.fit(X_train, y_train)
+    # accuracy = accuracy_score(y_test, model.predict(X_test))
+    # print(f"{target}: accuracracy {accuracy:.2} (test set of {len(X_test)} samples)")
+
+    
+    auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+    print(f"{target}: ROC-AUC = {auc:.3f}")
+
+
+    initial_type = [("float_input", FloatTensorType([None, len(FEATURES)]))]
+    onnx_model = convert_sklearn(model, initial_types=initial_type)
+    with open(output_path, "wb") as f:
+        f.write(onnx_model.SerializeToString())
+    print(f"Saved -> {output_path}")
 
 
 if __name__ == "__main__":
@@ -67,3 +96,5 @@ if __name__ == "__main__":
 
     train_and_export(df, TARGET_BIKES,  f"{out_dir}/model_bikes.onnx")
     train_and_export(df, TARGET_STANDS, f"{out_dir}/model_stands.onnx")
+    train_and_export_classifier(df, TARGET_AVAILABLE_STAND, f"{out_dir}/model_available_stand.onnx")
+    train_and_export_classifier(df, TARGET_AVAILABLE_BIKE, f"{out_dir}/model_available_bike.onnx")

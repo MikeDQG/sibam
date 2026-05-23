@@ -20,7 +20,7 @@ def download_all_parquets(folder, prefix=""):
         if name.endswith(".parquet") and name.startswith(prefix):
             data = supabase.storage.from_("bronze").download(f"{folder}/{name}")
             dfs.append(pd.read_parquet(io.BytesIO(data)))
-    return pd.concat(dfs, ignore_index=True)
+    return pd.concat(dfs, ignore_index=True).drop_duplicates(subset=["id"])
 
 def load_bronze():
     snapshots = download_all_parquets("bikes",   prefix="snapshots_")
@@ -76,10 +76,14 @@ def transform_buses():
     delays = download_all_parquets("buses", prefix="delays_")
     weather = download_all_parquets("weather", prefix="weather_")
 
+    trips = trips[trips["trip_id"].notna()]
+
     # join delays z trips da dobis route_id in recorded_at
     df = delays.merge(trips[["id", "route_id", "recorded_at"]],
                       left_on="trip_snapshot_id", right_on="id",
                       how="left")
+    
+    df = df.dropna(subset=["recorded_at"])
 
     # popravi timezone
     df["recorded_at"] = pd.to_datetime(df["recorded_at"], utc=True)

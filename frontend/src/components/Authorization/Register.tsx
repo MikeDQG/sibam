@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
 import { auth } from "../../firebase";
+import { ThemeToggle } from "../ThemeToggle";
 import {
     createUserWithEmailAndPassword,
     signInWithPopup,
@@ -121,7 +122,7 @@ export const Register = () => {
     ];
 
     return (
-        <div className="relative flex min-h-screen w-full items-center justify-end bg-[#212121]">
+        <div className="relative flex min-h-screen w-full items-center justify-end bg-background">
             <img
                 src="logo.svg"
                 className="absolute left-9 top-6 z-2 h-15 w-auto"
@@ -133,18 +134,17 @@ export const Register = () => {
                 src="/LandingPage/background.jpeg"
                 alt="Background"
             />
+            <ThemeToggle className="absolute right-7 top-6 z-20" />
             <div className="z-10 flex min-h-screen w-lg max-w-137.5 py-5 pr-5 lg:w-full lg:max-w-[50%]">
-                <div className="relative flex w-full flex-col items-center gap-8 rounded-lg bg-neutral-700 pt-20">
+                <div className="relative flex w-full flex-col items-center gap-8 rounded-lg bg-card pt-20 text-card-foreground shadow-xl dark:bg-neutral-700">
                     <button
                         type="button"
                         onClick={() => navigate("/")}
-                        className="absolute left-6 top-6 flex items-center gap-2 text-sm font-medium text-white hover:text-neutral-400 transition-colors cursor-pointer">
+                        className="absolute left-6 top-6 flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-muted-foreground dark:text-white dark:hover:text-neutral-400">
                         <ArrowLeft size={18} />
                         Nazaj domov
                     </button>
-                    <h1 className="text-4xl font-semibold text-white">
-                        Registracija
-                    </h1>
+                    <h1 className="text-4xl font-semibold">Registracija</h1>
                     <form className="flex w-full max-w-75 flex-col items-center gap-5">
                         <Input
                             type="text"
@@ -175,7 +175,7 @@ export const Register = () => {
                                 onClick={() =>
                                     setShowPassword((current) => !current)
                                 }
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 transition-colors hover:text-white"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white"
                                 aria-label={
                                     showPassword
                                         ? "Skrij geslo"
@@ -208,7 +208,7 @@ export const Register = () => {
                                         (current) => !current,
                                     )
                                 }
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 transition-colors hover:text-white"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white"
                                 aria-label={
                                     showRepeatedPassword
                                         ? "Skrij geslo"
@@ -222,12 +222,12 @@ export const Register = () => {
                             </button>
                         </div>
                         <div className="w-full space-y-2 text-left text-sm">
-                            <p className="text-white">Geslo mora vsebovati:</p>
+                            <p>Geslo mora vsebovati:</p>
                             <ul className="space-y-1">
                                 {passwordRequirements.map((requirement) => (
                                     <li
                                         key={requirement.label}
-                                        className="flex items-center gap-2 text-white/70">
+                                        className="flex items-center gap-2 text-muted-foreground dark:text-white/70">
                                         {requirement.isValid ? (
                                             <Check
                                                 size={16}
@@ -258,12 +258,12 @@ export const Register = () => {
                         Registriraj se
                     </Button>
 
-                    <div className="text-medium flex w-[95%] items-center gap-3 px-10 text-white">
-                        <Separator className="flex-1 text-white" />
+                    <div className="text-medium flex w-[95%] items-center gap-3 px-10 text-muted-foreground dark:text-white">
+                        <Separator className="flex-1" />
                         <span className="shrink-0 text-sm font-normal">
                             ali se registriraj z
                         </span>
-                        <Separator className="flex-1 text-white" />
+                        <Separator className="flex-1" />
                     </div>
 
                     <Button
@@ -272,7 +272,7 @@ export const Register = () => {
                         className="rounded-md bg-gray-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-gray-400">
                         <FaGoogle /> Google
                     </Button>
-                    <p className="w-full max-w-75 text-center text-sm text-white">
+                    <p className="w-full max-w-75 text-center text-sm">
                         Že imaš račun?{" "}
                         <button
                             type="button"

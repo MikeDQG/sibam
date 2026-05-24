@@ -79,7 +79,7 @@ export const RouteOptions = ({ routes }: RouteOptionProps) => {
   return (
     <section
       ref={sectionRef}
-      className='fixed bottom-0 left-0 right-0 h-[80vh] z-30 rounded-t-[18px] bg-[#292927] px-[6.3%] pb-13 pt-13 shadow-2xl transition-transform duration-200 ease-out'
+      className='fixed bottom-0 left-0 right-0 z-30 h-[80vh] rounded-t-[18px] bg-card px-[6.3%] pb-13 pt-13 text-card-foreground shadow-2xl transition-transform duration-200 ease-out dark:bg-[#292927]'
       style={{ transform: `translateY(${offsetY}px)` }}>
       <button
         type='button'
@@ -90,7 +90,7 @@ export const RouteOptions = ({ routes }: RouteOptionProps) => {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}>
-        <span className='h-1.5 w-17 rounded-full bg-[#aaa69d]' />
+        <span className='h-1.5 w-17 rounded-full bg-muted-foreground/50 dark:bg-[#aaa69d]' />
       </button>
 
       <div className='grid grid-cols-3 gap-9'>
@@ -99,13 +99,13 @@ export const RouteOptions = ({ routes }: RouteOptionProps) => {
             key={option.title}
             type='button'
             className={`h-40 rounded-[18px] border px-12 py-7 text-left shadow-lg ${option.className}`}>
-            <span className='text-[25px] font-normal text-[#b2ada4]'>
+            <span className='text-[25px] font-normal text-current/70 dark:text-[#b2ada4]'>
               {option.title}
             </span>
-            <strong className='mt-2 block text-[32px] font-bold leading-none text-white'>
+            <strong className='mt-2 block text-[32px] font-bold leading-none'>
               {option.time}
             </strong>
-            <div className='mt-4 flex items-center gap-3 text-[#aaa69d]'>
+            <div className='mt-4 flex items-center gap-3 text-current/60 dark:text-[#aaa69d]'>
               {option.icons.map((Icon, iconIndex) => (
                 <Icon key={iconIndex} />
               ))}

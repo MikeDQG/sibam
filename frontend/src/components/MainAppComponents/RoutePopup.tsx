@@ -73,11 +73,11 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
       clickable
       anchorLeft='-50%'
       anchorTop='-100%'>
-      <div className='relative mb-3 min-w-52 rounded-lg border border-white/10 bg-neutral-800 px-4 py-3 text-sm text-white shadow-2xl'>
+      <div className='relative mb-3 min-w-52 rounded-lg border border-border bg-card px-4 py-3 text-sm text-card-foreground shadow-2xl dark:border-white/10 dark:bg-neutral-800 dark:text-white'>
         <button
           type='button'
           onClick={onClose}
-          className='absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-md text-neutral-300 hover:bg-white/10 hover:text-white'
+          className='absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white'
           aria-label='Zapri podatke o poti'>
           <X size={16} />
         </button>
@@ -123,7 +123,7 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
           />
         </div>
 
-        <div className='absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-white/10 bg-neutral-800' />
+        <div className='absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-card dark:border-white/10 dark:bg-neutral-800' />
       </div>
     </AdvancedMarker>
   );
@@ -139,7 +139,7 @@ const RoutePopupRow = ({ label, value }: RoutePopupRowProps) => {
 
   return (
     <div className='flex justify-between gap-5'>
-      <span className='text-neutral-300'>{label}</span>
+      <span className='text-muted-foreground dark:text-neutral-300'>{label}</span>
       <span className='font-medium'>{value}</span>
     </div>
   );

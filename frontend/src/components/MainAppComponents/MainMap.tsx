@@ -5,6 +5,7 @@ import {
   useMap,
 } from "@vis.gl/react-google-maps";
 import { Fragment, useEffect } from "react";
+import { useTheme } from "../ThemeProvider";
 import { RoutePopup, type RoutePopupSelection } from "./RoutePopup";
 import { RoutePolyline, type MapPoint, type RouteLeg } from "./RoutePolyline";
 
@@ -74,10 +75,11 @@ export const MainMap = ({
   onRoutePopupClose,
 }: MainMapProps) => {
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
+  const { theme } = useTheme();
 
   if (!hasApiKey) {
     return (
-      <div className='absolute inset-0 z-0 flex items-center justify-center bg-neutral-800 text-neutral-300'>
+      <div className='absolute inset-0 z-0 flex items-center justify-center bg-muted text-muted-foreground'>
         Manjka Google Maps API key
       </div>
     );
@@ -92,7 +94,7 @@ export const MainMap = ({
           onCameraChanged={(event) => {
             onCameraChanged?.(event.detail.center, event.detail.zoom);
           }}
-          colorScheme='DARK'
+          colorScheme={theme === "dark" ? "DARK" : "LIGHT"}
           gestureHandling='greedy'
           disableDefaultUI
           clickableIcons={false}

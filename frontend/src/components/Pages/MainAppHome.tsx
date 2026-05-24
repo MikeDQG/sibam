@@ -14,19 +14,22 @@ const routeOptions = [
   {
     title: "Najhitrejša",
     time: "18 min",
-    className: "border-sky-500 bg-[#941d38] ring-4 ring-sky-500",
+    className:
+      "border-sky-500 bg-red-50 text-red-950 ring-4 ring-sky-500 dark:bg-[#941d38] dark:text-white",
     icons: [Bus, Footprints, Bike],
   },
   {
     title: "Najbolj zelena",
     time: "24 min",
-    className: "border-neutral-500 bg-[#1d431b]",
+    className:
+      "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-neutral-500 dark:bg-[#1d431b] dark:text-white",
     icons: [Footprints, Bike],
   },
   {
     title: "Brez kolesa",
     time: "22 min",
-    className: "border-neutral-600 bg-[#2c2c2a]",
+    className:
+      "border-neutral-200 bg-white text-neutral-950 dark:border-neutral-600 dark:bg-[#2c2c2a] dark:text-white",
     icons: [Bus, Footprints],
   },
 ];

@@ -6,6 +6,7 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { FaGoogle } from "react-icons/fa";
 import { auth } from "../../firebase";
+import { ThemeToggle } from "../ThemeToggle";
 import {
     signInWithEmailAndPassword,
     signInWithPopup,
@@ -60,7 +61,7 @@ export const Login = () => {
     };
 
     return (
-        <div className="relative flex min-h-screen w-full items-center justify-end bg-[#212121]">
+        <div className="relative flex min-h-screen w-full items-center justify-end bg-background">
             <img
                 src="logo.svg"
                 className="absolute left-9 top-6 h-15 w-auto z-2 cursor-pointer"
@@ -72,18 +73,17 @@ export const Login = () => {
                 src="/LandingPage/background.jpeg"
                 alt="Background"
             />
+            <ThemeToggle className="absolute right-7 top-6 z-20" />
             <div className="z-10 flex min-h-screen w-lg max-w-137.5 py-5 pr-5 lg:w-full lg:max-w-[50%]">
-                <div className="relative flex w-full flex-col items-center rounded-lg bg-neutral-700 pt-20 gap-8">
+                <div className="relative flex w-full flex-col items-center gap-8 rounded-lg bg-card pt-20 text-card-foreground shadow-xl dark:bg-neutral-700">
                     <button
                         type="button"
                         onClick={() => navigate("/")}
-                        className="absolute left-6 top-6 flex items-center gap-2 text-sm font-medium text-white transition-colors hover:text-neutral-300 cursor-pointer">
+                        className="absolute left-6 top-6 flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-muted-foreground dark:text-white dark:hover:text-neutral-300">
                         <ArrowLeft size={18} />
                         Nazaj domov
                     </button>
-                    <h1 className="text-4xl font-semibold text-white">
-                        Prijava
-                    </h1>
+                    <h1 className="text-4xl font-semibold">Prijava</h1>
                     <form className="flex flex-col items-center gap-5 w-full max-w-75">
                         <Input
                             type="email"
@@ -105,7 +105,7 @@ export const Login = () => {
                                 onClick={() =>
                                     setShowPassword((current) => !current)
                                 }
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 transition-colors hover:text-white"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white"
                                 aria-label={
                                     showPassword
                                         ? "Skrij geslo"
@@ -130,19 +130,19 @@ export const Login = () => {
                         Prijavi se
                     </Button>
 
-                    <div className="flex items-center gap-3 text-medium text-white w-[95%] px-10">
-                        <Separator className="flex-1 text-white" />
+                    <div className="text-medium flex w-[95%] items-center gap-3 px-10 text-muted-foreground dark:text-white">
+                        <Separator className="flex-1" />
                         <span className="shrink-0 font-normal text-sm">
                             ali se prijavi z
                         </span>
-                        <Separator className="flex-1 text-white" />
+                        <Separator className="flex-1" />
                     </div>
                     <Button
                         onClick={handleGoogleLogin}
                         className="bg-gray-500 hover:bg-gray-400 text-white font-semibold py-2 px-4 rounded-md transition-colors">
                         <FaGoogle /> Google
                     </Button>
-                    <p className="w-full max-w-75 text-center text-sm text-white">
+                    <p className="w-full max-w-75 text-center text-sm">
                         Še nimaš profila?{" "}
                         <button
                             type="button"

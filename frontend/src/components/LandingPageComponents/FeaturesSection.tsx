@@ -35,7 +35,7 @@ const features = [
 
 export const FeaturesSection = () => {
   return (
-    <section className='bg-neutral-50 px-6 py-20 text-neutral-900 lg:px-16 lg:py-28'>
+    <section className='bg-background px-6 py-20 text-foreground lg:px-16 lg:py-28'>
       <div className='mx-auto flex max-w-6xl flex-col gap-16'>
         <div className='max-w-2xl'>
           <span className='text-sm font-semibold uppercase tracking-wide text-red-700'>
@@ -63,17 +63,17 @@ export const FeaturesSection = () => {
                   <h3 className='mt-3 text-2xl font-bold lg:text-3xl'>
                     {feature.title}
                   </h3>
-                  <p className='mt-4 text-lg leading-8 text-neutral-600'>
+                  <p className='mt-4 text-lg leading-8 text-muted-foreground'>
                     {feature.description}
                   </p>
                 </div>
 
-                <div className='rounded-lg border border-neutral-200 bg-white p-6 shadow-sm'>
+                <div className='rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm'>
                   <ul className='space-y-4'>
                     {feature.items.map((item) => (
                       <li
                         key={item}
-                        className='flex items-start gap-3 text-base text-neutral-700'>
+                        className='flex items-start gap-3 text-base text-muted-foreground'>
                         <span className='mt-2 h-2 w-2 shrink-0 rounded-full bg-red-700' />
                         <span>{item}</span>
                       </li>

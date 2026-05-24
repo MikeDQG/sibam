@@ -25,28 +25,30 @@ export const AccountPage = () => {
     return (
         <>
             <Header />
-            <div className="min-h-screen bg-[url('/LandingPage/background.jpeg')] bg-cover bg-center flex flex-col items-center pt-20 px-6">
+            <div className="flex min-h-screen flex-col items-center bg-[url('/LandingPage/background.jpeg')] bg-cover bg-center px-6 pt-20">
                 <img
                     src="/logo.svg"
                     className="absolute left-9 top-6 h-15 w-auto cursor-pointer"
                     alt="Logo"
                     onClick={() => navigate("/")}
                 />
-                <div className="w-full max-w-xl bg-neutral-700 rounded-lg p-8 flex flex-col gap-6">
-                    <h1 className="text-3xl font-semibold text-white">
+                <div className="flex w-full max-w-xl flex-col gap-6 rounded-lg bg-card/95 p-8 text-card-foreground shadow-xl backdrop-blur-sm dark:bg-neutral-700/95">
+                    <h1 className="text-3xl font-semibold">
                         Zdravo{fullName ? `, ${fullName}` : ""}!
                     </h1>
-                    <p className="text-neutral-300 text-sm">
+                    <p className="text-sm text-muted-foreground">
                         Uporabljen email:{" "}
-                        <span className="text-white font-medium">{email}</span>
+                        <span className="font-medium text-foreground dark:text-white">
+                            {email}
+                        </span>
                     </p>
 
-                    <div className="border-t border-neutral-600 pt-4">
-                        <h2 className="text-xl font-semibold text-white mb-4">
+                    <div className="border-t border-border pt-4 dark:border-neutral-600">
+                        <h2 className="mb-4 text-xl font-semibold">
                             Shranjene lokacije
                         </h2>
                         <div className="flex flex-col gap-3">
-                            <div className="bg-neutral-600 rounded-md p-4 text-neutral-400 text-sm text-center">
+                            <div className="rounded-md bg-muted p-4 text-center text-sm text-muted-foreground dark:bg-neutral-600 dark:text-neutral-400">
                                 Ni še shranjenih lokacij.
                             </div>
                         </div>

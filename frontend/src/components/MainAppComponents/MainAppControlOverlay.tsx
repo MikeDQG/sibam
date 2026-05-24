@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useState, useEffect, useRef } from "react";
+import { ThemeToggle } from "../ThemeToggle";
 import {
   usePlacesAutocomplete,
   type PlaceSuggestion,
@@ -239,11 +240,11 @@ export const MainAppControlOverlay = ({
             {showDirections ? (
               <>
                 <div className='relative'>
-                  <div className='overflow-hidden rounded-lg bg-neutral-700 shadow-md'>
+                  <div className='overflow-hidden rounded-lg bg-white/95 text-neutral-900 shadow-md dark:bg-neutral-700 dark:text-white'>
                     <div className='relative flex h-10 items-center pr-10'>
                       <Search
                         size={16}
-                        className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
+                        className='pointer-events-none absolute left-3 z-10 shrink-0 text-muted-foreground'
                       />
                       <Input
                         type='text'
@@ -260,17 +261,17 @@ export const MainAppControlOverlay = ({
                         <button
                           type='button'
                           onClick={handleClear}
-                          className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
+                          className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground dark:hover:text-white'
                           aria-label='Počisti'>
                           <X size={13} />
                         </button>
                       )}
                     </div>
-                    <div className='h-px bg-neutral-600' />
+                    <div className='h-px bg-border dark:bg-neutral-600' />
                     <div className='relative flex h-10 items-center pr-10'>
                       <Search
                         size={16}
-                        className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
+                        className='pointer-events-none absolute left-3 z-10 shrink-0 text-muted-foreground'
                       />
                       <Input
                         type='text'
@@ -291,7 +292,7 @@ export const MainAppControlOverlay = ({
                             setDestinationCoords(null);
                             onDestinationSelect?.(null);
                           }}
-                          className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
+                          className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground dark:hover:text-white'
                           aria-label='Počisti'>
                           <X size={13} />
                         </button>
@@ -301,22 +302,22 @@ export const MainAppControlOverlay = ({
                   <button
                     type='button'
                     onClick={handleSwap}
-                    className='absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-neutral-600 text-neutral-300 shadow-md transition-colors hover:text-white'
+                    className='absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-muted text-muted-foreground shadow-md transition-colors hover:text-foreground dark:bg-neutral-600 dark:text-neutral-300 dark:hover:text-white'
                     aria-label='Zamenjaj smeri'>
                     <ArrowUpDown size={16} />
                   </button>
                 </div>
                 {origin.isOpen && origin.predictions.length > 0 && (
-                  <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
+                  <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
                     {origin.predictions.map((prediction) => (
                       <li
                         key={prediction.placeId}
                         onMouseDown={() => handleSelect(prediction)}
-                        className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
-                        <p className='text-sm font-medium leading-tight text-white'>
+                        className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+                        <p className='text-sm font-medium leading-tight'>
                           {prediction.mainText}
                         </p>
-                        <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
+                        <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
                           {prediction.secondaryText}
                         </p>
                       </li>
@@ -324,16 +325,16 @@ export const MainAppControlOverlay = ({
                   </ul>
                 )}
                 {destination.isOpen && destination.predictions.length > 0 && (
-                  <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
+                  <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
                     {destination.predictions.map((prediction) => (
                       <li
                         key={prediction.placeId}
                         onMouseDown={() => handleDestinationSelect(prediction)}
-                        className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
-                        <p className='text-sm font-medium leading-tight text-white'>
+                        className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+                        <p className='text-sm font-medium leading-tight'>
                           {prediction.mainText}
                         </p>
-                        <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
+                        <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
                           {prediction.secondaryText}
                         </p>
                       </li>
@@ -344,18 +345,18 @@ export const MainAppControlOverlay = ({
                   <button
                     type='button'
                     onClick={() => setUseBus((v) => !v)}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBus ? "bg-red-700 text-white" : "bg-neutral-700 text-neutral-400"}`}>
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBus ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
                     <Bus size={14} />
                     Bus
                   </button>
                   <button
                     type='button'
                     onClick={() => setUseBike((v) => !v)}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBike ? "bg-red-700 text-white" : "bg-neutral-700 text-neutral-400"}`}>
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBike ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
                     <Bike size={14} />
                     Kolo
                   </button>
-                  <div className='flex overflow-hidden rounded-lg bg-neutral-700 shadow-md'>
+                  <div className='flex overflow-hidden rounded-lg bg-white text-neutral-900 shadow-md dark:bg-neutral-700 dark:text-white'>
                     <button
                       type='button'
                       onClick={() =>
@@ -363,32 +364,32 @@ export const MainAppControlOverlay = ({
                           m === "depart" ? "arrive" : "depart",
                         )
                       }
-                      className='whitespace-nowrap px-3 py-1.5 text-sm text-white transition-colors hover:bg-neutral-600'>
+                      className='whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted dark:text-white dark:hover:bg-neutral-600'>
                       {timeMode === "depart" ? "Odhod ob" : "Prihod do"}
                     </button>
-                    <div className='w-px bg-neutral-600' />
+                    <div className='w-px bg-border dark:bg-neutral-600' />
                     <input
                       type='time'
                       value={selectedTime}
                       onChange={(e) => setSelectedTime(e.target.value)}
-                      className='bg-transparent px-2 py-1.5 text-sm text-white focus:outline-none'
+                      className='bg-transparent px-2 py-1.5 text-sm focus:outline-none dark:text-white'
                     />
                   </div>
                   <button
                     type='button'
                     onClick={handleRouteRequest}
                     disabled={!originCoords || !destinationCoords}
-                    className='ml-auto flex items-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-200 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40'>
+                    className='ml-auto flex items-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-200 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-neutral-200 dark:hover:bg-neutral-50'>
                     Najdi pot
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <div className='relative flex h-10 items-center rounded-lg bg-neutral-700 shadow-md'>
+                <div className='relative flex h-10 items-center rounded-lg bg-white/95 text-neutral-900 shadow-md dark:bg-neutral-700 dark:text-white'>
                   <Search
                     size={16}
-                    className='pointer-events-none absolute left-3 z-10 shrink-0 text-neutral-400'
+                    className='pointer-events-none absolute left-3 z-10 shrink-0 text-muted-foreground'
                   />
                   <Input
                     type='text'
@@ -410,7 +411,7 @@ export const MainAppControlOverlay = ({
                         setDestinationCoords(null);
                         onDestinationSelect?.(null);
                       }}
-                      className='mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:text-white'
+                      className='mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground dark:hover:text-white'
                       aria-label='Počisti'>
                       <X size={13} />
                     </button>
@@ -426,16 +427,16 @@ export const MainAppControlOverlay = ({
                   )}
                 </div>
                 {destination.isOpen && destination.predictions.length > 0 && (
-                  <ul className='overflow-hidden rounded-lg bg-neutral-700 shadow-lg'>
+                  <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
                     {destination.predictions.map((prediction) => (
                       <li
                         key={prediction.placeId}
                         onMouseDown={() => handleDestinationSelect(prediction)}
-                        className='cursor-pointer border-b border-neutral-600 px-3 py-2 last:border-0 hover:bg-neutral-600'>
-                        <p className='text-sm font-medium leading-tight text-white'>
+                        className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+                        <p className='text-sm font-medium leading-tight'>
                           {prediction.mainText}
                         </p>
-                        <p className='mt-0.5 text-xs leading-tight text-neutral-400'>
+                        <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
                           {prediction.secondaryText}
                         </p>
                       </li>
@@ -445,7 +446,7 @@ export const MainAppControlOverlay = ({
               </>
             )}
             {locationError && (
-              <p className='rounded-lg bg-neutral-700 px-3 py-2 text-xs text-red-400 shadow-lg'>
+              <p className='rounded-lg bg-card px-3 py-2 text-xs text-red-600 shadow-lg dark:bg-neutral-700 dark:text-red-400'>
                 Lokacije ni bilo mogoče najti. Prosimo poskusite znova.
               </p>
             )}
@@ -462,11 +463,12 @@ export const MainAppControlOverlay = ({
             <Button
               type='button'
               onClick={() => navigate("/account")}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'
               aria-label='Profil'>
               <UserRound strokeWidth={1.7} />
             </Button>
             <div className='flex flex-col gap-2'>
+              <ThemeToggle />
               <Button
                 type='button'
                 onClick={() => {
@@ -474,27 +476,27 @@ export const MainAppControlOverlay = ({
                   navigate("/login");
                 }}
                 aria-label='Odjava'
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'>
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'>
                 <LogOut />
               </Button>
               <Button
                 type='button'
                 onClick={onZoomIn}
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
                 aria-label='Povečaj'>
                 <Plus size={20} />
               </Button>
               <Button
                 type='button'
                 onClick={onZoomOut}
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
                 aria-label='Pomanjšaj'>
                 <Minus size={20} />
               </Button>
               <Button
                 type='button'
                 onClick={onLocate}
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
                 aria-label='Moja lokacija'>
                 <LocateFixed size={20} />
               </Button>
@@ -506,28 +508,29 @@ export const MainAppControlOverlay = ({
             <Button
               type='button'
               onClick={() => navigate("/login")}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'
               aria-label='Profil'>
               <UserRound strokeWidth={1.7} />
             </Button>
+            <ThemeToggle />
             <Button
               type='button'
               onClick={onZoomIn}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
               aria-label='Povečaj'>
               <Plus size={20} />
             </Button>
             <Button
               type='button'
               onClick={onZoomOut}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
               aria-label='Pomanjšaj'>
               <Minus size={20} />
             </Button>
             <Button
               type='button'
               onClick={onLocate}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-neutral-700 text-foreground shadow-lg hover:text-red-200'
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
               aria-label='Moja lokacija'>
               <LocateFixed size={20} />
             </Button>

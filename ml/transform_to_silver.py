@@ -79,18 +79,17 @@ def transform_buses():
     trips = trips[trips["trip_id"].notna()]
 
     # join delays z trips da dobis route_id in recorded_at
-    df = delays.merge(trips[["id", "route_id", "recorded_at"]],
-                      left_on="trip_snapshot_id", right_on="id",
-                      how="left")
+    df = delays.merge(trips[["id", "route_id", "bearing", "current_stop_id", "recorded_at"]],
+                  left_on="trip_snapshot_id", right_on="id",
+                  how="left")
     
     df = df.dropna(subset=["recorded_at"])
 
-    # popravi timezone
+    # fix timezone
     df["recorded_at"] = pd.to_datetime(df["recorded_at"], utc=True)
     df["recorded_at_local"] = df["recorded_at"].dt.tz_convert("Europe/Ljubljana")
 
-    # sam to rabimo
-    df = df[["route_id", "stop_sequence", "delay_seconds", "recorded_at", "recorded_at_local"]]
+    df = df[["route_id", "stop_sequence", "delay_seconds", "bearing", "current_stop_id", "recorded_at", "recorded_at_local"]]
 
     # pridruzimo vreme po najblizjem casu
     weather["recorded_at"] = pd.to_datetime(weather["recorded_at"], utc=True)

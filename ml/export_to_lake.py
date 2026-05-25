@@ -42,25 +42,31 @@ FROM stop_delay_snapshots
 """
 
 
-def export_table(query, bucket_folder, filename):
+def export_table(query, bucket_folder, filename, chunk_size=400_000):
     connection = psycopg2.connect(DB_URL)
     df = pd.read_sql(query, connection)
     connection.close()
 
     print(f"Loaded {len(df)} rows")
-    
-    local_path = f"{filename}.parquet"
-    df.to_parquet(local_path, index=False)
 
-    with open(local_path, "rb") as f:
-        try:
-            supabase.storage.from_("bronze").remove([f"{bucket_folder}/{local_path}"])
-        except:
-            pass
-        supabase.storage.from_("bronze").upload(f"{bucket_folder}/{local_path}", f)
+    # razdelitev na chunke, da ni prevelik filesize
+    n_chunks = (len(df) - 1) // chunk_size + 1
+    chunks = [df.iloc[i * chunk_size:(i + 1) * chunk_size] for i in range(n_chunks)]
 
-    print(f"Uploaded to bronze/{bucket_folder}/{local_path}")
-    os.remove(local_path)
+    for i, chunk in enumerate(chunks):
+        suffix = f"_{i}" if n_chunks > 1 else ""
+        local_path = f"{filename}{suffix}.parquet"
+        chunk.to_parquet(local_path, index=False)
+
+        with open(local_path, "rb") as f:
+            try:
+                supabase.storage.from_("bronze").remove([f"{bucket_folder}/{local_path}"])
+            except:
+                pass
+            supabase.storage.from_("bronze").upload(f"{bucket_folder}/{local_path}", f)
+
+        print(f"Uploaded to bronze/{bucket_folder}/{local_path}  ({len(chunk)} rows)")
+        os.remove(local_path)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.spatial.HelperService;
 import com.sibam.graph.spatial.SpatialSearchService;
 import com.sibam.graph.storage.InMemoryGraphStore;
+import com.sibam.service.GoogleRoutesService;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalTime;
@@ -39,7 +40,8 @@ class AStarRouterTest {
                 graphStore,
                 new SpatialSearchService(helperService),
                 helperService,
-                mock(VaoSerializer.class)
+                mock(VaoSerializer.class),
+                mock(GoogleRoutesService.class)
         );
 
         Journey journey = router.findJourney(

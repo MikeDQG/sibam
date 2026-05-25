@@ -18,6 +18,7 @@ import com.sibam.engine.VaoSerializer;
 import com.sibam.engine.vao.LineScheduleVao;
 import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.StopScheduleVao;
+import com.sibam.service.GoogleRoutesService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -50,18 +51,21 @@ public class AStarRouter {
     private final HelperService helperService;
     private final VaoSerializer vaoSerializer;
     private final WalkingEdgeBuilder walkingEdgeBuilder;
+    private final GoogleRoutesService googleRoutesService;
 
     public AStarRouter(
             GraphStore graphStore,
             SpatialSearchService spatialSearchService,
             HelperService helperService,
-            VaoSerializer vaoSerializer
+            VaoSerializer vaoSerializer,
+            GoogleRoutesService googleRoutesService
     ) {
         this.graphStore = graphStore;
         this.spatialSearchService = spatialSearchService;
         this.helperService = helperService;
         this.vaoSerializer = vaoSerializer;
         this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
+        this.googleRoutesService = googleRoutesService;
     }
 
     public Journey findJourney(
@@ -556,8 +560,23 @@ public class AStarRouter {
     }
 
     private List<GeoPoint> polyline(Graph graph, List<Edge> edges, Edge firstEdge, Edge lastEdge) {
-        if (firstEdge.getEdgeType() == EdgeType.WALK || firstEdge.getEdgeType() == EdgeType.TRANSFER) {
-            return List.of(nodePoint(graph, firstEdge.getFromNodeId()), nodePoint(graph, lastEdge.getToNodeId()));
+        GeoPoint from = nodePoint(graph, firstEdge.getFromNodeId());
+        GeoPoint to = nodePoint(graph, lastEdge.getToNodeId());
+
+        // For WALK and BIKE legs fetch polyline from Google Routes API
+        if (firstEdge.getEdgeType() == EdgeType.WALK || firstEdge.getEdgeType() == EdgeType.BIKE) {
+            try {
+                List<GeoPoint> apiPolyline = googleRoutesService.fetchPolyline(from, to);
+                if (apiPolyline != null && !apiPolyline.isEmpty()) {
+                    return apiPolyline;
+                }
+            } catch (Exception ignored) {
+                // Fallback to local polyline logic below
+            }
+        }
+
+        if (firstEdge.getEdgeType() == EdgeType.TRANSFER) {
+            return List.of(from, to);
         }
 
         List<GeoPoint> points = new ArrayList<>();

@@ -301,7 +301,7 @@
         "header": [
           {
             "key": "X-Goog-FieldMask",
-            "value": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
+            "value": "routes.duration,routes.distanceMeters,routes.polyline.geoJsonLinestring",
             "type": "text",
             "uuid": "2ba9a8ac-7d54-4585-a503-5672b62ebed3"
           },
@@ -314,7 +314,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"origin\": {\r\n        \"location\": {\r\n            \"latLng\": {\r\n                \"latitude\": 46.538077,\r\n                \"longitude\": 15.60352\r\n            }\r\n        }\r\n    },\r\n    \"destination\": {\r\n        \"location\": {\r\n            \"latLng\": {\r\n                \"latitude\": 46.538493,\r\n                \"longitude\": 15.611431\r\n            }\r\n        }\r\n    }\r\n}",
+          "raw": "{\r\n    \"origin\": {\r\n        \"location\": {\r\n            \"latLng\": {\r\n                \"latitude\": 46.538077,\r\n                \"longitude\": 15.60352\r\n            }\r\n        }\r\n    },\r\n    \"destination\": {\r\n        \"location\": {\r\n            \"latLng\": {\r\n                \"latitude\": 46.538493,\r\n                \"longitude\": 15.611431\r\n            }\r\n        }\r\n    },\r\n    \"polylineQuality\": \"HIGH_QUALITY\",\r\n    \"polylineEncoding\": \"GEO_JSON_LINESTRING\"\r\n}",
           "options": {
             "raw": {
               "language": "json"

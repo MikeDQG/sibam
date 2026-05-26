@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
-import { MainMap, type LocationIcon } from "../MainAppComponents/MainMap";
+import { MainMap } from "../MainAppComponents/MainMap";
+import type { LocationIcon } from "../MainAppComponents/MapLocationPopup";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
 import type { RoutePopupSelection } from "../MainAppComponents/RoutePopup";
 import type {

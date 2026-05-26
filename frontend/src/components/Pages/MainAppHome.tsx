@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
-import {
-  MainMap,
-  type LocationIcon,
-} from "../MainAppComponents/MainMap";
+import { MainMap, type LocationIcon } from "../MainAppComponents/MainMap";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
 import type { RoutePopupSelection } from "../MainAppComponents/RoutePopup";
 import type {
@@ -18,7 +15,7 @@ const routeOptions = [
     title: "Najhitrejša",
     time: "18 min",
     className:
-      "border-sky-500 bg-red-50 text-red-950 ring-4 ring-sky-500 dark:bg-[#941d38] dark:text-white",
+      "border-red-200 bg-red-50 text-red-950 ring-4 dark:bg-[#941d38] dark:text-white",
     icons: [Bus, Footprints, Bike],
   },
   {

@@ -25,7 +25,8 @@
   "name": "Home",
   "address": "Some Street 1, Ljubljana",
   "latitude": 46.0569,
-  "longitude": 14.5058
+  "longitude": 14.5058,
+  "color": "#FF5733"
 }`
 
 ---
@@ -45,7 +46,8 @@
   "name": "Work",
   "address": "Business Ave 5, Ljubljana",
   "latitude": 46.0600,
-  "longitude": 14.5100
+  "longitude": 14.5100,
+  "color": "#FF5733"
 }`
 
 ---

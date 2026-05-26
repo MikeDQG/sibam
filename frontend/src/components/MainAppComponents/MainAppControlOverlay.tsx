@@ -468,7 +468,6 @@ export const MainAppControlOverlay = ({
               <UserRound strokeWidth={1.7} />
             </Button>
             <div className='flex flex-col gap-2'>
-              <ThemeToggle />
               <Button
                 type='button'
                 onClick={() => {
@@ -479,6 +478,7 @@ export const MainAppControlOverlay = ({
                 className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'>
                 <LogOut />
               </Button>
+              <ThemeToggle />
               <Button
                 type='button'
                 onClick={onZoomIn}

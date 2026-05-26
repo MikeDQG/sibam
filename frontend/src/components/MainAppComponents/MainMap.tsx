@@ -5,12 +5,15 @@ import {
   Map,
   useMap,
 } from "@vis.gl/react-google-maps";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, type ComponentType, useEffect, useState } from "react";
 import { useTheme } from "../ThemeProvider";
 import { Input } from "../ui/input";
 import { RoutePopup, type RoutePopupSelection } from "./RoutePopup";
 import { RoutePolyline, type MapPoint, type RouteLeg } from "./RoutePolyline";
 import { Button } from "../ui/button";
+import { IoIosSchool } from "react-icons/io";
+import { FaHome, FaLandmark } from "react-icons/fa";
+import { MdWork } from "react-icons/md";
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID";
@@ -20,10 +23,13 @@ type MapCenter = {
   lng: number;
 };
 
+export type LocationIcon = "school" | "home" | "work" | "landmark";
+
 type MapLocationDraft = {
   position: MapCenter;
   name: string;
   color: string;
+  icon: LocationIcon;
 };
 
 type MainMapProps = {
@@ -47,6 +53,7 @@ type MainMapProps = {
   onMapContextSelect?: (position: MapCenter) => void;
   mapLocationDraft?: MapLocationDraft | null;
   onMapLocationColorChange?: (color: string) => void;
+  onMapLocationIconChange?: (icon: LocationIcon) => void;
   onMapLocationSave?: (name: string) => void;
   onMapLocationPopupClose?: () => void;
   markerPosition?: MapCenter | null;
@@ -61,15 +68,28 @@ const locationColors = [
   { label: "Vijolična", value: "#7c3aed" },
 ];
 
+const locationIcons = [
+  { label: "Dom", value: "home", Icon: FaHome },
+  { label: "Šola", value: "school", Icon: IoIosSchool },
+  { label: "Delo", value: "work", Icon: MdWork },
+  { label: "Znamenitost", value: "landmark", Icon: FaLandmark },
+] satisfies {
+  label: string;
+  value: LocationIcon;
+  Icon: ComponentType<{ size?: number; className?: string }>;
+}[];
+
 type MapLocationPopupProps = {
   draft: MapLocationDraft;
   onColorChange?: (color: string) => void;
+  onIconChange?: (icon: LocationIcon) => void;
   onSave?: (name: string) => void;
 };
 
 function MapLocationPopup({
   draft,
   onColorChange,
+  onIconChange,
   onSave,
 }: MapLocationPopupProps) {
   const [name, setName] = useState(draft.name);
@@ -107,6 +127,24 @@ function MapLocationPopup({
               style={{ backgroundColor: color.value }}
               aria-label={color.label}
             />
+          ))}
+        </div>
+
+        <div className='flex items-center gap-2'>
+          {locationIcons.map(({ label, value, Icon }) => (
+            <button
+              key={value}
+              type='button'
+              onClick={() => onIconChange?.(value)}
+              className={`flex h-9 w-9 items-center justify-center rounded-md border transition ${
+                draft.icon === value
+                  ? "border-foreground bg-muted text-foreground ring-2 ring-ring/40 dark:bg-neutral-700 dark:text-white"
+                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground dark:border-white/10 dark:hover:bg-neutral-700 dark:hover:text-white"
+              }`}
+              aria-label={label}
+              title={label}>
+              <Icon size={20} />
+            </button>
           ))}
         </div>
       </div>
@@ -157,6 +195,7 @@ export const MainMap = ({
   onMapContextSelect,
   mapLocationDraft,
   onMapLocationColorChange,
+  onMapLocationIconChange,
   onMapLocationSave,
   onMapLocationPopupClose,
 }: MainMapProps) => {
@@ -313,6 +352,7 @@ export const MainMap = ({
               <MapLocationPopup
                 draft={mapLocationDraft}
                 onColorChange={onMapLocationColorChange}
+                onIconChange={onMapLocationIconChange}
                 onSave={onMapLocationSave}
               />
             </InfoWindow>

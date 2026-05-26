@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
-import { MainMap } from "../MainAppComponents/MainMap";
+import {
+  MainMap,
+  type LocationIcon,
+} from "../MainAppComponents/MainMap";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
 import type { RoutePopupSelection } from "../MainAppComponents/RoutePopup";
 import type {
@@ -48,9 +51,11 @@ type MapLocationDraft = {
   position: MapCenter;
   name: string;
   color: string;
+  icon: LocationIcon;
 };
 
 const defaultLocationColor = "#b91c1c";
+const defaultLocationIcon: LocationIcon = "home";
 
 export const MainAppHome = () => {
   const [center, setCenter] = useState<MapCenter>(fallbackCenter);
@@ -172,12 +177,19 @@ export const MainAppHome = () => {
       position,
       name: "",
       color: defaultLocationColor,
+      icon: defaultLocationIcon,
     });
   }
 
   function handleMapLocationColorChange(color: string) {
     setMapLocationDraft((currentDraft) =>
       currentDraft ? { ...currentDraft, color } : currentDraft,
+    );
+  }
+
+  function handleMapLocationIconChange(icon: LocationIcon) {
+    setMapLocationDraft((currentDraft) =>
+      currentDraft ? { ...currentDraft, icon } : currentDraft,
     );
   }
 
@@ -204,6 +216,7 @@ export const MainAppHome = () => {
         onMapContextSelect={handleMapContextSelect}
         mapLocationDraft={mapLocationDraft}
         onMapLocationColorChange={handleMapLocationColorChange}
+        onMapLocationIconChange={handleMapLocationIconChange}
         onMapLocationSave={handleMapLocationSave}
         onMapLocationPopupClose={() => setMapLocationDraft(null)}
         markerPosition={markerPosition}

@@ -90,6 +90,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- ONNX Runtime for ML model inference -->
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+            <version>1.25.1</version>
+        </dependency>
+
         <!-- Kryo serialization dependency -->
         <dependency>
             <groupId>com.esotericsoftware</groupId>

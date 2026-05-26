@@ -289,6 +289,8 @@ export const MainAppHome = () => {
         address: locationName,
         latitude: draft.position.lat,
         longitude: draft.position.lng,
+        color: draft.color,
+        icon: draft.icon,
       };
 
       const response = await fetch(`${apiUrl}/api/locations`, {

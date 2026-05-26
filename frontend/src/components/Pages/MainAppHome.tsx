@@ -44,6 +44,14 @@ type MapCenter = {
   lng: number;
 };
 
+type MapLocationDraft = {
+  position: MapCenter;
+  name: string;
+  color: string;
+};
+
+const defaultLocationColor = "#b91c1c";
+
 export const MainAppHome = () => {
   const [center, setCenter] = useState<MapCenter>(fallbackCenter);
   const [zoom, setZoom] = useState(14);
@@ -54,6 +62,8 @@ export const MainAppHome = () => {
   const [destinationMarkerPosition, setDestinationMarkerPosition] =
     useState<MapCenter | null>(null);
   const [routePath, setRoutePath] = useState<RoutePath | null>(null);
+  const [mapLocationDraft, setMapLocationDraft] =
+    useState<MapLocationDraft | null>(null);
 
   // iskanje userjeve lokacije
   function locateUser(zoomToUser = false) {
@@ -104,6 +114,7 @@ export const MainAppHome = () => {
   }
 
   function handleLegClick(leg: RouteLeg, position: MapPoint) {
+    setMapLocationDraft(null);
     setSelectedLeg({ leg, position, source: "path" });
   }
 
@@ -112,6 +123,7 @@ export const MainAppHome = () => {
     position: MapPoint,
     previousLeg?: RouteLeg,
   ) {
+    setMapLocationDraft(null);
     setSelectedLeg({ leg, position, previousLeg, source: "busIcon" });
   }
 
@@ -120,12 +132,14 @@ export const MainAppHome = () => {
     position: MapPoint,
     source: "bikePickupIcon" | "bikeReturnIcon",
   ) {
+    setMapLocationDraft(null);
     setSelectedLeg({ leg, position, source });
   }
 
   function handlePlaceSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
     setSelectedLeg(null);
+    setMapLocationDraft(null);
 
     if (!place) {
       setMarkerPosition(null);
@@ -140,12 +154,38 @@ export const MainAppHome = () => {
   function handleDestinationSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
     setSelectedLeg(null);
+    setMapLocationDraft(null);
     setDestinationMarkerPosition(place);
   }
 
   function handlePathReceive(path: RoutePath) {
     setRoutePath(path);
     setSelectedLeg(null);
+    setMapLocationDraft(null);
+  }
+
+  function handleMapContextSelect(position: MapCenter) {
+    setSelectedLeg(null);
+    setCenter(position);
+    setZoom((currentZoom) => Math.max(currentZoom, 16));
+    setMapLocationDraft({
+      position,
+      name: "",
+      color: defaultLocationColor,
+    });
+  }
+
+  function handleMapLocationColorChange(color: string) {
+    setMapLocationDraft((currentDraft) =>
+      currentDraft ? { ...currentDraft, color } : currentDraft,
+    );
+  }
+
+  function handleMapLocationSave(name: string) {
+    setMapLocationDraft((currentDraft) =>
+      currentDraft ? { ...currentDraft, name } : currentDraft,
+    );
+    setMapLocationDraft(null);
   }
 
   return (
@@ -161,6 +201,11 @@ export const MainAppHome = () => {
         onBikeIconClick={handleBikeIconClick}
         onRoutePopupClose={() => setSelectedLeg(null)}
         onCameraChanged={handleCameraChanged}
+        onMapContextSelect={handleMapContextSelect}
+        mapLocationDraft={mapLocationDraft}
+        onMapLocationColorChange={handleMapLocationColorChange}
+        onMapLocationSave={handleMapLocationSave}
+        onMapLocationPopupClose={() => setMapLocationDraft(null)}
         markerPosition={markerPosition}
         destinationMarkerPosition={destinationMarkerPosition}
       />

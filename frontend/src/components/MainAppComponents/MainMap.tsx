@@ -1,13 +1,16 @@
 import {
   APIProvider,
   AdvancedMarker,
+  InfoWindow,
   Map,
   useMap,
 } from "@vis.gl/react-google-maps";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useTheme } from "../ThemeProvider";
+import { Input } from "../ui/input";
 import { RoutePopup, type RoutePopupSelection } from "./RoutePopup";
 import { RoutePolyline, type MapPoint, type RouteLeg } from "./RoutePolyline";
+import { Button } from "../ui/button";
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID";
@@ -15,6 +18,12 @@ const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID";
 type MapCenter = {
   lat: number;
   lng: number;
+};
+
+type MapLocationDraft = {
+  position: MapCenter;
+  name: string;
+  color: string;
 };
 
 type MainMapProps = {
@@ -35,9 +44,81 @@ type MainMapProps = {
   ) => void;
   onRoutePopupClose?: () => void;
   onCameraChanged?: (center: MapCenter, zoom: number) => void;
+  onMapContextSelect?: (position: MapCenter) => void;
+  mapLocationDraft?: MapLocationDraft | null;
+  onMapLocationColorChange?: (color: string) => void;
+  onMapLocationSave?: (name: string) => void;
+  onMapLocationPopupClose?: () => void;
   markerPosition?: MapCenter | null;
   destinationMarkerPosition?: MapCenter | null;
 };
+
+const locationColors = [
+  { label: "Rdeča", value: "#b91c1c" },
+  { label: "Modra", value: "#2563eb" },
+  { label: "Zelena", value: "#15803d" },
+  { label: "Rumena", value: "#ca8a04" },
+  { label: "Vijolična", value: "#7c3aed" },
+];
+
+type MapLocationPopupProps = {
+  draft: MapLocationDraft;
+  onColorChange?: (color: string) => void;
+  onSave?: (name: string) => void;
+};
+
+function MapLocationPopup({
+  draft,
+  onColorChange,
+  onSave,
+}: MapLocationPopupProps) {
+  const [name, setName] = useState(draft.name);
+
+  useEffect(() => {
+    setName(draft.name);
+  }, [draft.position.lat, draft.position.lng, draft.name]);
+
+  return (
+    <div className='w-64 mx-2 mb-2 bg-card text-sm text-card-foreground dark:bg-neutral-800 dark:text-white'>
+      <strong className='block pr-8 text-base font-semibold'>
+        Nova lokacija
+      </strong>
+
+      <div className='mt-3 space-y-3'>
+        <Input
+          autoFocus
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder='Ime lokacije'
+          className='h-9'
+        />
+
+        <div className='flex items-center gap-2'>
+          {locationColors.map((color) => (
+            <button
+              key={color.value}
+              type='button'
+              onClick={() => onColorChange?.(color.value)}
+              className={`h-7 w-7 rounded-full border-2 transition ${
+                draft.color === color.value
+                  ? "border-foreground ring-2 ring-ring/40"
+                  : "border-white/80 hover:scale-105"
+              }`}
+              style={{ backgroundColor: color.value }}
+              aria-label={color.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className='flex justify-end pt-4'>
+        <Button type='button' onClick={() => onSave?.(name)}>
+          Shrani
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 function FitBounds({
   origin,
@@ -73,6 +154,11 @@ export const MainMap = ({
   onBusIconClick,
   onBikeIconClick,
   onRoutePopupClose,
+  onMapContextSelect,
+  mapLocationDraft,
+  onMapLocationColorChange,
+  onMapLocationSave,
+  onMapLocationPopupClose,
 }: MainMapProps) => {
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
   const { theme } = useTheme();
@@ -93,6 +179,15 @@ export const MainMap = ({
           zoom={zoom}
           onCameraChanged={(event) => {
             onCameraChanged?.(event.detail.center, event.detail.zoom);
+          }}
+          onContextmenu={(event) => {
+            event.stop();
+
+            const position = event.detail.latLng;
+            if (!position) return;
+
+            onRoutePopupClose?.();
+            onMapContextSelect?.(position);
           }}
           colorScheme={theme === "dark" ? "DARK" : "LIGHT"}
           gestureHandling='greedy'
@@ -208,6 +303,19 @@ export const MainMap = ({
           })}
           {selectedLeg && (
             <RoutePopup selectedLeg={selectedLeg} onClose={onRoutePopupClose} />
+          )}
+          {mapLocationDraft && (
+            <InfoWindow
+              position={mapLocationDraft.position}
+              onCloseClick={onMapLocationPopupClose}
+              shouldFocus={false}
+              pixelOffset={[0, -8]}>
+              <MapLocationPopup
+                draft={mapLocationDraft}
+                onColorChange={onMapLocationColorChange}
+                onSave={onMapLocationSave}
+              />
+            </InfoWindow>
           )}
         </Map>
       </APIProvider>

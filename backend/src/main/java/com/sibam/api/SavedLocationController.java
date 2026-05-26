@@ -19,27 +19,36 @@ public class SavedLocationController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<SavedLocation>> getLocations(@PathVariable UUID userId) {
-        return ResponseEntity.ok(locationService.getLocationsForUser(userId));
+    public ResponseEntity<List<SavedLocation>> getLocations(
+            @PathVariable UUID userId,
+            @RequestAttribute("uid") String uid) {
+        return ResponseEntity.ok(locationService.getLocationsForUser(userId, uid));
     }
 
     @PostMapping
-    public ResponseEntity<SavedLocation> saveLocation(@RequestBody SavedLocationRequest request) {
+    public ResponseEntity<SavedLocation> saveLocation(
+            @RequestBody SavedLocationRequest request,
+            @RequestAttribute("uid") String uid) {
         return ResponseEntity.ok(locationService.saveLocation(
-                request.userId(), request.name(), request.address(), request.latitude(), request.longitude()
+                request.userId(), request.name(), request.address(), request.latitude(), request.longitude(), uid
         ));
     }
-    
+
     @PutMapping("/{locationId}")
-    public ResponseEntity<SavedLocation> updateLocation(@PathVariable UUID locationId, @RequestBody SavedLocationRequest request) {
+    public ResponseEntity<SavedLocation> updateLocation(
+            @PathVariable UUID locationId,
+            @RequestBody SavedLocationRequest request,
+            @RequestAttribute("uid") String uid) {
         return ResponseEntity.ok(locationService.updateLocation(
-                locationId, request.name(), request.address(), request.latitude(), request.longitude()
+                locationId, request.name(), request.address(), request.latitude(), request.longitude(), uid
         ));
     }
 
     @DeleteMapping("/{locationId}")
-    public ResponseEntity<Void> deleteLocation(@PathVariable UUID locationId) {
-        locationService.deleteLocation(locationId);
+    public ResponseEntity<Void> deleteLocation(
+            @PathVariable UUID locationId,
+            @RequestAttribute("uid") String uid) {
+        locationService.deleteLocation(locationId, uid);
         return ResponseEntity.noContent().build();
     }
 

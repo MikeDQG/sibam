@@ -57,8 +57,13 @@ export function MapLocationPopup({
     setName(draft.name);
   }, [draft.position.lat, draft.position.lng, draft.name]);
 
+  const isValidInput =
+    name.trim().length > 0 &&
+    draft.color.trim().length > 0 &&
+    draft.icon.trim().length > 0;
+
   return (
-    <div className='w-64 mx-2 mb-2 bg-card text-sm text-card-foreground dark:bg-neutral-800 dark:text-white'>
+    <div className='w-64 bg-card text-sm text-card-foreground dark:bg-neutral-700 dark:text-white'>
       <strong className='block pr-8 text-base font-semibold'>
         Nova lokacija
       </strong>
@@ -81,7 +86,7 @@ export function MapLocationPopup({
               className={`h-7 w-7 rounded-full border-2 transition ${
                 draft.color === color.value
                   ? "border-foreground ring-2 ring-ring/40"
-                  : "border-white/80 hover:scale-105"
+                  : "border-background hover:scale-105"
               }`}
               style={{ backgroundColor: color.value }}
               aria-label={color.label}
@@ -109,7 +114,10 @@ export function MapLocationPopup({
       </div>
 
       <div className='flex justify-end pt-4'>
-        <Button type='button' onClick={() => onSave?.(name)}>
+        <Button
+          type='button'
+          disabled={!isValidInput}
+          onClick={() => onSave?.(name.trim())}>
           Shrani
         </Button>
       </div>

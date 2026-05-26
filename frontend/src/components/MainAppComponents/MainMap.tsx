@@ -239,6 +239,7 @@ export const MainMap = ({
           {mapLocationDraft && (
             <InfoWindow
               position={mapLocationDraft.position}
+              className='map-location-info-window'
               onCloseClick={onMapLocationPopupClose}
               shouldFocus={false}
               pixelOffset={[0, -8]}>

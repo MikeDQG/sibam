@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 from supabase import create_client
 from dotenv import load_dotenv
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error
 from skl2onnx import convert_sklearn
@@ -97,33 +96,13 @@ def train_and_export(df_model):
     X_test  = test_df[FEATURES].astype(np.float32)
     y_test  = test_df[TARGET].astype(np.float32)
 
-    models = {
-        "Ridge":            Ridge(),
-        "RandomForest":     RandomForestRegressor(
-                                n_estimators=200, max_depth=20,
-                                max_features="log2", random_state=42, n_jobs=-1),
-        "GradientBoosting": GradientBoostingRegressor(
-                                n_estimators=100, max_depth=4,
-                                learning_rate=0.1, random_state=42),
-    }
+    model = Ridge()
+    model.fit(X_train, y_train)
+    mae = mean_absolute_error(y_test, model.predict(X_test))
+    print(f"Ridge MAE = {mae:.1f}s")
 
-    mae_results = {}
-    for name, model in models.items():
-        print(f"Treniram {name}...")
-        model.fit(X_train, y_train)
-        mae = mean_absolute_error(y_test, model.predict(X_test))
-        mae_results[name] = mae
-        print(f"  {name:25s}  MAE = {mae:.1f}s")
-
-    best_name  = min(mae_results, key=mae_results.get)
-    best_model = models[best_name]
-    print(f"\nZmagovalec: {best_name}  (MAE = {mae_results[best_name]:.1f}s)")
-
-    # izvoz v ONNX
     initial_type = [("float_input", FloatTensorType([None, len(FEATURES)]))]
-    onnx_bytes   = convert_sklearn(best_model, initial_types=initial_type).SerializeToString()
-
-    print(f"Vrstni red značilk: {FEATURES}")
+    onnx_bytes = convert_sklearn(model, initial_types=initial_type).SerializeToString()
     return onnx_bytes
 
 

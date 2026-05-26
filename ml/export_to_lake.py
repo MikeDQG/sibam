@@ -69,10 +69,34 @@ def export_table(query, bucket_folder, filename, chunk_size=400_000):
         os.remove(local_path)
 
 
+def cleanup_staging_tables():
+	connection = psycopg2.connect(DB_URL)
+	cursor = connection.cursor()
+	cursor.execute("""
+	    DELETE FROM stop_delay_snapshots
+	    WHERE trip_snapshot_id IN (
+	        SELECT id FROM trip_snapshots
+	        WHERE recorded_at < NOW() - INTERVAL '3 days'
+	    )
+	""")
+	connection.commit()
+	cursor.execute("DELETE FROM trip_snapshots WHERE recorded_at < NOW() - INTERVAL '3 days'")
+	cursor.execute("DELETE FROM bike_station_snapshots WHERE recorded_at < NOW() - INTERVAL '3 days'")
+	cursor.execute("DELETE FROM weather_snapshots WHERE recorded_at < NOW() - INTERVAL '3 days'")
+	connection.commit()
+	cursor.close()
+	connection.close()
+	print("Staging tables cleaned up")
+
 if __name__ == "__main__":
     today = date.today()
-    export_table(BIKE_STATIONS_QUERY, "bikes",   "stations")
-    export_table(BIKES_QUERY,         "bikes",   f"snapshots_{today}")
-    export_table(WEATHER_QUERY,       "weather", f"weather_{today}")
-    export_table(TRIP_SNAPSHOTS_QUERY, "buses",  f"trips_{today}")
-    export_table(STOP_DELAY_QUERY,     "buses",  f"delays_{today}")
+    try:
+        export_table(BIKE_STATIONS_QUERY,  "bikes",   "stations")
+        export_table(BIKES_QUERY,          "bikes",   f"snapshots_{today}")
+        export_table(WEATHER_QUERY,        "weather", f"weather_{today}")
+        export_table(TRIP_SNAPSHOTS_QUERY, "buses",   f"trips_{today}")
+        export_table(STOP_DELAY_QUERY,     "buses",   f"delays_{today}")
+        cleanup_staging_tables()
+    except Exception as e:
+        print(f"Export failed: {e} — staging tables NOT cleaned up")
+        raise

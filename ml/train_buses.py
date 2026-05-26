@@ -72,7 +72,17 @@ def clean(df):
     ].copy()
 
 
-def train_and_export(df_model, out_dir):
+def upload_to_gold(onnx_bytes, filename):
+    path = f"models/{filename}"
+    try:
+        supabase.storage.from_("gold").remove([path])
+    except Exception:
+        pass
+    supabase.storage.from_("gold").upload(path, onnx_bytes, {"content-type": "application/octet-stream"})
+    print(f"Naloženo → gold/{path}")
+
+
+def train_and_export(df_model):
     # razdelimo po datumu — ne naključno, da preprečimo data leakage
     df_sorted = df_model.sort_values("recorded_at")
     split_idx = int(len(df_sorted) * 0.8)
@@ -111,20 +121,13 @@ def train_and_export(df_model, out_dir):
 
     # izvoz v ONNX
     initial_type = [("float_input", FloatTensorType([None, len(FEATURES)]))]
-    onnx_model   = convert_sklearn(best_model, initial_types=initial_type)
+    onnx_bytes   = convert_sklearn(best_model, initial_types=initial_type).SerializeToString()
 
-    os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "model_bus_delay.onnx")
-    with open(out_path, "wb") as f:
-        f.write(onnx_model.SerializeToString())
-
-    print(f"\nShranjen model → {out_path}")
     print(f"Vrstni red značilk: {FEATURES}")
+    return onnx_bytes
 
 
 if __name__ == "__main__":
-    out_dir = os.path.join(SCRIPT_DIR, "../backend/src/main/resources/models")
-
     print("Nalaganje silver podatkov...")
     df = load_silver()
     print(f"Vrstic: {len(df)}")
@@ -138,5 +141,9 @@ if __name__ == "__main__":
     print(f"Vrstic za trening: {len(df)}")
 
     print("\nTrening modelov...")
-    train_and_export(df, out_dir)
+    onnx_bytes = train_and_export(df)
+
+    print("\nNalaganje modela v Supabase gold...")
+    upload_to_gold(onnx_bytes, "model_bus_delay.onnx")
+
     print("\nKončano.")

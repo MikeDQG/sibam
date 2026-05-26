@@ -4,8 +4,8 @@ import com.sibam.dto.prediction.BikePredictionRequest;
 import com.sibam.dto.prediction.BikePredictionResponse;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
+import com.sibam.integration.supabase.SupabaseStorageClient;
 
-import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Map;
@@ -19,25 +19,26 @@ public class BikePredictionService {
 
     private OrtEnvironment env;
 
-    @PostConstruct
-    public void loadModels() throws Exception {
-        env = OrtEnvironment.getEnvironment();
-        modelBikes         = loadModel("/models/model_bikes.onnx");
-        modelStands        = loadModel("/models/model_stands.onnx");
-        modelBikeAvailable  = loadModel("/models/model_available_bike.onnx");
-        modelStandAvailable = loadModel("/models/model_available_stand.onnx");
+    private final SupabaseStorageClient supabaseStorageClient;
 
+    public BikePredictionService(SupabaseStorageClient supabaseStorageClient) {
+        this.supabaseStorageClient = supabaseStorageClient;
     }
 
-    private OrtSession loadModel(String resourcePath) throws Exception {
-        InputStream is = getClass().getResourceAsStream(resourcePath);
-        if (is == null) {
-            throw new IllegalStateException("ONNX model not found: " + resourcePath);
-        }
-        byte[] bytes = is.readAllBytes();
-        is.close();
+    @PostConstruct
+    public void loadModels() throws OrtException {
+        env = OrtEnvironment.getEnvironment();
+        modelBikes          = loadFromGold("model_bikes.onnx");
+        modelStands         = loadFromGold("model_stands.onnx");
+        modelBikeAvailable  = loadFromGold("model_available_bike.onnx");
+        modelStandAvailable = loadFromGold("model_available_stand.onnx");
+    }
+
+    private OrtSession loadFromGold(String filename) throws OrtException {
+        byte[] bytes = supabaseStorageClient.download("gold", "models/" + filename);
         return env.createSession(bytes, new OrtSession.SessionOptions());
     }
+
 
     public BikePredictionResponse predict(BikePredictionRequest req) throws OrtException {
         float[] features = {

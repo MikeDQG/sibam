@@ -1,11 +1,18 @@
 import {
   APIProvider,
   AdvancedMarker,
+  InfoWindow,
   Map,
   useMap,
 } from "@vis.gl/react-google-maps";
 import { Fragment, useEffect } from "react";
 import { useTheme } from "../ThemeProvider";
+import {
+  LocationIconGlyph,
+  MapLocationPopup,
+  type LocationIcon,
+  type MapLocationDraft,
+} from "./MapLocationPopup";
 import { RoutePopup, type RoutePopupSelection } from "./RoutePopup";
 import { RoutePolyline, type MapPoint, type RouteLeg } from "./RoutePolyline";
 
@@ -35,8 +42,23 @@ type MainMapProps = {
   ) => void;
   onRoutePopupClose?: () => void;
   onCameraChanged?: (center: MapCenter, zoom: number) => void;
+  onMapContextSelect?: (position: MapCenter) => void;
+  mapLocationDraft?: MapLocationDraft | null;
+  onMapLocationColorChange?: (color: string) => void;
+  onMapLocationIconChange?: (icon: LocationIcon) => void;
+  onMapLocationSave: (draft: MapLocationDraft) => void;
+  onMapLocationPopupClose?: () => void;
+  savedLocations?: SavedMapLocation[];
   markerPosition?: MapCenter | null;
   destinationMarkerPosition?: MapCenter | null;
+};
+
+export type SavedMapLocation = {
+  id: string;
+  position: MapCenter;
+  name: string;
+  color: string;
+  icon: LocationIcon;
 };
 
 function FitBounds({
@@ -73,6 +95,13 @@ export const MainMap = ({
   onBusIconClick,
   onBikeIconClick,
   onRoutePopupClose,
+  onMapContextSelect,
+  mapLocationDraft,
+  onMapLocationColorChange,
+  onMapLocationIconChange,
+  onMapLocationSave,
+  onMapLocationPopupClose,
+  savedLocations = [],
 }: MainMapProps) => {
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
   const { theme } = useTheme();
@@ -94,8 +123,20 @@ export const MainMap = ({
           onCameraChanged={(event) => {
             onCameraChanged?.(event.detail.center, event.detail.zoom);
           }}
+          onContextmenu={(event) => {
+            event.stop();
+
+            const position = event.detail.latLng;
+            if (!position) return;
+
+            onRoutePopupClose?.();
+            onMapContextSelect?.(position);
+          }}
           colorScheme={theme === "dark" ? "DARK" : "LIGHT"}
           gestureHandling='greedy'
+          draggable
+          scrollwheel
+          keyboardShortcuts
           disableDefaultUI
           clickableIcons={false}
           mapId={mapId}
@@ -208,6 +249,35 @@ export const MainMap = ({
           })}
           {selectedLeg && (
             <RoutePopup selectedLeg={selectedLeg} onClose={onRoutePopupClose} />
+          )}
+          {savedLocations.map((location) => (
+            <AdvancedMarker key={location.id} position={location.position}>
+              <div className='flex -translate-y-1 flex-col items-center gap-1'>
+                <div
+                  className='flex h-10 w-10 items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
+                  style={{ backgroundColor: location.color }}>
+                  <LocationIconGlyph icon={location.icon} size={22} />
+                </div>
+                <span className='max-w-28 rounded-md bg-white/95 px-2 py-0.5 text-center text-xs font-semibold leading-tight text-neutral-900 shadow-md dark:bg-neutral-700/95 dark:text-white'>
+                  {location.name}
+                </span>
+              </div>
+            </AdvancedMarker>
+          ))}
+          {mapLocationDraft && (
+            <InfoWindow
+              position={mapLocationDraft.position}
+              className='map-location-info-window'
+              onCloseClick={onMapLocationPopupClose}
+              shouldFocus={false}
+              pixelOffset={[0, -8]}>
+              <MapLocationPopup
+                draft={mapLocationDraft}
+                onColorChange={onMapLocationColorChange}
+                onIconChange={onMapLocationIconChange}
+                onSave={onMapLocationSave}
+              />
+            </InfoWindow>
           )}
         </Map>
       </APIProvider>

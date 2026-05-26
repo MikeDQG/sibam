@@ -12,6 +12,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
+import { useUserSession } from "../UserSessionProvider";
 
 export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,11 +21,17 @@ export const Login = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { syncUserSession } = useUserSession();
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/account");
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      await syncUserSession(await userCredential.user.getIdToken());
+      navigate("/home");
     } catch (error: any) {
       switch (error.code) {
         case "auth/invalid-credential":
@@ -48,13 +55,8 @@ export const Login = () => {
       const userCredential = await signInWithPopup(auth, provider);
       const token = await userCredential.user.getIdToken();
 
-      await fetch("http://localhost:8080/api/users/me", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      navigate("/account");
+      await syncUserSession(token);
+      navigate("/home");
     } catch (error: any) {
       setError("Prišlo je do napake pri Google prijavi.");
     }

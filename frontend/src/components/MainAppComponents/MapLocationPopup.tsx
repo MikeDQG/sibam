@@ -23,7 +23,7 @@ type MapLocationPopupProps = {
   draft: MapLocationDraft;
   onColorChange?: (color: string) => void;
   onIconChange?: (icon: LocationIcon) => void;
-  onSave?: (name: string) => void;
+  onSave: (draft: MapLocationDraft) => void;
 };
 
 const locationColors = [
@@ -34,7 +34,7 @@ const locationColors = [
   { label: "Vijolična", value: "#7c3aed" },
 ];
 
-const locationIcons = [
+export const locationIcons = [
   { label: "Dom", value: "home", Icon: FaHome },
   { label: "Šola", value: "school", Icon: IoIosSchool },
   { label: "Delo", value: "work", Icon: MdWork },
@@ -44,6 +44,27 @@ const locationIcons = [
   value: LocationIcon;
   Icon: ComponentType<{ size?: number; className?: string }>;
 }[];
+
+export function isLocationIcon(icon: unknown): icon is LocationIcon {
+  return locationIcons.some((option) => option.value === icon);
+}
+
+type LocationIconGlyphProps = {
+  icon: LocationIcon;
+  size?: number;
+  className?: string;
+};
+
+export function LocationIconGlyph({
+  icon,
+  size,
+  className,
+}: LocationIconGlyphProps) {
+  const Icon =
+    locationIcons.find((option) => option.value === icon)?.Icon ?? FaHome;
+
+  return <Icon size={size} className={className} />;
+}
 
 export function MapLocationPopup({
   draft,
@@ -57,10 +78,24 @@ export function MapLocationPopup({
     setName(draft.name);
   }, [draft.position.lat, draft.position.lng, draft.name]);
 
+  // Validacija: ime, barva in ikona morajo biti nastavljeni
   const isValidInput =
     name.trim().length > 0 &&
     draft.color.trim().length > 0 &&
     draft.icon.trim().length > 0;
+
+  // funkcija za shranjevanje lokacije, ki preveri validnost in nato pokliče onSave callback
+  function handleSave() {
+    if (isValidInput) {
+      // normaliziranje shranjene vrednosti
+      const normalizedDraft = {
+        ...draft,
+        name: name.trim(),
+      };
+
+      onSave(normalizedDraft);
+    }
+  }
 
   return (
     <div className='w-64 bg-card text-sm text-card-foreground dark:bg-neutral-700 dark:text-white'>
@@ -95,7 +130,7 @@ export function MapLocationPopup({
         </div>
 
         <div className='flex items-center gap-2'>
-          {locationIcons.map(({ label, value, Icon }) => (
+          {locationIcons.map(({ label, value }) => (
             <button
               key={value}
               type='button'
@@ -107,17 +142,14 @@ export function MapLocationPopup({
               }`}
               aria-label={label}
               title={label}>
-              <Icon size={20} />
+              <LocationIconGlyph icon={value} size={20} />
             </button>
           ))}
         </div>
       </div>
 
       <div className='flex justify-end pt-4'>
-        <Button
-          type='button'
-          disabled={!isValidInput}
-          onClick={() => onSave?.(name.trim())}>
+        <Button type='button' disabled={!isValidInput} onClick={handleSave}>
           Shrani
         </Button>
       </div>

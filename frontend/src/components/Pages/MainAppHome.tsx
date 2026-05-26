@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
+import { toast } from "sonner";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
-import { MainMap } from "../MainAppComponents/MainMap";
-import type { LocationIcon } from "../MainAppComponents/MapLocationPopup";
+import { MainMap, type SavedMapLocation } from "../MainAppComponents/MainMap";
+import {
+  isLocationIcon,
+  type LocationIcon,
+} from "../MainAppComponents/MapLocationPopup";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
 import type { RoutePopupSelection } from "../MainAppComponents/RoutePopup";
 import type {
@@ -10,6 +14,9 @@ import type {
   RouteLeg,
   RoutePath,
 } from "../MainAppComponents/RoutePolyline";
+import { useUserSession } from "../UserSessionProvider";
+
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const routeOptions = [
   {
@@ -52,10 +59,20 @@ type MapLocationDraft = {
   icon: LocationIcon;
 };
 
+type SavedLocationResponse = {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  color?: string | null;
+  icon?: string | null;
+};
+
 const defaultLocationColor = "#b91c1c";
 const defaultLocationIcon: LocationIcon = "home";
 
 export const MainAppHome = () => {
+  const { userSession, getAuthToken, fetchUserSession } = useUserSession();
   const [center, setCenter] = useState<MapCenter>(fallbackCenter);
   const [zoom, setZoom] = useState(14);
   const [selectedLeg, setSelectedLeg] = useState<RoutePopupSelection | null>(
@@ -67,6 +84,7 @@ export const MainAppHome = () => {
   const [routePath, setRoutePath] = useState<RoutePath | null>(null);
   const [mapLocationDraft, setMapLocationDraft] =
     useState<MapLocationDraft | null>(null);
+  const [savedLocations, setSavedLocations] = useState<SavedMapLocation[]>([]);
 
   // iskanje userjeve lokacije
   function locateUser(zoomToUser = false) {
@@ -97,6 +115,68 @@ export const MainAppHome = () => {
   useEffect(() => {
     locateUser();
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchSavedLocations() {
+      const token = await getAuthToken();
+
+      if (!token) {
+        setSavedLocations([]);
+        return;
+      }
+
+      try {
+        const session = userSession ?? (await fetchUserSession(token));
+
+        const response = await fetch(`${apiUrl}/api/locations/${session.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Saved locations request failed: ${response.status}`);
+        }
+
+        const locations = (await response.json()) as SavedLocationResponse[];
+
+        if (!isActive) return;
+
+        setSavedLocations(
+          locations
+            .filter(
+              (location) =>
+                Number.isFinite(location.latitude) &&
+                Number.isFinite(location.longitude),
+            )
+            .map((location) => ({
+              id: location.id,
+              name: location.name,
+              position: {
+                lat: location.latitude,
+                lng: location.longitude,
+              },
+              color: location.color ?? defaultLocationColor,
+              icon: isLocationIcon(location.icon)
+                ? location.icon
+                : defaultLocationIcon,
+            })),
+        );
+      } catch (error) {
+        if (!isActive) return;
+        console.error("Napaka pri pridobivanju shranjenih lokacij:", error);
+        toast.error("Shranjene lokacije niso bile naložene.");
+      }
+    }
+
+    void fetchSavedLocations();
+
+    return () => {
+      isActive = false;
+    };
+  }, [fetchUserSession, getAuthToken, userSession]);
 
   // handlanje overlay kontrol
   function handleZoomIn() {
@@ -191,11 +271,65 @@ export const MainAppHome = () => {
     );
   }
 
-  function handleMapLocationSave(name: string) {
-    setMapLocationDraft((currentDraft) =>
-      currentDraft ? { ...currentDraft, name } : currentDraft,
-    );
-    setMapLocationDraft(null);
+  async function handleMapLocationSave(draft: MapLocationDraft) {
+    try {
+      const token = await getAuthToken();
+
+      if (!token) {
+        toast.error("Za shranjevanje lokacije moraš biti prijavljen.");
+        return;
+      }
+
+      const session = userSession ?? (await fetchUserSession(token));
+      const locationName = draft.name.trim();
+
+      const data = {
+        userId: session.id,
+        name: locationName,
+        address: locationName,
+        latitude: draft.position.lat,
+        longitude: draft.position.lng,
+      };
+
+      const response = await fetch(`${apiUrl}/api/locations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        console.log(
+          "Napaka pri shranjevanju lokacije, status:",
+          response.status,
+        );
+        throw new Error(response.statusText);
+      }
+
+      const savedLocation = (await response.json()) as SavedLocationResponse;
+
+      setSavedLocations((currentLocations) => [
+        ...currentLocations,
+        {
+          id: savedLocation.id,
+          name: savedLocation.name,
+          position: {
+            lat: savedLocation.latitude,
+            lng: savedLocation.longitude,
+          },
+          color: draft.color,
+          icon: draft.icon,
+        },
+      ]);
+
+      toast.success("Lokacija je shranjena.");
+      setMapLocationDraft(null);
+    } catch (e) {
+      console.log("Napaka pri shranjevanju lokacije:", e);
+      toast.error("Lokacije ni bilo mogoče shraniti. Poskusite znova.");
+    }
   }
 
   return (
@@ -217,6 +351,7 @@ export const MainAppHome = () => {
         onMapLocationIconChange={handleMapLocationIconChange}
         onMapLocationSave={handleMapLocationSave}
         onMapLocationPopupClose={() => setMapLocationDraft(null)}
+        savedLocations={savedLocations}
         markerPosition={markerPosition}
         destinationMarkerPosition={destinationMarkerPosition}
       />

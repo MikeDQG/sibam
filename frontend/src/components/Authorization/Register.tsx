@@ -12,6 +12,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
+import { useUserSession } from "../UserSessionProvider";
 
 export const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +26,7 @@ export const Register = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { syncUserSession } = useUserSession();
 
   const handleRegister = async () => {
     const allRequirementsMet = passwordRequirements.every((r) => r.isValid);
@@ -57,13 +59,7 @@ export const Register = () => {
       );
       const token = await userCredential.user.getIdToken();
 
-      await fetch("http://localhost:8080/api/users/me", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "X-Full-Name": fullName,
-        },
-      });
+      await syncUserSession(token, fullName);
 
       navigate("/account");
     } catch (error: any) {
@@ -89,12 +85,7 @@ export const Register = () => {
       const userCredential = await signInWithPopup(auth, provider);
       const token = await userCredential.user.getIdToken();
 
-      await fetch("http://localhost:8080/api/users/me", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await syncUserSession(token);
 
       navigate("/account");
     } catch (error: any) {

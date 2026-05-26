@@ -66,6 +66,7 @@ function normalizeSavedLocation(
 
 function SavedLocationMapCard({ location }: { location: SavedAccountLocation }) {
   const { theme } = useTheme();
+  const [zoom, setZoom] = useState(13);
 
   return (
     <article
@@ -73,16 +74,27 @@ function SavedLocationMapCard({ location }: { location: SavedAccountLocation }) 
       aria-label={location.name}>
       <Map
         center={location.position}
-        zoom={13}
+        zoom={zoom}
+        onCameraChanged={(event) => {
+          setZoom(event.detail.zoom);
+        }}
         colorScheme={theme === "dark" ? "DARK" : "LIGHT"}
-        gestureHandling='none'
+        gestureHandling='greedy'
+        draggable={false}
+        scrollwheel
+        zoomControl
+        minZoom={10}
+        maxZoom={19}
         disableDefaultUI
         keyboardShortcuts={false}
         clickableIcons={false}
         mapId={mapId}
         reuseMaps>
-        <AdvancedMarker position={location.position}>
-          <div className='flex -translate-y-1 flex-col items-center gap-1'>
+        <AdvancedMarker
+          position={location.position}
+          anchorLeft='-50%'
+          anchorTop='-22px'>
+          <div className='flex flex-col items-center gap-1'>
             <div
               className='flex h-11 w-11 items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
               style={{ backgroundColor: location.color }}>

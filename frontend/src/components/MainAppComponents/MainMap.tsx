@@ -134,6 +134,9 @@ export const MainMap = ({
           }}
           colorScheme={theme === "dark" ? "DARK" : "LIGHT"}
           gestureHandling='greedy'
+          draggable
+          scrollwheel
+          keyboardShortcuts
           disableDefaultUI
           clickableIcons={false}
           mapId={mapId}

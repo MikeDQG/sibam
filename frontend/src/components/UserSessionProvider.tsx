@@ -50,10 +50,6 @@ type UserSessionProviderProps = {
 export function UserSessionProvider({ children }: UserSessionProviderProps) {
   const [userSession, setUserSession] = useState<UserSession | null>(null);
 
-  useEffect(() => {
-    console.log("Session ", userSession);
-  }, [userSession]);
-
   const clearUserSession = useCallback(() => {
     setUserSession(null);
   }, []);

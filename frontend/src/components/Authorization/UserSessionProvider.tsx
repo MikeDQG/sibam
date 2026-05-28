@@ -7,10 +7,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 
 const apiUrl = import.meta.env.VITE_API_URL;
+const authRoutes = new Set(["/login", "/register"]);
 
 export type UserSession = {
   id: string;
@@ -43,6 +44,14 @@ function normalizeUser(user: BackendUser): UserSession {
   };
 }
 
+async function endInvalidSession() {
+  await signOut(auth);
+
+  if (authRoutes.has(window.location.pathname)) return;
+
+  window.location.replace("/login");
+}
+
 type UserSessionProviderProps = {
   children: ReactNode;
 };
@@ -64,21 +73,27 @@ export function UserSessionProvider({ children }: UserSessionProviderProps) {
 
   const fetchUserSession = useCallback(
     async (token: string) => {
-      const response = await fetch(`${apiUrl}/api/users/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      try {
+        const response = await fetch(`${apiUrl}/api/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error(`User session request failed: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`User session request failed: ${response.status}`);
+        }
+
+        const session = normalizeUser((await response.json()) as BackendUser);
+        setUserSession(session);
+        return session;
+      } catch (error) {
+        clearUserSession();
+        await endInvalidSession();
+        throw error;
       }
-
-      const session = normalizeUser((await response.json()) as BackendUser);
-      setUserSession(session);
-      return session;
     },
-    [setUserSession],
+    [clearUserSession, setUserSession],
   );
 
   const syncUserSession = useCallback(
@@ -118,6 +133,7 @@ export function UserSessionProvider({ children }: UserSessionProviderProps) {
         await fetchUserSession(await user.getIdToken());
       } catch {
         clearUserSession();
+        await endInvalidSession();
       }
     });
 

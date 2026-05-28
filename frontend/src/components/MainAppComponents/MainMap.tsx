@@ -138,6 +138,7 @@ export const MainMap = ({
           scrollwheel
           keyboardShortcuts
           disableDefaultUI
+          zoomControl={false}
           clickableIcons={false}
           mapId={mapId}
           reuseMaps>

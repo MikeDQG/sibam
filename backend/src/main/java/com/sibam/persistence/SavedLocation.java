@@ -34,6 +34,9 @@ public class SavedLocation {
     @Column(name = "color")
     private String color;
 
+    @Column(name = "logo")
+    private String logo;
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 }

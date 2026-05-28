@@ -29,7 +29,7 @@ public class SavedLocationService {
         return savedLocationRepository.findByUserId(userId);
     }
 
-    public SavedLocation saveLocation(UUID userId, String name, String address, Double latitude, Double longitude, String color, String uid) {
+    public SavedLocation saveLocation(UUID userId, String name, String address, Double latitude, Double longitude, String color, String logo, String uid) {
         User user = userRepository.findById(userId).orElseThrow();
         if (!user.getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         SavedLocation location = new SavedLocation();
@@ -39,11 +39,12 @@ public class SavedLocationService {
         location.setLatitude(latitude);
         location.setLongitude(longitude);
         location.setColor(color);
+        location.setLogo(logo);
         location.setCreatedAt(OffsetDateTime.now());
         return savedLocationRepository.save(location);
     }
 
-    public SavedLocation updateLocation(UUID locationId, String name, String address, Double latitude, Double longitude, String color, String uid) {
+    public SavedLocation updateLocation(UUID locationId, String name, String address, Double latitude, Double longitude, String color, String logo, String uid) {
         SavedLocation location = savedLocationRepository.findById(locationId).orElseThrow();
         if (!location.getUser().getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         location.setAddress(address);
@@ -51,6 +52,7 @@ public class SavedLocationService {
         location.setLongitude(longitude);
         location.setLatitude(latitude);
         location.setColor(color);
+        location.setLogo(logo);
         return savedLocationRepository.save(location);
     }
 

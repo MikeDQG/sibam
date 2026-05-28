@@ -8,5 +8,6 @@ public record SavedLocationRequest(
         String address,
         Double latitude,
         Double longitude,
-        String color
+        String color,
+        String logo
 ) {}

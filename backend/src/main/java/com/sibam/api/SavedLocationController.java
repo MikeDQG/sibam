@@ -30,7 +30,7 @@ public class SavedLocationController {
             @RequestBody SavedLocationRequest request,
             @RequestAttribute("uid") String uid) {
         return ResponseEntity.ok(locationService.saveLocation(
-                request.userId(), request.name(), request.address(), request.latitude(), request.longitude(), request.color(), uid
+                request.userId(), request.name(), request.address(), request.latitude(), request.longitude(), request.color(), request.logo(), uid
         ));
     }
 
@@ -40,7 +40,7 @@ public class SavedLocationController {
             @RequestBody SavedLocationRequest request,
             @RequestAttribute("uid") String uid) {
         return ResponseEntity.ok(locationService.updateLocation(
-                locationId, request.name(), request.address(), request.latitude(), request.longitude(), request.color(), uid
+                locationId, request.name(), request.address(), request.latitude(), request.longitude(), request.color(), request.logo(), uid
         ));
     }
 

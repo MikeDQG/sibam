@@ -6,7 +6,7 @@ export type PlaceSuggestion = {
     secondaryText: string;
 };
 
-const MARIBOR_BOUNDS = {
+export const MARIBOR_BOUNDS = {
     low: { latitude: 46.49, longitude: 15.520363 },
     high: { latitude: 46.63, longitude: 15.76 },
 };

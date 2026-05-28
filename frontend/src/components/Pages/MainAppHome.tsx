@@ -14,7 +14,7 @@ import type {
   RouteLeg,
   RoutePath,
 } from "../MainAppComponents/RoutePolyline";
-import { useUserSession } from "../UserSessionProvider";
+import { useUserSession } from "../Authorization/UserSessionProvider";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 

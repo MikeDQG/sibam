@@ -11,7 +11,7 @@ import {
   type LocationIcon,
 } from "../MainAppComponents/MapLocationPopup";
 import { useTheme } from "../ThemeProvider";
-import { useUserSession } from "../UserSessionProvider";
+import { useUserSession } from "../Authorization/UserSessionProvider";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -64,7 +64,11 @@ function normalizeSavedLocation(
   };
 }
 
-function SavedLocationMapCard({ location }: { location: SavedAccountLocation }) {
+function SavedLocationMapCard({
+  location,
+}: {
+  location: SavedAccountLocation;
+}) {
   const { theme } = useTheme();
   const [zoom, setZoom] = useState(13);
 

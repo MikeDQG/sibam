@@ -12,7 +12,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { useUserSession } from "../UserSessionProvider";
+import { useUserSession } from "./UserSessionProvider";
 
 export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);

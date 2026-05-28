@@ -118,7 +118,6 @@ export const AccountPage = () => {
         );
       } catch (error) {
         if (!isActive) return;
-        console.error("Napaka pri pridobivanju shranjenih lokacij:", error);
         setSavedLocations([]);
         toast.error("Shranjene lokacije niso bile naložene.");
       } finally {

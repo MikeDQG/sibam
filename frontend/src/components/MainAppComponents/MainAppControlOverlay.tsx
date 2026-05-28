@@ -254,7 +254,7 @@ export const MainAppControlOverlay = ({
                           e.key === "Escape" && origin.setIsOpen(false)
                         }
                         placeholder='Kje štartaš?'
-                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
+                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none dark:bg-transparent focus-visible:ring-0 focus-visible:outline-none'
                         aria-label='Kje štartaš?'
                       />
                       {origin.value && (
@@ -281,7 +281,7 @@ export const MainAppControlOverlay = ({
                           e.key === "Escape" && destination.setIsOpen(false)
                         }
                         placeholder='Kam šibaš?'
-                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
+                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none dark:bg-transparent focus-visible:ring-0 focus-visible:outline-none'
                         aria-label='Kam šibaš?'
                       />
                       {destination.value && (
@@ -399,7 +399,7 @@ export const MainAppControlOverlay = ({
                       e.key === "Escape" && destination.setIsOpen(false)
                     }
                     placeholder='Kam šibaš?'
-                    className='h-full w-auto flex-1 rounded-lg border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none focus-visible:ring-0 focus-visible:outline-none'
+                    className='h-full w-auto flex-1 rounded-lg border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none dark:bg-transparent focus-visible:ring-0 focus-visible:outline-none'
                     aria-label='Kam šibaš?'
                   />
                   {destination.value && (

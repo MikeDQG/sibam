@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
 import { toast } from "sonner";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
@@ -15,6 +15,7 @@ import type {
   RoutePath,
 } from "../MainAppComponents/RoutePolyline";
 import { useUserSession } from "../Authorization/UserSessionProvider";
+import { MARIBOR_BOUNDS } from "../../hooks/usePlacesAutocomplete";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -71,6 +72,15 @@ type SavedLocationResponse = {
 const defaultLocationColor = "#b91c1c";
 const defaultLocationIcon: LocationIcon = "home";
 
+function isInsideMaribor({ lat, lng }: MapCenter) {
+  return (
+    lat >= MARIBOR_BOUNDS.low.latitude &&
+    lat <= MARIBOR_BOUNDS.high.latitude &&
+    lng >= MARIBOR_BOUNDS.low.longitude &&
+    lng <= MARIBOR_BOUNDS.high.longitude
+  );
+}
+
 export const MainAppHome = () => {
   const { userSession, getAuthToken, fetchUserSession } = useUserSession();
   const [center, setCenter] = useState<MapCenter>(fallbackCenter);
@@ -79,23 +89,45 @@ export const MainAppHome = () => {
     null,
   );
   const [markerPosition, setMarkerPosition] = useState<MapCenter | null>(null);
+  const [userLocationPosition, setUserLocationPosition] =
+    useState<MapCenter | null>(null);
   const [destinationMarkerPosition, setDestinationMarkerPosition] =
     useState<MapCenter | null>(null);
   const [routePath, setRoutePath] = useState<RoutePath | null>(null);
   const [mapLocationDraft, setMapLocationDraft] =
     useState<MapLocationDraft | null>(null);
   const [savedLocations, setSavedLocations] = useState<SavedMapLocation[]>([]);
+  const hasShownOutOfCoverageToast = useRef(false);
 
   // iskanje userjeve lokacije
-  function locateUser(zoomToUser = false) {
+  function locateUser({
+    zoomToUser = false,
+    showOutOfCoverageToast = false,
+  } = {}) {
     if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setCenter({
+        const userPosition = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        });
+        };
+
+        setUserLocationPosition(userPosition);
+
+        if (!isInsideMaribor(userPosition)) {
+          setCenter(fallbackCenter);
+          setZoom(14);
+          if (showOutOfCoverageToast && !hasShownOutOfCoverageToast.current) {
+            hasShownOutOfCoverageToast.current = true;
+            toast.info(
+              "Trenutno si izven območja pokritosti. Prikazujemo Maribor.",
+            );
+          }
+          return;
+        }
+
+        setCenter(userPosition);
 
         if (zoomToUser) {
           setZoom(16);
@@ -164,7 +196,7 @@ export const MainAppHome = () => {
                 : defaultLocationIcon,
             })),
         );
-      } catch (error) {
+      } catch {
         if (!isActive) return;
         toast.error("Shranjene lokacije niso bile naložene.");
       }
@@ -187,7 +219,7 @@ export const MainAppHome = () => {
   }
 
   function handleLocate() {
-    locateUser(true);
+    locateUser({ zoomToUser: true, showOutOfCoverageToast: true });
   }
 
   function handleCameraChanged(nextCenter: MapCenter, nextZoom: number) {
@@ -323,7 +355,7 @@ export const MainAppHome = () => {
 
       toast.success("Lokacija je shranjena.");
       setMapLocationDraft(null);
-    } catch (e) {
+    } catch {
       toast.error("Lokacije ni bilo mogoče shraniti. Poskusite znova.");
     }
   }
@@ -349,6 +381,7 @@ export const MainAppHome = () => {
         onMapLocationPopupClose={() => setMapLocationDraft(null)}
         savedLocations={savedLocations}
         markerPosition={markerPosition}
+        userLocationPosition={userLocationPosition}
         destinationMarkerPosition={destinationMarkerPosition}
       />
 

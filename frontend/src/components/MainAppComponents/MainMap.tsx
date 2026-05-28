@@ -50,6 +50,7 @@ type MainMapProps = {
   onMapLocationPopupClose?: () => void;
   savedLocations?: SavedMapLocation[];
   markerPosition?: MapCenter | null;
+  userLocationPosition?: MapCenter | null;
   destinationMarkerPosition?: MapCenter | null;
 };
 
@@ -88,6 +89,7 @@ export const MainMap = ({
   zoom,
   onCameraChanged,
   markerPosition,
+  userLocationPosition,
   destinationMarkerPosition,
   legs,
   selectedLeg,
@@ -142,6 +144,14 @@ export const MainMap = ({
           clickableIcons={false}
           mapId={mapId}
           reuseMaps>
+          {userLocationPosition && (
+            <AdvancedMarker position={userLocationPosition}>
+              <div className='relative flex h-8 w-8 items-center justify-center'>
+                <div className='absolute h-8 w-8 rounded-full bg-blue-500/20' />
+                <div className='h-4 w-4 rounded-full border-2 border-white bg-blue-600 shadow-lg' />
+              </div>
+            </AdvancedMarker>
+          )}
           {/* zacetek in konec poti */}
           {markerPosition && (
             <AdvancedMarker position={markerPosition}>

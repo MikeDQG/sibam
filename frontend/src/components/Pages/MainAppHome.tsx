@@ -166,7 +166,6 @@ export const MainAppHome = () => {
         );
       } catch (error) {
         if (!isActive) return;
-        console.error("Napaka pri pridobivanju shranjenih lokacij:", error);
         toast.error("Shranjene lokacije niso bile naložene.");
       }
     }
@@ -303,10 +302,6 @@ export const MainAppHome = () => {
       });
 
       if (!response.ok) {
-        console.log(
-          "Napaka pri shranjevanju lokacije, status:",
-          response.status,
-        );
         throw new Error(response.statusText);
       }
 
@@ -329,7 +324,6 @@ export const MainAppHome = () => {
       toast.success("Lokacija je shranjena.");
       setMapLocationDraft(null);
     } catch (e) {
-      console.log("Napaka pri shranjevanju lokacije:", e);
       toast.error("Lokacije ni bilo mogoče shraniti. Poskusite znova.");
     }
   }

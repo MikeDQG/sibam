@@ -390,6 +390,7 @@ export const MainAppHome = () => {
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onLocate={handleLocate}
+        currentLocation={userLocationPosition}
         onPlaceSelect={handlePlaceSelect}
         onDestinationSelect={handleDestinationSelect}
         onPathReceive={handlePathReceive}

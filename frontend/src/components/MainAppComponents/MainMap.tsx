@@ -5,7 +5,8 @@ import {
   Map,
   useMap,
 } from "@vis.gl/react-google-maps";
-import { Fragment, useEffect } from "react";
+import { Trash } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
 import { useTheme } from "../ThemeProvider";
 import {
   LocationIconGlyph,
@@ -49,6 +50,8 @@ type MainMapProps = {
   onMapLocationSave: (draft: MapLocationDraft) => void;
   onMapLocationPopupClose?: () => void;
   savedLocations?: SavedMapLocation[];
+  deletingSavedLocationId?: string | null;
+  onSavedLocationDelete?: (locationId: string) => void;
   markerPosition?: MapCenter | null;
   userLocationPosition?: MapCenter | null;
   destinationMarkerPosition?: MapCenter | null;
@@ -104,9 +107,17 @@ export const MainMap = ({
   onMapLocationSave,
   onMapLocationPopupClose,
   savedLocations = [],
+  deletingSavedLocationId,
+  onSavedLocationDelete,
 }: MainMapProps) => {
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
   const { theme } = useTheme();
+  const [deletePromptLocationId, setDeletePromptLocationId] = useState<
+    string | null
+  >(null);
+  const deletePromptLocation =
+    savedLocations.find((location) => location.id === deletePromptLocationId) ??
+    null;
 
   if (!hasApiKey) {
     return (
@@ -262,12 +273,26 @@ export const MainMap = ({
             <RoutePopup selectedLeg={selectedLeg} onClose={onRoutePopupClose} />
           )}
           {savedLocations.map((location) => (
-            <AdvancedMarker key={location.id} position={location.position}>
+            <AdvancedMarker
+              key={location.id}
+              position={location.position}
+              clickable={Boolean(onSavedLocationDelete)}
+              onClick={() => {
+                if (!onSavedLocationDelete) return;
+                onRoutePopupClose?.();
+                onMapLocationPopupClose?.();
+                setDeletePromptLocationId(location.id);
+              }}>
               <div className='flex -translate-y-1 flex-col items-center gap-1'>
                 <div
-                  className='flex h-10 w-10 items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
+                  className='group flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
                   style={{ backgroundColor: location.color }}>
-                  <LocationIconGlyph icon={location.icon} size={22} />
+                  <LocationIconGlyph
+                    icon={location.icon}
+                    size={22}
+                    className='group-hover:hidden'
+                  />
+                  <Trash className='hidden group-hover:block' size={20} />
                 </div>
                 <span className='max-w-28 rounded-md bg-white/95 px-2 py-0.5 text-center text-xs font-semibold leading-tight text-neutral-900 shadow-md dark:bg-neutral-700/95 dark:text-white'>
                   {location.name}
@@ -275,6 +300,44 @@ export const MainMap = ({
               </div>
             </AdvancedMarker>
           ))}
+          {deletePromptLocation && (
+            <InfoWindow
+              position={deletePromptLocation.position}
+              onCloseClick={() => setDeletePromptLocationId(null)}
+              className='map-location-info-window'
+              shouldFocus={false}
+              pixelOffset={[0, -8]}>
+              <div className='w-56 text-foreground'>
+                <p className='text-sm font-semibold leading-tight'>
+                  Izbriši shranjeno lokacijo?
+                </p>
+                <p className='mt-3 text-xs leading-snug text-foreground-muted'>
+                  Lokacija "{deletePromptLocation.name}" bo odstranjena iz
+                  tvojih shranjenih lokacij.
+                </p>
+                <div className='mt-3 flex justify-end gap-2'>
+                  <button
+                    type='button'
+                    onClick={() => setDeletePromptLocationId(null)}
+                    className='rounded-md cursor-pointer bg-background/40 px-3 py-1.5 text-xs font-medium text-foreground-muted hover:bg-background/20'>
+                    Prekliči
+                  </button>
+                  <button
+                    type='button'
+                    disabled={
+                      deletingSavedLocationId === deletePromptLocation.id
+                    }
+                    onClick={() => {
+                      onSavedLocationDelete?.(deletePromptLocation.id);
+                      setDeletePromptLocationId(null);
+                    }}
+                    className='rounded-md cursor-pointer bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60'>
+                    Izbriši
+                  </button>
+                </div>
+              </div>
+            </InfoWindow>
+          )}
           {mapLocationDraft && (
             <InfoWindow
               position={mapLocationDraft.position}

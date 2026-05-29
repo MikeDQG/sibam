@@ -2,11 +2,11 @@
 
 ## Pregled
 
-Backend uporablja **JUnit 5 + Mockito + AssertJ** za unit teste, ki jih zagotavlja
-`spring-boot-starter-test`. Za zagon testov ni potrebnih dodatnih odvisnosti.
+Backend uporablja **JUnit 5 + Mockito + AssertJ** za unit teste in **Testcontainers + Spring Boot Test** za integracijske teste.
 
-Testi so čisti unit testi — Spring context se nikoli ne naloži, podatkovna baza se ne zažene.
-Zunanje odvisnosti (repozitoriji, API odjemalci, Supabase) so zamenjane z Mockito mocki.
+**Unit testi** — Spring context se nikoli ne naloži, podatkovna baza se ne zažene. Zunanje odvisnosti so zamenjane z Mockito mocki.
+
+**Integracijski testi** — Spring context se naloži v celoti. Ločeni na dva tipa: ONNX testi preverijo inference modelov na pravem Supabase, DB testi preverijo JPA plast na pravi PostgreSQL podatkovni bazi v Docker containerju.
 
 ---
 
@@ -22,6 +22,12 @@ Zunanje odvisnosti (repozitoriji, API odjemalci, Supabase) so zamenjane z Mockit
 
 **CI:** Samodejno se izvede ob vsakem push in pull requestu na `main` vejo preko
 GitHub Actions `Main CI`.
+
+### Integracijski testi
+
+**DB testi** zahtevajo zagnani Docker — Testcontainers samodejno potegne `postgres:16` image in zažene container. Za zagon zadostuje `./mvnw test` ali zagon razreda iz IntelliJ, Docker mora biti aktiven.
+
+**ONNX testi** (`BikePredictionServiceIT`, `BusDelayPredictionServiceIT`) so privzeto preskočeni, razen ko sta nastavljeni okoljski spremenljivki `SUPABASE_URL` in `SUPABASE_SERVICE_KEY`. Brez njiju se testi ne zaženejo in ne prijavijo napake.
 
 ---
 
@@ -70,6 +76,30 @@ GitHub Actions `Main CI`.
 
 ---
 
+## Integracijski testi
+
+### ONNX modeli — pravo nalaganje in inference
+
+Oba razreda zahtevata okoljski spremenljivki `SUPABASE_URL` in `SUPABASE_SERVICE_KEY`. Brez njiju sta celotna razreda preskočena (`@EnabledIfEnvironmentVariable`). Spring context se ne naloži — modeli se zgradijo ročno z `ReflectionTestUtils`.
+
+| Razred | Pokriva |
+| --- | --- |
+| `it/BikePredictionServiceIT` | Vsi štirje modeli se naložijo brez napake; `predict` vrne verjetnosti med 0 in 1; napovedane količine so nenegativne; pravilno deluje za vikend in deževen vnos |
+| `it/BusDelayPredictionServiceIT` | Model in preslikava smeri se naložita brez napake; neznana postaja vrne 0 brez klica modela; znana postaja (linija 84, postaja 17) vrne zamudo v razumnem obsegu (−900 s do 3600 s); veljavni rezultati za več kombinacij vnosov |
+
+### Podatkovna baza — JPA plast na pravem PostgreSQL
+
+Vsi DB integracijski testi dedujejo od `AbstractDatabaseIT`, ki zagotavlja singleton PostgreSQL container (Testcontainers), skupen za celoten testni tek. Spring context se naloži enkrat in se deli med vsemi razredi. Sinhronski testi so označeni z `@Transactional` — vsak test se po koncu samodejno povrne.
+
+| Razred | Pokriva |
+| --- | --- |
+| `it/UserServiceIT` | Ustvarjanje novega uporabnika s pravilnimi polji; drugi klic z istim UID vrne obstoječega brez podvajanja vrstice; iskanje po UID vrne uporabnika; iskanje neznanega UID vrne prazen `Optional` |
+| `it/SavedLocationServiceIT` | Shranjevanje lokacije in branje z `getLocationsForUser`; posodobitev preslika spremenjena polja; brisanje odstrani vrstico; vse štiri operacije vrnejo `403`, ko se UID ne ujema z lastnikom |
+| `it/MBajkDataServiceIT` | `ingestBikesData` ustvari postajo in posnetek v bazi (Awaitility čaka na asinhroni subscribe); drugi klic ne podvoji postaje; `getBikeStationVaos` vrne razpoložljivost iz najnovejšega posnetka |
+| `it/GTFSRTDataServiceIT` | `ingestRealtimeTrips` shrani `TripEntity` s pravilnimi polji; shrani `StopDelayEntity` s pravilno FK; prazen feed ne shrani ničesar; dve vozili ustvarita dve entiteti |
+
+---
+
 ## Omejitve
 
 ### SchedulerService — delovni čas ni testabilen
@@ -82,7 +112,7 @@ med **05:00 in 23:00 po ljubljanskem času** (standardni pogoji CI).
 
 `BikePredictionService` in `BusDelayPredictionService` ob zagonu preneseta ONNX modele
 iz Supabase prek `@PostConstruct`. Brez aktivne Supabase povezave ju ni mogoče
-instancirati v enотnem testu. Namesto tega je testirana **plast krmilnika** z zamenjano storitvijo.
+instancirati v unit testu. Namesto tega je testirana **plast krmilnika** z zamenjano storitvijo, celotna storitev pa z integracijskim testom.
 
 ### WeatherDataService — asinhroni subscribe ni testabilen
 
@@ -95,8 +125,7 @@ preslikavalne logike znotraj callbacka zahteva reaktivno testno ogrodje in je bi
 
 | Komponenta                                | Razlog                                                                                                                          |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| JPA repozitoriji                          | So Spring Data vmesniki z izvedenimi poizvedbami brez lastne logike. Generiranje poizvedb testira samo Spring Data JPA ogrodje. |
+| JPA repozitoriji                          | So Spring Data vmesniki z izvedenimi poizvedbami brez lastne logike; posredno preverja vsak DB integracijski test. |
 | `SchedulerService.isWithinOperatingHours` | Glej znane omejitve zgoraj.                                                                                                     |
-| `WeatherDataService.ingestWeatherData`    | Glej znane omejitve zgoraj.                                                                                                     |
-| `MBajkDataService.ingestBikesData`        | Asinhroni reaktivni subscribe; isti razlog kot `WeatherDataService`.                                                            |
+| `WeatherDataService.ingestWeatherData`    | Asinhroni reaktivni subscribe; testiranje preslikavalne logike zahteva reaktivno testno ogrodje.                                |
 | Firebase / `FirebaseAuthFilter`           | Zunanji ponudnik avtentikacije. Testira ga Firebase SDK, ne koda aplikacije.                                                    |

@@ -66,7 +66,7 @@ type SavedLocationResponse = {
   latitude: number;
   longitude: number;
   color?: string | null;
-  icon?: string | null;
+  logo?: string | null;
 };
 
 const defaultLocationColor = "#b91c1c";
@@ -191,8 +191,8 @@ export const MainAppHome = () => {
                 lng: location.longitude,
               },
               color: location.color ?? defaultLocationColor,
-              icon: isLocationIcon(location.icon)
-                ? location.icon
+              icon: isLocationIcon(location.logo)
+                ? location.logo
                 : defaultLocationIcon,
             })),
         );
@@ -322,6 +322,7 @@ export const MainAppHome = () => {
         longitude: draft.position.lng,
         color: draft.color,
         icon: draft.icon,
+        logo: draft.icon,
       };
 
       const response = await fetch(`${apiUrl}/api/locations`, {
@@ -349,7 +350,9 @@ export const MainAppHome = () => {
             lng: savedLocation.longitude,
           },
           color: draft.color,
-          icon: draft.icon,
+          icon: isLocationIcon(savedLocation.logo)
+            ? savedLocation.logo
+            : draft.icon,
         },
       ]);
 

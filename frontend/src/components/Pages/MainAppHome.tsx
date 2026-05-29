@@ -97,6 +97,9 @@ export const MainAppHome = () => {
   const [mapLocationDraft, setMapLocationDraft] =
     useState<MapLocationDraft | null>(null);
   const [savedLocations, setSavedLocations] = useState<SavedMapLocation[]>([]);
+  const [deletingSavedLocationId, setDeletingSavedLocationId] = useState<
+    string | null
+  >(null);
   const hasShownOutOfCoverageToast = useRef(false);
 
   // iskanje userjeve lokacije
@@ -363,6 +366,41 @@ export const MainAppHome = () => {
     }
   }
 
+  async function handleSavedLocationDelete(locationId: string) {
+    if (deletingSavedLocationId === locationId) return;
+
+    setDeletingSavedLocationId(locationId);
+
+    try {
+      const token = await getAuthToken();
+
+      if (!token) {
+        toast.error("Za brisanje lokacije moraš biti prijavljen.");
+        return;
+      }
+
+      const response = await fetch(`${apiUrl}/api/locations/${locationId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Delete location request failed: ${response.status}`);
+      }
+
+      setSavedLocations((currentLocations) =>
+        currentLocations.filter((location) => location.id !== locationId),
+      );
+      toast.success("Lokacija je izbrisana.");
+    } catch {
+      toast.error("Lokacije ni bilo mogoče izbrisati.");
+    } finally {
+      setDeletingSavedLocationId(null);
+    }
+  }
+
   return (
     <main className='relative min-h-screen overflow-hidden'>
       {/* map */}
@@ -383,6 +421,8 @@ export const MainAppHome = () => {
         onMapLocationSave={handleMapLocationSave}
         onMapLocationPopupClose={() => setMapLocationDraft(null)}
         savedLocations={savedLocations}
+        deletingSavedLocationId={deletingSavedLocationId}
+        onSavedLocationDelete={handleSavedLocationDelete}
         markerPosition={markerPosition}
         userLocationPosition={userLocationPosition}
         destinationMarkerPosition={destinationMarkerPosition}

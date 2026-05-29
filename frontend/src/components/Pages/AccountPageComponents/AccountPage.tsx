@@ -1,6 +1,6 @@
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { onAuthStateChanged } from "firebase/auth";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -61,6 +61,9 @@ export const AccountPage = () => {
     [],
   );
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
+  const [deletingLocationIds, setDeletingLocationIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const { userSession, getAuthToken, fetchUserSession } = useUserSession();
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
 
@@ -134,6 +137,45 @@ export const AccountPage = () => {
     };
   }, [fetchUserSession, getAuthToken, userSession]);
 
+  async function handleDeleteLocation(locationId: string) {
+    if (deletingLocationIds.has(locationId)) return;
+
+    setDeletingLocationIds((currentIds) => new Set(currentIds).add(locationId));
+
+    try {
+      const token = await getAuthToken();
+
+      if (!token) {
+        toast.error("Za brisanje lokacije moraš biti prijavljen.");
+        return;
+      }
+
+      const response = await fetch(`${apiUrl}/api/locations/${locationId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Delete location request failed: ${response.status}`);
+      }
+
+      setSavedLocations((currentLocations) =>
+        currentLocations.filter((location) => location.id !== locationId),
+      );
+      toast.success("Lokacija je izbrisana.");
+    } catch {
+      toast.error("Lokacije ni bilo mogoče izbrisati.");
+    } finally {
+      setDeletingLocationIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(locationId);
+        return nextIds;
+      });
+    }
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col items-center bg-[url('/LandingPage/background.jpeg')] bg-cover bg-center px-6 pt-25">
       <img
@@ -174,6 +216,8 @@ export const AccountPage = () => {
                     <SavedLocationMapCard
                       key={location.id}
                       location={location}
+                      isDeleting={deletingLocationIds.has(location.id)}
+                      onDelete={handleDeleteLocation}
                     />
                   ))}
                 </div>
@@ -183,15 +227,25 @@ export const AccountPage = () => {
                 {savedLocations.map((location) => (
                   <div
                     key={location.id}
-                    className='flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border border-border bg-muted p-4 text-center dark:border-neutral-600 dark:bg-neutral-800'>
-                    <div
-                      className='flex h-11 w-11 items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
-                      style={{ backgroundColor: location.color }}>
-                      <LocationIconGlyph icon={location.icon} size={23} />
+                    className='group mb-11 overflow-hidden rounded-lg border border-border bg-muted text-center transition-[margin] duration-200 hover:mb-0 dark:border-neutral-600 dark:bg-neutral-800'>
+                    <div className='flex aspect-square flex-col items-center justify-center gap-2 p-4 transition-[border-radius] duration-200 group-hover:rounded-b-none'>
+                      <div
+                        className='flex h-11 w-11 items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
+                        style={{ backgroundColor: location.color }}>
+                        <LocationIconGlyph icon={location.icon} size={23} />
+                      </div>
+                      <span className='text-sm font-semibold'>
+                        {location.name}
+                      </span>
                     </div>
-                    <span className='text-sm font-semibold'>
-                      {location.name}
-                    </span>
+                    <button
+                      type='button'
+                      disabled={deletingLocationIds.has(location.id)}
+                      onClick={() => handleDeleteLocation(location.id)}
+                      className='flex h-11 max-h-0 w-full cursor-pointer items-center justify-center overflow-hidden rounded-b-lg bg-card/95 text-foreground transition-[max-height,color] duration-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 group-hover:max-h-11 dark:bg-neutral-800/95 dark:text-white dark:hover:text-red-600'
+                      aria-label={`Izbriši lokacijo ${location.name}`}>
+                      <Trash size={20} />
+                    </button>
                   </div>
                 ))}
               </div>

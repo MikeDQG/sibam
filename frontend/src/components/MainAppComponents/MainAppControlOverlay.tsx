@@ -23,8 +23,10 @@ import { useState, useEffect, useRef } from "react";
 import { ThemeToggle } from "../ThemeToggle";
 import {
   usePlacesAutocomplete,
+  MARIBOR_BOUNDS,
   type PlaceSuggestion,
 } from "../../hooks/usePlacesAutocomplete";
+import { LocationIconGlyph, type LocationIcon } from "./MapLocationPopup";
 
 const placesApiKey = import.meta.env.VITE_PLACES_API_KEY as string;
 
@@ -32,18 +34,46 @@ type MainAppControlOverlayProps = {
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onLocate?: () => void;
+  currentLocation?: { lat: number; lng: number } | null;
   onPlaceSelect?: (place: { lat: number; lng: number } | null) => void;
   onDestinationSelect?: (place: { lat: number; lng: number } | null) => void;
   onPathReceive?: (path: RoutePath) => void;
+  savedLocations?: SavedSearchLocation[];
 };
+
+type Coordinates = {
+  lat: number;
+  lng: number;
+};
+
+type SavedSearchLocation = {
+  id: string;
+  name: string;
+  position: Coordinates;
+  color: string;
+  icon: LocationIcon;
+};
+
+const currentLocationLabel = "Trenutna lokacija";
+
+function isInsideMaribor({ lat, lng }: Coordinates) {
+  return (
+    lat >= MARIBOR_BOUNDS.low.latitude &&
+    lat <= MARIBOR_BOUNDS.high.latitude &&
+    lng >= MARIBOR_BOUNDS.low.longitude &&
+    lng <= MARIBOR_BOUNDS.high.longitude
+  );
+}
 
 export const MainAppControlOverlay = ({
   onZoomIn,
   onZoomOut,
   onLocate,
+  currentLocation,
   onPlaceSelect,
   onDestinationSelect,
   onPathReceive,
+  savedLocations = [],
 }: MainAppControlOverlayProps) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -73,6 +103,20 @@ export const MainAppControlOverlay = ({
   const destination = usePlacesAutocomplete(placesApiKey);
   const { setIsOpen: setOriginIsOpen } = origin;
   const { setIsOpen: setDestinationIsOpen } = destination;
+  const canUseCurrentLocation =
+    currentLocation !== null &&
+    currentLocation !== undefined &&
+    isInsideMaribor(currentLocation);
+  const hasSavedLocations = savedLocations.length > 0;
+
+  function getCurrentLocationCoords() {
+    if (!currentLocation || !canUseCurrentLocation) return null;
+
+    return {
+      lat: currentLocation.lat,
+      lng: currentLocation.lng,
+    };
+  }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -89,7 +133,7 @@ export const MainAppControlOverlay = ({
     onPlaceSelect?.(null);
   }
 
-  async function handleSelect(prediction: PlaceSuggestion) {
+  async function handleOriginSelect(prediction: PlaceSuggestion) {
     origin.setValue(prediction.mainText);
     origin.closeDropdown();
     try {
@@ -118,6 +162,67 @@ export const MainAppControlOverlay = ({
     } catch {
       setLocationError(true);
     }
+  }
+
+  function handleCurrentLocationSelect(kind: "origin" | "destination") {
+    const coords = getCurrentLocationCoords();
+    if (!coords) return;
+
+    setLocationError(false);
+
+    if (kind === "origin") {
+      origin.setValue(currentLocationLabel);
+      origin.closeDropdown();
+      setOriginCoords(coords);
+      onPlaceSelect?.(coords);
+      return;
+    }
+
+    destination.setValue(currentLocationLabel);
+    destination.closeDropdown();
+    setDestinationCoords(coords);
+    setSelectedPlace(currentLocationLabel);
+    onDestinationSelect?.(coords);
+  }
+
+  function handleCurrentOriginSelect() {
+    handleCurrentLocationSelect("origin");
+  }
+
+  function handleCurrentDestinationSelect() {
+    handleCurrentLocationSelect("destination");
+  }
+
+  function handleSavedLocationSelect(
+    kind: "origin" | "destination",
+    location: SavedSearchLocation,
+  ) {
+    const coords = {
+      lat: location.position.lat,
+      lng: location.position.lng,
+    };
+
+    setLocationError(false);
+
+    if (kind === "origin") {
+      origin.setValue(location.name);
+      origin.closeDropdown();
+      setOriginCoords(coords);
+      onPlaceSelect?.(coords);
+      return;
+    }
+
+    destination.setValue(location.name);
+    destination.closeDropdown();
+    setDestinationCoords(coords);
+    setSelectedPlace(location.name);
+    onDestinationSelect?.(coords);
+  }
+
+  function handleShowDirectionsClick() {
+    destination.setIsOpen(false);
+    origin.setIsOpen(canUseCurrentLocation || hasSavedLocations);
+    setShowDirections(true);
   }
 
   async function handleDestinationSelect(prediction: PlaceSuggestion) {
@@ -163,6 +268,109 @@ export const MainAppControlOverlay = ({
     }
   }
 
+  function handleOriginFocus() {
+    destination.setIsOpen(false);
+    if (
+      canUseCurrentLocation ||
+      hasSavedLocations ||
+      origin.predictions.length > 0
+    ) {
+      origin.setIsOpen(true);
+    }
+  }
+
+  function handleDestinationFocus() {
+    origin.setIsOpen(false);
+    if (
+      canUseCurrentLocation ||
+      hasSavedLocations ||
+      destination.predictions.length > 0
+    ) {
+      destination.setIsOpen(true);
+    }
+  }
+
+  function renderLocationDropdown(kind: "origin" | "destination") {
+    const autocomplete = kind === "origin" ? origin : destination;
+
+    {
+      /* upravljamo select uporabnika */
+    }
+    const handleCurrentSelect =
+      kind === "origin"
+        ? handleCurrentOriginSelect
+        : handleCurrentDestinationSelect;
+
+    const handlePredictionSelect =
+      kind === "origin" ? handleOriginSelect : handleDestinationSelect;
+
+    if (
+      !autocomplete.isOpen ||
+      (!canUseCurrentLocation &&
+        !hasSavedLocations &&
+        autocomplete.predictions.length === 0)
+    ) {
+      return null;
+    }
+
+    return (
+      <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
+        {/* trenutna lokacija uporabnika */}
+        {canUseCurrentLocation && (
+          <li
+            onMouseDown={handleCurrentSelect}
+            className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+            <LocateFixed size={16} className='shrink-0 text-muted-foreground' />
+            <p className='text-sm font-medium leading-tight'>
+              {currentLocationLabel}
+            </p>
+          </li>
+        )}
+
+        {/* shranjene lokacije */}
+        {hasSavedLocations && (
+          <>
+            <li className='border-b border-border px-3 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground dark:border-neutral-600'>
+              Shranjene lokacije
+            </li>
+            {savedLocations.map((location) => (
+              <li
+                key={`${kind}-${location.id}`}
+                onMouseDown={() => handleSavedLocationSelect(kind, location)}
+                className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+                <span
+                  className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white shadow-sm'
+                  style={{ backgroundColor: location.color }}>
+                  <LocationIconGlyph icon={location.icon} size={15} />
+                </span>
+                <p className='min-w-0 truncate text-sm font-medium leading-tight'>
+                  {location.name}
+                </p>
+              </li>
+            ))}
+          </>
+        )}
+
+        {/* predikcije autocomplete-a */}
+        <div className='border-t-3 border-border dark:border-neutral-600'>
+          {autocomplete.predictions.map((prediction) => (
+            <li
+              key={prediction.placeId}
+              onMouseDown={() => handlePredictionSelect(prediction)}
+              className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+              <p className='text-sm font-medium leading-tight'>
+                {prediction.mainText}
+              </p>
+              <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
+                {prediction.secondaryText}
+              </p>
+            </li>
+          ))}
+        </div>
+      </ul>
+    );
+  }
+
   async function handleRouteRequest() {
     if (!originCoords || !destinationCoords) return;
 
@@ -203,7 +411,6 @@ export const MainAppControlOverlay = ({
       setIsLoadingRoute(false);
     }
   }
-
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -229,7 +436,7 @@ export const MainAppControlOverlay = ({
           <img
             src='/logo.svg'
             alt='ŠibaM'
-            className='pointer-events-auto h-10 w-auto shrink-0 cursor-pointer'
+            className='pointer-events-auto h-10 w-auto shrink-0 cursor-pointer max-[699px]:hidden'
             onClick={() => navigate("/")}
           />
 
@@ -250,6 +457,7 @@ export const MainAppControlOverlay = ({
                         type='text'
                         value={origin.value}
                         onChange={origin.handleChange}
+                        onFocus={handleOriginFocus}
                         onKeyDown={(e) =>
                           e.key === "Escape" && origin.setIsOpen(false)
                         }
@@ -277,6 +485,7 @@ export const MainAppControlOverlay = ({
                         type='text'
                         value={destination.value}
                         onChange={destination.handleChange}
+                        onFocus={handleDestinationFocus}
                         onKeyDown={(e) =>
                           e.key === "Escape" && destination.setIsOpen(false)
                         }
@@ -307,40 +516,8 @@ export const MainAppControlOverlay = ({
                     <ArrowUpDown size={16} />
                   </button>
                 </div>
-                {origin.isOpen && origin.predictions.length > 0 && (
-                  <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
-                    {origin.predictions.map((prediction) => (
-                      <li
-                        key={prediction.placeId}
-                        onMouseDown={() => handleSelect(prediction)}
-                        className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                        <p className='text-sm font-medium leading-tight'>
-                          {prediction.mainText}
-                        </p>
-                        <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
-                          {prediction.secondaryText}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {destination.isOpen && destination.predictions.length > 0 && (
-                  <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
-                    {destination.predictions.map((prediction) => (
-                      <li
-                        key={prediction.placeId}
-                        onMouseDown={() => handleDestinationSelect(prediction)}
-                        className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                        <p className='text-sm font-medium leading-tight'>
-                          {prediction.mainText}
-                        </p>
-                        <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
-                          {prediction.secondaryText}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {renderLocationDropdown("origin")}
+                {renderLocationDropdown("destination")}
                 <div className='flex items-center gap-2'>
                   <button
                     type='button'
@@ -395,6 +572,7 @@ export const MainAppControlOverlay = ({
                     type='text'
                     value={destination.value}
                     onChange={destination.handleChange}
+                    onFocus={handleDestinationFocus}
                     onKeyDown={(e) =>
                       e.key === "Escape" && destination.setIsOpen(false)
                     }
@@ -419,30 +597,14 @@ export const MainAppControlOverlay = ({
                   {selectedPlace && !showDirections && (
                     <button
                       type='button'
-                      onClick={() => setShowDirections(true)}
-                      className='mr-2 flex h-6 w-6 shrink-0 rotate-45 items-center justify-center rounded-sm bg-red-700 text-white shadow-sm transition-colors hover:bg-red-600'
+                      onClick={handleShowDirectionsClick}
+                      className='mr-2 flex h-6 w-6 cursor-pointer shrink-0 rotate-45 items-center justify-center rounded-sm bg-red-700 text-white shadow-sm transition-colors hover:bg-red-600'
                       aria-label='Navodila za pot'>
                       <Route size={14} className='-rotate-45' />
                     </button>
                   )}
                 </div>
-                {destination.isOpen && destination.predictions.length > 0 && (
-                  <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
-                    {destination.predictions.map((prediction) => (
-                      <li
-                        key={prediction.placeId}
-                        onMouseDown={() => handleDestinationSelect(prediction)}
-                        className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                        <p className='text-sm font-medium leading-tight'>
-                          {prediction.mainText}
-                        </p>
-                        <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
-                          {prediction.secondaryText}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {renderLocationDropdown("destination")}
               </>
             )}
             {locationError && (
@@ -459,7 +621,7 @@ export const MainAppControlOverlay = ({
         {/* Desni panel */}
         {isLoggedIn ? (
           <div
-            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-row gap-2 min-[700px]:top-3 ${showDirections ? "max-[699px]:top-24" : "max-[699px]:top-14"}`}>
+            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-row gap-2 min-[700px]:top-3 ${showDirections ? "max-[700px]:top-24" : "max-[700px]:top-14"}`}>
             <Button
               type='button'
               onClick={() => navigate("/account")}

@@ -158,6 +158,29 @@
   padding: 16px !important;
 }
 
+.gm-style-iw-c:has(.map-location-info-window) .gm-style-iw-ch {
+  display: none !important;
+}
+
+.gm-style-iw-c:has(.map-location-info-window) .gm-style-iw-chr {
+  position: absolute !important;
+  top: 0px !important;
+  right: 16px !important;
+  z-index: 2 !important;
+  display: block !important;
+  height: 32px !important;
+  width: 32px !important;
+}
+
+.gm-style-iw-c:has(.map-location-info-window) .gm-ui-hover-effect {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  height: 32px !important;
+  width: 32px !important;
+  margin: 0 !important;
+}
+
 .gm-style-iw-d:has(.map-location-info-window) {
   overflow: visible !important;
 }

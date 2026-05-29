@@ -26,6 +26,7 @@ import {
   MARIBOR_BOUNDS,
   type PlaceSuggestion,
 } from "../../hooks/usePlacesAutocomplete";
+import { LocationIconGlyph, type LocationIcon } from "./MapLocationPopup";
 
 const placesApiKey = import.meta.env.VITE_PLACES_API_KEY as string;
 
@@ -37,11 +38,20 @@ type MainAppControlOverlayProps = {
   onPlaceSelect?: (place: { lat: number; lng: number } | null) => void;
   onDestinationSelect?: (place: { lat: number; lng: number } | null) => void;
   onPathReceive?: (path: RoutePath) => void;
+  savedLocations?: SavedSearchLocation[];
 };
 
 type Coordinates = {
   lat: number;
   lng: number;
+};
+
+type SavedSearchLocation = {
+  id: string;
+  name: string;
+  position: Coordinates;
+  color: string;
+  icon: LocationIcon;
 };
 
 const currentLocationLabel = "Trenutna lokacija";
@@ -63,6 +73,7 @@ export const MainAppControlOverlay = ({
   onPlaceSelect,
   onDestinationSelect,
   onPathReceive,
+  savedLocations = [],
 }: MainAppControlOverlayProps) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -96,6 +107,7 @@ export const MainAppControlOverlay = ({
     currentLocation !== null &&
     currentLocation !== undefined &&
     isInsideMaribor(currentLocation);
+  const hasSavedLocations = savedLocations.length > 0;
 
   function getCurrentLocationCoords() {
     if (!currentLocation || !canUseCurrentLocation) return null;
@@ -121,7 +133,7 @@ export const MainAppControlOverlay = ({
     onPlaceSelect?.(null);
   }
 
-  async function handleSelect(prediction: PlaceSuggestion) {
+  async function handleOriginSelect(prediction: PlaceSuggestion) {
     origin.setValue(prediction.mainText);
     origin.closeDropdown();
     try {
@@ -181,9 +193,35 @@ export const MainAppControlOverlay = ({
     handleCurrentLocationSelect("destination");
   }
 
+  function handleSavedLocationSelect(
+    kind: "origin" | "destination",
+    location: SavedSearchLocation,
+  ) {
+    const coords = {
+      lat: location.position.lat,
+      lng: location.position.lng,
+    };
+
+    setLocationError(false);
+
+    if (kind === "origin") {
+      origin.setValue(location.name);
+      origin.closeDropdown();
+      setOriginCoords(coords);
+      onPlaceSelect?.(coords);
+      return;
+    }
+
+    destination.setValue(location.name);
+    destination.closeDropdown();
+    setDestinationCoords(coords);
+    setSelectedPlace(location.name);
+    onDestinationSelect?.(coords);
+  }
+
   function handleShowDirectionsClick() {
     destination.setIsOpen(false);
-    origin.setIsOpen(canUseCurrentLocation);
+    origin.setIsOpen(canUseCurrentLocation || hasSavedLocations);
     setShowDirections(true);
   }
 
@@ -232,16 +270,105 @@ export const MainAppControlOverlay = ({
 
   function handleOriginFocus() {
     destination.setIsOpen(false);
-    if (canUseCurrentLocation || origin.predictions.length > 0) {
+    if (
+      canUseCurrentLocation ||
+      hasSavedLocations ||
+      origin.predictions.length > 0
+    ) {
       origin.setIsOpen(true);
     }
   }
 
   function handleDestinationFocus() {
     origin.setIsOpen(false);
-    if (canUseCurrentLocation || destination.predictions.length > 0) {
+    if (
+      canUseCurrentLocation ||
+      hasSavedLocations ||
+      destination.predictions.length > 0
+    ) {
       destination.setIsOpen(true);
     }
+  }
+
+  function renderLocationDropdown(kind: "origin" | "destination") {
+    const autocomplete = kind === "origin" ? origin : destination;
+
+    {
+      /* upravljamo select uporabnika */
+    }
+    const handleCurrentSelect =
+      kind === "origin"
+        ? handleCurrentOriginSelect
+        : handleCurrentDestinationSelect;
+
+    const handlePredictionSelect =
+      kind === "origin" ? handleOriginSelect : handleDestinationSelect;
+
+    if (
+      !autocomplete.isOpen ||
+      (!canUseCurrentLocation &&
+        !hasSavedLocations &&
+        autocomplete.predictions.length === 0)
+    ) {
+      return null;
+    }
+
+    return (
+      <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
+        {/* trenutna lokacija uporabnika */}
+        {canUseCurrentLocation && (
+          <li
+            onMouseDown={handleCurrentSelect}
+            className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+            <LocateFixed size={16} className='shrink-0 text-muted-foreground' />
+            <p className='text-sm font-medium leading-tight'>
+              {currentLocationLabel}
+            </p>
+          </li>
+        )}
+
+        {/* shranjene lokacije */}
+        {hasSavedLocations && (
+          <>
+            <li className='border-b border-border px-3 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground dark:border-neutral-600'>
+              Shranjene lokacije
+            </li>
+            {savedLocations.map((location) => (
+              <li
+                key={`${kind}-${location.id}`}
+                onMouseDown={() => handleSavedLocationSelect(kind, location)}
+                className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+                <span
+                  className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white shadow-sm'
+                  style={{ backgroundColor: location.color }}>
+                  <LocationIconGlyph icon={location.icon} size={15} />
+                </span>
+                <p className='min-w-0 truncate text-sm font-medium leading-tight'>
+                  {location.name}
+                </p>
+              </li>
+            ))}
+          </>
+        )}
+
+        {/* predikcije autocomplete-a */}
+        <div className='border-t-3 border-border dark:border-neutral-600'>
+          {autocomplete.predictions.map((prediction) => (
+            <li
+              key={prediction.placeId}
+              onMouseDown={() => handlePredictionSelect(prediction)}
+              className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+              <p className='text-sm font-medium leading-tight'>
+                {prediction.mainText}
+              </p>
+              <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
+                {prediction.secondaryText}
+              </p>
+            </li>
+          ))}
+        </div>
+      </ul>
+    );
   }
 
   async function handleRouteRequest() {
@@ -389,69 +516,8 @@ export const MainAppControlOverlay = ({
                     <ArrowUpDown size={16} />
                   </button>
                 </div>
-                {origin.isOpen &&
-                  (canUseCurrentLocation || origin.predictions.length > 0) && (
-                    <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
-                      {canUseCurrentLocation && (
-                        <li
-                          onMouseDown={handleCurrentOriginSelect}
-                          className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                          <LocateFixed
-                            size={16}
-                            className='shrink-0 text-muted-foreground'
-                          />
-                          <p className='text-sm font-medium leading-tight'>
-                            {currentLocationLabel}
-                          </p>
-                        </li>
-                      )}
-                      {origin.predictions.map((prediction) => (
-                        <li
-                          key={prediction.placeId}
-                          onMouseDown={() => handleSelect(prediction)}
-                          className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                          <p className='text-sm font-medium leading-tight'>
-                            {prediction.mainText}
-                          </p>
-                          <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
-                            {prediction.secondaryText}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                {destination.isOpen &&
-                  (canUseCurrentLocation ||
-                    destination.predictions.length > 0) && (
-                  <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
-                    {canUseCurrentLocation && (
-                      <li
-                        onMouseDown={handleCurrentDestinationSelect}
-                        className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                        <LocateFixed
-                          size={16}
-                          className='shrink-0 text-muted-foreground'
-                        />
-                        <p className='text-sm font-medium leading-tight'>
-                          {currentLocationLabel}
-                        </p>
-                      </li>
-                    )}
-                    {destination.predictions.map((prediction) => (
-                      <li
-                        key={prediction.placeId}
-                        onMouseDown={() => handleDestinationSelect(prediction)}
-                        className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                        <p className='text-sm font-medium leading-tight'>
-                          {prediction.mainText}
-                        </p>
-                        <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
-                          {prediction.secondaryText}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {renderLocationDropdown("origin")}
+                {renderLocationDropdown("destination")}
                 <div className='flex items-center gap-2'>
                   <button
                     type='button'
@@ -538,38 +604,7 @@ export const MainAppControlOverlay = ({
                     </button>
                   )}
                 </div>
-                {destination.isOpen &&
-                  (canUseCurrentLocation ||
-                    destination.predictions.length > 0) && (
-                  <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
-                    {canUseCurrentLocation && (
-                      <li
-                        onMouseDown={handleCurrentDestinationSelect}
-                        className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                        <LocateFixed
-                          size={16}
-                          className='shrink-0 text-muted-foreground'
-                        />
-                        <p className='text-sm font-medium leading-tight'>
-                          {currentLocationLabel}
-                        </p>
-                      </li>
-                    )}
-                    {destination.predictions.map((prediction) => (
-                      <li
-                        key={prediction.placeId}
-                        onMouseDown={() => handleDestinationSelect(prediction)}
-                        className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                        <p className='text-sm font-medium leading-tight'>
-                          {prediction.mainText}
-                        </p>
-                        <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
-                          {prediction.secondaryText}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {renderLocationDropdown("destination")}
               </>
             )}
             {locationError && (

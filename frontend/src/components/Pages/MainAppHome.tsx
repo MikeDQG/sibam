@@ -109,8 +109,8 @@ export const MainAppHome = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const userPosition = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
+          lat: position.coords.latitude, //46.5575
+          lng: position.coords.longitude, // 15.6456
         };
 
         setUserLocationPosition(userPosition);
@@ -394,6 +394,7 @@ export const MainAppHome = () => {
         onPlaceSelect={handlePlaceSelect}
         onDestinationSelect={handleDestinationSelect}
         onPathReceive={handlePathReceive}
+        savedLocations={savedLocations}
       />
 
       {/* route options */}

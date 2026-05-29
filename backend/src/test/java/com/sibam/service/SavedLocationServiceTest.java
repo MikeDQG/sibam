@@ -42,7 +42,7 @@ class SavedLocationServiceTest {
                 .thenAnswer(inv -> inv.getArgument(0));
 
         SavedLocation result = service.saveLocation(
-                userId, "Dom", "Partizanska 1", 46.556, 15.646, "#FF5733", "uid-ok"
+                userId, "Dom", "Partizanska 1", 46.556, 15.646, "#FF5733", null, "uid-ok"
         );
 
         assertThat(result.getName()).isEqualTo("Dom");
@@ -63,7 +63,7 @@ class SavedLocationServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         assertThatThrownBy(() ->
-                service.saveLocation(userId, "Dom", "Partizanska 1", 46.556, 15.646, "#FF5733", "wrong-uid")
+                service.saveLocation(userId, "Dom", "Partizanska 1", 46.556, 15.646, "#FF5733", null, "wrong-uid")
         ).isInstanceOf(ResponseStatusException.class);
 
         verify(savedLocationRepository, never()).save(any());
@@ -85,7 +85,7 @@ class SavedLocationServiceTest {
                 .thenAnswer(inv -> inv.getArgument(0));
 
         SavedLocation result = service.updateLocation(
-                locationId, "New", "Nova ulica 5", 46.0, 15.0, "#000", "uid-ok"
+                locationId, "New", "Nova ulica 5", 46.0, 15.0, "#000", null, "uid-ok"
         );
 
         assertThat(result.getName()).isEqualTo("New");
@@ -103,7 +103,7 @@ class SavedLocationServiceTest {
         when(savedLocationRepository.findById(locationId)).thenReturn(Optional.of(location));
 
         assertThatThrownBy(() ->
-                service.updateLocation(locationId, "New", "Addr", 46.0, 15.0, "#000", "wrong-uid")
+                service.updateLocation(locationId, "New", "Addr", 46.0, 15.0, "#000", null, "wrong-uid")
         ).isInstanceOf(ResponseStatusException.class);
 
         verify(savedLocationRepository, never()).save(any());

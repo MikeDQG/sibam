@@ -39,7 +39,7 @@ class SavedLocationServiceIT extends AbstractDatabaseIT{
     @Test
     void saveLocationPersistsAndIsReturnedByGetLocations() {
         savedLocationService.saveLocation(
-                user.getId(), "Home", "Partizanska 1", 46.55, 15.65, "#FF0000", user.getFirebaseUid()
+                user.getId(), "Home", "Partizanska 1", 46.55, 15.65, "#FF0000", null, user.getFirebaseUid()
         );
 
         List<SavedLocation> locations = savedLocationService.getLocationsForUser(
@@ -57,11 +57,11 @@ class SavedLocationServiceIT extends AbstractDatabaseIT{
     @Test
     void updateLocationModifiesFields() {
         SavedLocation saved = savedLocationService.saveLocation(
-                user.getId(), "Work", "Gosposvetska 2", 46.56, 15.66, "#0000FF", user.getFirebaseUid()
+                user.getId(), "Work", "Gosposvetska 2", 46.56, 15.66, "#0000FF", null, user.getFirebaseUid()
         );
 
         savedLocationService.updateLocation(
-                saved.getId(), "Office", "Gosposvetska 5", 46.57, 15.67, "#00FF00", user.getFirebaseUid()
+                saved.getId(), "Office", "Gosposvetska 5", 46.57, 15.67, "#00FF00", null, user.getFirebaseUid()
         );
 
         List<SavedLocation> locations = savedLocationService.getLocationsForUser(
@@ -77,7 +77,7 @@ class SavedLocationServiceIT extends AbstractDatabaseIT{
     @Test
     void deleteLocationRemovesItFromDatabase() {
         SavedLocation saved = savedLocationService.saveLocation(
-                user.getId(), "Gym", "Koroška cesta 1", 46.54, 15.63, "#FFFF00", user.getFirebaseUid()
+                user.getId(), "Gym", "Koroška cesta 1", 46.54, 15.63, "#FFFF00", null, user.getFirebaseUid()
         );
 
         savedLocationService.deleteLocation(saved.getId(), user.getFirebaseUid());
@@ -100,7 +100,7 @@ class SavedLocationServiceIT extends AbstractDatabaseIT{
     void saveLocationThrowsForbiddenForWrongUid() {
         assertThatThrownBy(() ->
                 savedLocationService.saveLocation(
-                        user.getId(), "Fake", "Fake St", 46.0, 15.0, "#000", "wrong-uid"
+                        user.getId(), "Fake", "Fake St", 46.0, 15.0, "#000", null, "wrong-uid"
                 )
         ).isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("403");
@@ -109,12 +109,12 @@ class SavedLocationServiceIT extends AbstractDatabaseIT{
     @Test
     void updateLocationThrowsForbiddenForWrongUid() {
         SavedLocation saved = savedLocationService.saveLocation(
-                user.getId(), "Secret", "Secret St", 46.0, 15.0, "#111", user.getFirebaseUid()
+                user.getId(), "Secret", "Secret St", 46.0, 15.0, "#111", null, user.getFirebaseUid()
         );
 
         assertThatThrownBy(() ->
                 savedLocationService.updateLocation(
-                        saved.getId(), "Hacked", "Hacker Ave", 0.0, 0.0, "#000", "wrong-uid"
+                        saved.getId(), "Hacked", "Hacker Ave", 0.0, 0.0, "#000", null, "wrong-uid"
                 )
         ).isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("403");
@@ -123,7 +123,7 @@ class SavedLocationServiceIT extends AbstractDatabaseIT{
     @Test
     void deleteLocationThrowsForbiddenForWrongUid() {
         SavedLocation saved = savedLocationService.saveLocation(
-                user.getId(), "Locked", "Locked St", 46.0, 15.0, "#222", user.getFirebaseUid()
+                user.getId(), "Locked", "Locked St", 46.0, 15.0, "#222", null, user.getFirebaseUid()
         );
 
         assertThatThrownBy(() ->

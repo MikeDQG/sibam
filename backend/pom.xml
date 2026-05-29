@@ -83,13 +83,6 @@
             <version>9.2.0</version>
         </dependency>
 
-        <!-- Lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- Kryo serialization dependency -->
         <dependency>
             <groupId>com.esotericsoftware</groupId>

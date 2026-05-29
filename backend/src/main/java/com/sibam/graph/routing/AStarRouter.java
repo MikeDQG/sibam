@@ -11,6 +11,7 @@ import com.sibam.graph.model.RouteInfo;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.model.output.Leg;
 import com.sibam.graph.builder.WalkingEdgeBuilder;
+import com.sibam.graph.spatial.DistanceCalculator;
 import com.sibam.graph.spatial.HelperService;
 import com.sibam.graph.spatial.SpatialSearchService;
 import com.sibam.graph.storage.GraphStore;
@@ -43,7 +44,12 @@ public class AStarRouter {
     private static final int ORIGIN_NODE_ID = -1;
     private static final int DESTINATION_NODE_ID = -2;
     private static final int NEAREST_STOP_LIMIT = 5;
-    private static final double HEURISTIC_MAX_SPEED_MPS = 30.0;
+    private static final double BIKE_SPEED_MPS = 4.5;
+    private static final int TRANSFER_PENALTY_SECONDS = 300;
+    private static final int WALK_LONG_DISTANCE_THRESHOLD_METERS = 1_000;
+    private static final int BIKE_LONG_DISTANCE_THRESHOLD_METERS = 1_000;
+    private static final double WALK_LONG_DISTANCE_COST_MULTIPLIER = 1.5;
+    private static final double BIKE_LONG_DISTANCE_COST_MULTIPLIER = 1.5;
     private static final DateTimeFormatter DEPARTURE_TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
 
     private final GraphStore graphStore;
@@ -52,13 +58,15 @@ public class AStarRouter {
     private final VaoSerializer vaoSerializer;
     private final WalkingEdgeBuilder walkingEdgeBuilder;
     private final GoogleRoutesService googleRoutesService;
+    private final HeuristicService heuristicService;
 
     public AStarRouter(
             GraphStore graphStore,
             SpatialSearchService spatialSearchService,
             HelperService helperService,
             VaoSerializer vaoSerializer,
-            GoogleRoutesService googleRoutesService
+            GoogleRoutesService googleRoutesService,
+            HeuristicService heuristicService
     ) {
         this.graphStore = graphStore;
         this.spatialSearchService = spatialSearchService;
@@ -66,6 +74,7 @@ public class AStarRouter {
         this.vaoSerializer = vaoSerializer;
         this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
         this.googleRoutesService = googleRoutesService;
+        this.heuristicService = heuristicService;
     }
 
     public Journey findJourney(
@@ -185,7 +194,7 @@ public class AStarRouter {
         Map<Integer, PathStepTiming> cameFromTiming = new HashMap<>();
 
         gScore.put(startNodeId, 0);
-        openSet.add(new NodeRecord(startNodeId, heuristicSeconds(graph, startNodeId, goalNodeId)));
+        openSet.add(new NodeRecord(startNodeId, heuristicSeconds(graph, startNodeId, goalNodeId, null)));
 
         while (!openSet.isEmpty()) {
             NodeRecord current = openSet.poll();
@@ -227,7 +236,7 @@ public class AStarRouter {
                     gScore.put(edge.getToNodeId(), tentative);
                     openSet.add(new NodeRecord(
                             edge.getToNodeId(),
-                            tentative + heuristicSeconds(graph, edge.getToNodeId(), goalNodeId)
+                            tentative + heuristicSeconds(graph, edge.getToNodeId(), goalNodeId, edge.getEdgeType())
                     ));
                 }
             }
@@ -238,8 +247,9 @@ public class AStarRouter {
 
     private EdgeRelaxation relaxEdge(Graph graph, Edge edge, Edge previousEdge, long currentMillis) {
         if (edge.getEdgeType() != EdgeType.BUS) {
-            long arrivalMillis = currentMillis + secondsToMillis(edge.getCostSeconds());
-            return new EdgeRelaxation(edge.getCostSeconds(), currentMillis, arrivalMillis);
+            int costSeconds = edgeCostSeconds(graph, edge);
+            long arrivalMillis = currentMillis + secondsToMillis(costSeconds);
+            return new EdgeRelaxation(costSeconds, currentMillis, arrivalMillis);
         }
 
         if (previousEdge != null
@@ -252,7 +262,26 @@ public class AStarRouter {
         long departureMillis = nextBusDepartureMillis(edge, currentMillis);
         long arrivalMillis = departureMillis + secondsToMillis(edge.getCostSeconds());
         int costSeconds = (int) Math.max(1, Math.round((arrivalMillis - currentMillis) / 1000.0));
+        costSeconds += transferPenaltySeconds(previousEdge, edge);
         return new EdgeRelaxation(costSeconds, departureMillis, arrivalMillis);
+    }
+
+    private int transferPenaltySeconds(Edge previousEdge, Edge currentEdge) {
+        if (previousEdge == null
+                || previousEdge.getEdgeType() != EdgeType.BUS
+                || currentEdge.getEdgeType() != EdgeType.BUS) {
+            return 0;
+        }
+
+        RouteInfo previousRoute = previousEdge.getRouteInfo();
+        RouteInfo currentRoute = currentEdge.getRouteInfo();
+        if (previousRoute == null || currentRoute == null) {
+            return TRANSFER_PENALTY_SECONDS;
+        }
+
+        boolean sameLine = previousRoute.lineId() == currentRoute.lineId();
+        boolean sameRoute = previousRoute.routeId() == currentRoute.routeId();
+        return sameLine || sameRoute ? 0 : TRANSFER_PENALTY_SECONDS;
     }
 
     private long nextBusDepartureMillis(Edge edge, long currentMillis) {
@@ -566,7 +595,7 @@ public class AStarRouter {
         // For WALK and BIKE legs fetch polyline from Google Routes API
         if (firstEdge.getEdgeType() == EdgeType.WALK || firstEdge.getEdgeType() == EdgeType.BIKE) {
             try {
-                List<GeoPoint> apiPolyline = googleRoutesService.fetchPolyline(from, to);
+                List<GeoPoint> apiPolyline = googleRoutesService.fetchPolyline(from, to, firstEdge.getEdgeType());
                 if (apiPolyline != null && !apiPolyline.isEmpty()) {
                     return apiPolyline;
                 }
@@ -638,19 +667,51 @@ public class AStarRouter {
         return new Graph(nodes, adjacencyList);
     }
 
-    private double heuristicSeconds(Graph graph, int currentNodeId, int goalNodeId) {
+    private double heuristicSeconds(Graph graph, int currentNodeId, int goalNodeId, EdgeType edgeType) {
         Node current = graph.getNodes().get(currentNodeId);
         Node goal = graph.getNodes().get(goalNodeId);
         if (current == null || goal == null) {
             return 0;
         }
 
-        return helperService.haversineMeters(
-                current.getLat(),
-                current.getLon(),
-                goal.getLat(),
-                goal.getLon()
-        ) / HEURISTIC_MAX_SPEED_MPS;
+        return heuristicService.estimate(current, goal, edgeType);
+    }
+
+    private int edgeCostSeconds(Graph graph, Edge edge) {
+        if (edge.getEdgeType() != EdgeType.WALK && edge.getEdgeType() != EdgeType.BIKE) {
+            return edge.getCostSeconds();
+        }
+
+        Node from = graph.getNodes().get(edge.getFromNodeId());
+        Node to = graph.getNodes().get(edge.getToNodeId());
+        if (from == null || to == null) {
+            return edge.getCostSeconds();
+        }
+
+        GeoPoint fromPoint = new GeoPoint(from.getLat(), from.getLon());
+        GeoPoint toPoint = new GeoPoint(to.getLat(), to.getLon());
+        double distanceMeters = DistanceCalculator.correctedDistanceMeters(
+                fromPoint,
+                toPoint,
+                edge.getEdgeType()
+        );
+        double speedMps = edge.getEdgeType() == EdgeType.WALK
+                ? helperService.getWalkingSpeedMps()
+                : BIKE_SPEED_MPS;
+        int baseCostSeconds = (int) Math.max(1, Math.round(distanceMeters / speedMps));
+        return applyModePenalty(edge.getEdgeType(), distanceMeters, baseCostSeconds);
+    }
+
+    private int applyModePenalty(EdgeType edgeType, double distanceMeters, int baseCostSeconds) {
+        if (edgeType == EdgeType.WALK && distanceMeters > WALK_LONG_DISTANCE_THRESHOLD_METERS) {
+            return (int) Math.max(1, Math.round(baseCostSeconds * WALK_LONG_DISTANCE_COST_MULTIPLIER));
+        }
+
+        if (edgeType == EdgeType.BIKE && distanceMeters > BIKE_LONG_DISTANCE_THRESHOLD_METERS) {
+            return (int) Math.max(1, Math.round(baseCostSeconds * BIKE_LONG_DISTANCE_COST_MULTIPLIER));
+        }
+
+        return baseCostSeconds;
     }
 
     private long toEpochMillis(LocalTime time) {

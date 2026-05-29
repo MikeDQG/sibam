@@ -2,25 +2,25 @@ package com.sibam.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sibam.graph.model.EdgeType;
 import com.sibam.graph.model.GeoPoint;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class GoogleRoutesService {
 
+    private static final Logger log = LoggerFactory.getLogger(GoogleRoutesService.class);
     private static final String ENDPOINT = "https://routes.googleapis.com/directions/v2:computeRoutes";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -37,13 +37,17 @@ public class GoogleRoutesService {
     private WebClient webClient = WebClient.builder().baseUrl(ENDPOINT).build();
 
     public List<GeoPoint> fetchPolyline(GeoPoint origin, GeoPoint destination) {
+        return fetchPolyline(origin, destination, EdgeType.WALK);
+    }
+
+    public List<GeoPoint> fetchPolyline(GeoPoint origin, GeoPoint destination, EdgeType edgeType) {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("Google Routes API key missing; skipping polyline fetch.");
             return List.of(origin, destination);
         }
 
         try {
-            String body = buildRequestBody(origin, destination);
+            String body = buildRequestBody(origin, destination, edgeType);
 
             String response = webClient.post()
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -70,9 +74,10 @@ public class GoogleRoutesService {
         }
     }
 
-    private String buildRequestBody(GeoPoint origin, GeoPoint destination) {
+    private String buildRequestBody(GeoPoint origin, GeoPoint destination, EdgeType edgeType) {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
+        sb.append("\"travelMode\":\"").append(travelMode(edgeType)).append("\",");
         sb.append("\"origin\":{\"location\":{\"latLng\":{")
                 .append("\"latitude\":").append(origin.lat()).append(",")
                 .append("\"longitude\":").append(origin.lon())
@@ -88,6 +93,14 @@ public class GoogleRoutesService {
         }
         sb.append("}");
         return sb.toString();
+    }
+
+    private String travelMode(EdgeType edgeType) {
+        if (edgeType == EdgeType.BIKE) {
+            return "WALK";
+        }
+
+        return "WALK";
     }
 
     private List<GeoPoint> parsePolyline(String response, GeoPoint fallbackStart, GeoPoint fallbackEnd) throws Exception {

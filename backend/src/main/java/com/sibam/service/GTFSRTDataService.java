@@ -11,8 +11,9 @@ import com.sibam.persistence.TripEntity;
 import com.sibam.persistence.StopDelayEntity;
 import com.sibam.repository.StopDelaySnapshotRepository;
 import com.sibam.repository.TripSnapshotRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -20,9 +21,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 public class GTFSRTDataService {
+    private static final Logger log = LoggerFactory.getLogger(GTFSRTDataService.class);
+
     private final GTFSRTClient gtfsRTClient;
     private final GTFSRTMapper gtfsRTMapper;
     private final TripSnapshotRepository tripSnapshotRepository;

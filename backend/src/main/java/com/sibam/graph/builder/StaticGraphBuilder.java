@@ -6,6 +6,7 @@ import com.sibam.engine.vao.BusStopVao;
 import com.sibam.engine.vao.RouteVao;
 import com.sibam.engine.vao.ShapeNodeVao;
 import com.sibam.graph.model.*;
+import com.sibam.graph.spatial.DistanceCalculator;
 import com.sibam.graph.spatial.HelperService;
 import com.sibam.service.MBajkDataService;
 import org.springframework.stereotype.Component;
@@ -99,11 +100,10 @@ public class StaticGraphBuilder implements GraphBuilder {
                     continue;
                 }
 
-                int distanceMeters = (int) Math.max(1, Math.round(helperService.haversineMeters(
-                        from.getLat(),
-                        from.getLon(),
-                        to.getLat(),
-                        to.getLon()
+                int distanceMeters = (int) Math.max(1, Math.round(DistanceCalculator.correctedDistanceMeters(
+                        new GeoPoint(from.getLat(), from.getLon()),
+                        new GeoPoint(to.getLat(), to.getLon()),
+                        EdgeType.BIKE
                 )));
                 int travelTimeSeconds = (int) Math.max(1, Math.round(distanceMeters / BIKE_SPEED_MPS));
 

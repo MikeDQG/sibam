@@ -41,7 +41,8 @@ class AStarRouterTest {
                 new SpatialSearchService(helperService),
                 helperService,
                 mock(VaoSerializer.class),
-                mock(GoogleRoutesService.class)
+                mock(GoogleRoutesService.class),
+                new HeuristicService()
         );
 
         Journey journey = router.findJourney(

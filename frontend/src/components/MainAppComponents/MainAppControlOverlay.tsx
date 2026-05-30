@@ -1,76 +1,703 @@
 import {
-  CloudRain,
+  Bike,
+  Bus,
   LocateFixed,
   Minus,
+  Route,
   Plus,
   Search,
   UserRound,
+  X,
+  LogOut,
+  ArrowUpDown,
 } from "lucide-react";
+import { WeatherWidget } from "./WeatherWidget";
+import { RouteLoadingOverlay } from "./RouteLoadingOverlay";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import type { RoutePath } from "./RoutePolyline";
+import { useNavigate } from "react-router-dom";
+import { auth } from "../../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { useState, useEffect, useRef } from "react";
+import { ThemeToggle } from "../ThemeToggle";
+import {
+  usePlacesAutocomplete,
+  MARIBOR_BOUNDS,
+  type PlaceSuggestion,
+} from "../../hooks/usePlacesAutocomplete";
+import { LocationIconGlyph, type LocationIcon } from "./MapLocationPopup";
+
+const placesApiKey = import.meta.env.VITE_PLACES_API_KEY as string;
 
 type MainAppControlOverlayProps = {
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onLocate?: () => void;
+  currentLocation?: { lat: number; lng: number } | null;
+  onPlaceSelect?: (place: { lat: number; lng: number } | null) => void;
+  onDestinationSelect?: (place: { lat: number; lng: number } | null) => void;
+  onPathReceive?: (path: RoutePath) => void;
+  savedLocations?: SavedSearchLocation[];
 };
+
+type Coordinates = {
+  lat: number;
+  lng: number;
+};
+
+type SavedSearchLocation = {
+  id: string;
+  name: string;
+  position: Coordinates;
+  color: string;
+  icon: LocationIcon;
+};
+
+const currentLocationLabel = "Trenutna lokacija";
+
+function isInsideMaribor({ lat, lng }: Coordinates) {
+  return (
+    lat >= MARIBOR_BOUNDS.low.latitude &&
+    lat <= MARIBOR_BOUNDS.high.latitude &&
+    lng >= MARIBOR_BOUNDS.low.longitude &&
+    lng <= MARIBOR_BOUNDS.high.longitude
+  );
+}
 
 export const MainAppControlOverlay = ({
   onZoomIn,
   onZoomOut,
   onLocate,
+  currentLocation,
+  onPlaceSelect,
+  onDestinationSelect,
+  onPathReceive,
+  savedLocations = [],
 }: MainAppControlOverlayProps) => {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [locationError, setLocationError] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState("");
+  const [showDirections, setShowDirections] = useState(false);
+  const [originCoords, setOriginCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [destinationCoords, setDestinationCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [useBus, setUseBus] = useState(true);
+  const [useBike, setUseBike] = useState(true);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [timeMode, setTimeMode] = useState<"depart" | "arrive">("depart");
+  const [selectedTime, setSelectedTime] = useState(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 1);
+    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const origin = usePlacesAutocomplete(placesApiKey);
+  const destination = usePlacesAutocomplete(placesApiKey);
+  const { setIsOpen: setOriginIsOpen } = origin;
+  const { setIsOpen: setDestinationIsOpen } = destination;
+  const canUseCurrentLocation =
+    currentLocation !== null &&
+    currentLocation !== undefined &&
+    isInsideMaribor(currentLocation);
+  const hasSavedLocations = savedLocations.length > 0;
+
+  function getCurrentLocationCoords() {
+    if (!currentLocation || !canUseCurrentLocation) return null;
+
+    return {
+      lat: currentLocation.lat,
+      lng: currentLocation.lng,
+    };
+  }
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  function handleClear() {
+    origin.clear();
+    setLocationError(false);
+    setSelectedPlace("");
+    setOriginCoords(null);
+    onPlaceSelect?.(null);
+  }
+
+  async function handleOriginSelect(prediction: PlaceSuggestion) {
+    origin.setValue(prediction.mainText);
+    origin.closeDropdown();
+    try {
+      const res = await fetch(
+        `https://places.googleapis.com/v1/places/${prediction.placeId}`,
+        {
+          headers: {
+            "X-Goog-Api-Key": placesApiKey,
+            "X-Goog-FieldMask": "location",
+          },
+        },
+      );
+      const data = await res.json();
+      if (data.location) {
+        setLocationError(false);
+        setSelectedPlace(prediction.mainText);
+        const coords = {
+          lat: data.location.latitude,
+          lng: data.location.longitude,
+        };
+        setOriginCoords(coords);
+        onPlaceSelect?.(coords);
+      } else {
+        setLocationError(true);
+      }
+    } catch {
+      setLocationError(true);
+    }
+  }
+
+  function handleCurrentLocationSelect(kind: "origin" | "destination") {
+    const coords = getCurrentLocationCoords();
+    if (!coords) return;
+
+    setLocationError(false);
+
+    if (kind === "origin") {
+      origin.setValue(currentLocationLabel);
+      origin.closeDropdown();
+      setOriginCoords(coords);
+      onPlaceSelect?.(coords);
+      return;
+    }
+
+    destination.setValue(currentLocationLabel);
+    destination.closeDropdown();
+    setDestinationCoords(coords);
+    setSelectedPlace(currentLocationLabel);
+    onDestinationSelect?.(coords);
+  }
+
+  function handleCurrentOriginSelect() {
+    handleCurrentLocationSelect("origin");
+  }
+
+  function handleCurrentDestinationSelect() {
+    handleCurrentLocationSelect("destination");
+  }
+
+  function handleSavedLocationSelect(
+    kind: "origin" | "destination",
+    location: SavedSearchLocation,
+  ) {
+    const coords = {
+      lat: location.position.lat,
+      lng: location.position.lng,
+    };
+
+    setLocationError(false);
+
+    if (kind === "origin") {
+      origin.setValue(location.name);
+      origin.closeDropdown();
+      setOriginCoords(coords);
+      onPlaceSelect?.(coords);
+      return;
+    }
+
+    destination.setValue(location.name);
+    destination.closeDropdown();
+    setDestinationCoords(coords);
+    setSelectedPlace(location.name);
+    onDestinationSelect?.(coords);
+  }
+
+  function handleShowDirectionsClick() {
+    destination.setIsOpen(false);
+    origin.setIsOpen(canUseCurrentLocation || hasSavedLocations);
+    setShowDirections(true);
+  }
+
+  async function handleDestinationSelect(prediction: PlaceSuggestion) {
+    destination.setValue(prediction.mainText);
+    destination.closeDropdown();
+    try {
+      const res = await fetch(
+        `https://places.googleapis.com/v1/places/${prediction.placeId}`,
+        {
+          headers: {
+            "X-Goog-Api-Key": placesApiKey,
+            "X-Goog-FieldMask": "location",
+          },
+        },
+      );
+      const data = await res.json();
+      if (data.location) {
+        setLocationError(false);
+        setSelectedPlace(prediction.mainText);
+        const coords = {
+          lat: data.location.latitude,
+          lng: data.location.longitude,
+        };
+        setDestinationCoords(coords);
+        onDestinationSelect?.(coords);
+      } else {
+        setLocationError(true);
+      }
+    } catch {
+      setLocationError(true);
+    }
+  }
+
+  function handleSwap() {
+    const tempValue = origin.value;
+    origin.setValue(destination.value);
+    destination.setValue(tempValue);
+    if (originCoords && destinationCoords) {
+      onPlaceSelect?.(destinationCoords);
+      onDestinationSelect?.(originCoords);
+      setOriginCoords(destinationCoords);
+      setDestinationCoords(originCoords);
+    }
+  }
+
+  function handleOriginFocus() {
+    destination.setIsOpen(false);
+    if (
+      canUseCurrentLocation ||
+      hasSavedLocations ||
+      origin.predictions.length > 0
+    ) {
+      origin.setIsOpen(true);
+    }
+  }
+
+  function handleDestinationFocus() {
+    origin.setIsOpen(false);
+    if (
+      canUseCurrentLocation ||
+      hasSavedLocations ||
+      destination.predictions.length > 0
+    ) {
+      destination.setIsOpen(true);
+    }
+  }
+
+  function renderLocationDropdown(kind: "origin" | "destination") {
+    const autocomplete = kind === "origin" ? origin : destination;
+
+    {
+      /* upravljamo select uporabnika */
+    }
+    const handleCurrentSelect =
+      kind === "origin"
+        ? handleCurrentOriginSelect
+        : handleCurrentDestinationSelect;
+
+    const handlePredictionSelect =
+      kind === "origin" ? handleOriginSelect : handleDestinationSelect;
+
+    if (
+      !autocomplete.isOpen ||
+      (!canUseCurrentLocation &&
+        !hasSavedLocations &&
+        autocomplete.predictions.length === 0)
+    ) {
+      return null;
+    }
+
+    return (
+      <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
+        {/* trenutna lokacija uporabnika */}
+        {canUseCurrentLocation && (
+          <li
+            onMouseDown={handleCurrentSelect}
+            className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+            <LocateFixed size={16} className='shrink-0 text-muted-foreground' />
+            <p className='text-sm font-medium leading-tight'>
+              {currentLocationLabel}
+            </p>
+          </li>
+        )}
+
+        {/* shranjene lokacije */}
+        {hasSavedLocations && (
+          <>
+            <li className='border-b border-border px-3 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground dark:border-neutral-600'>
+              Shranjene lokacije
+            </li>
+            {savedLocations.map((location) => (
+              <li
+                key={`${kind}-${location.id}`}
+                onMouseDown={() => handleSavedLocationSelect(kind, location)}
+                className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+                <span
+                  className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white shadow-sm'
+                  style={{ backgroundColor: location.color }}>
+                  <LocationIconGlyph icon={location.icon} size={15} />
+                </span>
+                <p className='min-w-0 truncate text-sm font-medium leading-tight'>
+                  {location.name}
+                </p>
+              </li>
+            ))}
+          </>
+        )}
+
+        {/* predikcije autocomplete-a */}
+        <div className='border-t-3 border-border dark:border-neutral-600'>
+          {autocomplete.predictions.map((prediction) => (
+            <li
+              key={prediction.placeId}
+              onMouseDown={() => handlePredictionSelect(prediction)}
+              className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+              <p className='text-sm font-medium leading-tight'>
+                {prediction.mainText}
+              </p>
+              <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
+                {prediction.secondaryText}
+              </p>
+            </li>
+          ))}
+        </div>
+      </ul>
+    );
+  }
+
+  async function handleRouteRequest() {
+    if (!originCoords || !destinationCoords) return;
+
+    setIsLoadingRoute(true);
+    try {
+      const params = new URLSearchParams({
+        originLat: String(originCoords.lat),
+        originLon: String(originCoords.lng),
+        destinationLat: String(destinationCoords.lat),
+        destinationLon: String(destinationCoords.lng),
+        originAddress: origin.value,
+        destinationAddress: destination.value,
+        leaveNow: "false",
+        bike: String(useBike),
+        bus: String(useBus),
+      });
+
+      if (timeMode === "depart") {
+        params.set("leaveAt", selectedTime);
+      } else {
+        params.set("arriveBy", selectedTime);
+      }
+
+      if (auth.currentUser?.uid) {
+        params.set("userId", auth.currentUser.uid);
+      }
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/compute?${params}`,
+      );
+      if (!res.ok) {
+        throw new Error("Route request failed");
+      }
+
+      const journey = (await res.json()) as RoutePath;
+      onPathReceive?.(journey);
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  }
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOriginIsOpen(false);
+        setDestinationIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [setDestinationIsOpen, setOriginIsOpen]);
+
   return (
     <>
-      {/* search bar */}
-      <div className='absolute left-5 right-5 top-3 z-20 flex h-11 items-center'>
-        <Search
-          size={25}
-          className='pointer-events-none absolute left-5 z-10 shrink-0'
-        />
-        <Input
-          type='search'
-          placeholder='Kam šibaš?'
-          className='h-full rounded-lg border-0 bg-neutral-700 pl-13 text-xl font-normal shadow-md md:text-xl'
-          aria-label='Kam šibaš?'
-        />
-        <button
-          type='button'
-          className='absolute right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full '
-          aria-label='Profil'>
-          <UserRound size={25} strokeWidth={1.7} />
-        </button>
-      </div>
+      {isLoadingRoute && (
+        <RouteLoadingOverlay onDismiss={() => setIsLoadingRoute(false)} />
+      )}
+      <div className='pointer-events-none absolute inset-x-4 top-4 z-20 flex flex-row items-start gap-2'>
+        <div className='mt-3 flex min-w-0 flex-1 flex-row items-start gap-2 max-[699px]:w-full max-[699px]:flex-none'>
+          {/* logotip */}
+          <img
+            src='/logo.svg'
+            alt='ŠibaM'
+            className='pointer-events-auto h-10 w-auto shrink-0 cursor-pointer max-[699px]:hidden'
+            onClick={() => navigate("/")}
+          />
 
-      {/* temperatura */}
-      <div className='absolute left-5 top-17 z-20 flex h-8 items-center gap-4 rounded-sm bg-red-700/80 px-4 text-white shadow-lg'>
-        <CloudRain size={20} />
-        <span className='text-md 7'>15 °C</span>
-      </div>
+          {/* searchbar */}
+          <div
+            ref={containerRef}
+            className='pointer-events-auto flex min-w-0 flex-1 flex-col gap-1 min-[700px]:w-110 min-[700px]:flex-none'>
+            {showDirections ? (
+              <>
+                <div className='relative'>
+                  <div className='overflow-hidden rounded-lg bg-white/95 text-neutral-900 shadow-md dark:bg-neutral-700 dark:text-white'>
+                    <div className='relative flex h-10 items-center pr-10'>
+                      <Search
+                        size={16}
+                        className='pointer-events-none absolute left-3 z-10 shrink-0 text-muted-foreground'
+                      />
+                      <Input
+                        type='text'
+                        value={origin.value}
+                        onChange={origin.handleChange}
+                        onFocus={handleOriginFocus}
+                        onKeyDown={(e) =>
+                          e.key === "Escape" && origin.setIsOpen(false)
+                        }
+                        placeholder='Kje štartaš?'
+                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none dark:bg-transparent focus-visible:ring-0 focus-visible:outline-none'
+                        aria-label='Kje štartaš?'
+                      />
+                      {origin.value && (
+                        <button
+                          type='button'
+                          onClick={handleClear}
+                          className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground dark:hover:text-white'
+                          aria-label='Počisti'>
+                          <X size={13} />
+                        </button>
+                      )}
+                    </div>
+                    <div className='h-px bg-border dark:bg-neutral-600' />
+                    <div className='relative flex h-10 items-center pr-10'>
+                      <Search
+                        size={16}
+                        className='pointer-events-none absolute left-3 z-10 shrink-0 text-muted-foreground'
+                      />
+                      <Input
+                        type='text'
+                        value={destination.value}
+                        onChange={destination.handleChange}
+                        onFocus={handleDestinationFocus}
+                        onKeyDown={(e) =>
+                          e.key === "Escape" && destination.setIsOpen(false)
+                        }
+                        placeholder='Kam šibaš?'
+                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none dark:bg-transparent focus-visible:ring-0 focus-visible:outline-none'
+                        aria-label='Kam šibaš?'
+                      />
+                      {destination.value && (
+                        <button
+                          type='button'
+                          onClick={() => {
+                            destination.clear();
+                            setDestinationCoords(null);
+                            onDestinationSelect?.(null);
+                          }}
+                          className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground dark:hover:text-white'
+                          aria-label='Počisti'>
+                          <X size={13} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type='button'
+                    onClick={handleSwap}
+                    className='absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-muted text-muted-foreground shadow-md transition-colors hover:text-foreground dark:bg-neutral-600 dark:text-neutral-300 dark:hover:text-white'
+                    aria-label='Zamenjaj smeri'>
+                    <ArrowUpDown size={16} />
+                  </button>
+                </div>
+                {renderLocationDropdown("origin")}
+                {renderLocationDropdown("destination")}
+                <div className='flex items-center gap-2'>
+                  <button
+                    type='button'
+                    onClick={() => setUseBus((v) => !v)}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBus ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
+                    <Bus size={14} />
+                    Bus
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setUseBike((v) => !v)}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBike ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
+                    <Bike size={14} />
+                    Kolo
+                  </button>
+                  <div className='flex overflow-hidden rounded-lg bg-white text-neutral-900 shadow-md dark:bg-neutral-700 dark:text-white'>
+                    <button
+                      type='button'
+                      onClick={() =>
+                        setTimeMode((m) =>
+                          m === "depart" ? "arrive" : "depart",
+                        )
+                      }
+                      className='whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted dark:text-white dark:hover:bg-neutral-600'>
+                      {timeMode === "depart" ? "Odhod ob" : "Prihod do"}
+                    </button>
+                    <div className='w-px bg-border dark:bg-neutral-600' />
+                    <input
+                      type='time'
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      className='bg-transparent px-2 py-1.5 text-sm focus:outline-none dark:text-white'
+                    />
+                  </div>
+                  <button
+                    type='button'
+                    onClick={handleRouteRequest}
+                    disabled={!originCoords || !destinationCoords}
+                    className='ml-auto flex items-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-200 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-neutral-200 dark:hover:bg-neutral-50'>
+                    Najdi pot
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className='relative flex h-10 items-center rounded-lg bg-white/95 text-neutral-900 shadow-md dark:bg-neutral-700 dark:text-white'>
+                  <Search
+                    size={16}
+                    className='pointer-events-none absolute left-3 z-10 shrink-0 text-muted-foreground'
+                  />
+                  <Input
+                    type='text'
+                    value={destination.value}
+                    onChange={destination.handleChange}
+                    onFocus={handleDestinationFocus}
+                    onKeyDown={(e) =>
+                      e.key === "Escape" && destination.setIsOpen(false)
+                    }
+                    placeholder='Kam šibaš?'
+                    className='h-full w-auto flex-1 rounded-lg border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none dark:bg-transparent focus-visible:ring-0 focus-visible:outline-none'
+                    aria-label='Kam šibaš?'
+                  />
+                  {destination.value && (
+                    <button
+                      type='button'
+                      onClick={() => {
+                        destination.clear();
+                        setSelectedPlace("");
+                        setDestinationCoords(null);
+                        onDestinationSelect?.(null);
+                      }}
+                      className='mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground dark:hover:text-white'
+                      aria-label='Počisti'>
+                      <X size={13} />
+                    </button>
+                  )}
+                  {selectedPlace && !showDirections && (
+                    <button
+                      type='button'
+                      onClick={handleShowDirectionsClick}
+                      className='mr-2 flex h-6 w-6 cursor-pointer shrink-0 rotate-45 items-center justify-center rounded-sm bg-red-700 text-white shadow-sm transition-colors hover:bg-red-600'
+                      aria-label='Navodila za pot'>
+                      <Route size={14} className='-rotate-45' />
+                    </button>
+                  )}
+                </div>
+                {renderLocationDropdown("destination")}
+              </>
+            )}
+            {locationError && (
+              <p className='rounded-lg bg-card px-3 py-2 text-xs text-red-600 shadow-lg dark:bg-neutral-700 dark:text-red-400'>
+                Lokacije ni bilo mogoče najti. Prosimo poskusite znova.
+              </p>
+            )}
+          </div>
 
-      {/* controls */}
-      <div className='absolute right-5 top-18 z-20 flex flex-col gap-2'>
-        <Button
-          type='button'
-          onClick={onZoomIn}
-          className='flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg'
-          aria-label='Povečaj'>
-          <Plus size={20} />
-        </Button>
-        <Button
-          type='button'
-          onClick={onZoomOut}
-          className='flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg'
-          aria-label='Pomanjšaj'>
-          <Minus size={20} />
-        </Button>
-        <Button
-          type='button'
-          onClick={onLocate}
-          className='flex h-9 w-9 items-center justify-center rounded-md hover:text-red-200 bg-neutral-700 text-foreground shadow-lg'
-          aria-label='Moja lokacija'>
-          <LocateFixed size={20} />
-        </Button>
+          {/* vreme */}
+          <WeatherWidget />
+        </div>
+
+        {/* Desni panel */}
+        {isLoggedIn ? (
+          <div
+            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-row gap-2 min-[700px]:top-3 ${showDirections ? "max-[700px]:top-24" : "max-[700px]:top-14"}`}>
+            <Button
+              type='button'
+              onClick={() => navigate("/account")}
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'
+              aria-label='Profil'>
+              <UserRound strokeWidth={1.7} />
+            </Button>
+            <div className='flex flex-col gap-2'>
+              <Button
+                type='button'
+                onClick={() => {
+                  auth.signOut();
+                  navigate("/login");
+                }}
+                aria-label='Odjava'
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'>
+                <LogOut />
+              </Button>
+              <ThemeToggle />
+              <Button
+                type='button'
+                onClick={onZoomIn}
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+                aria-label='Povečaj'>
+                <Plus size={20} />
+              </Button>
+              <Button
+                type='button'
+                onClick={onZoomOut}
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+                aria-label='Pomanjšaj'>
+                <Minus size={20} />
+              </Button>
+              <Button
+                type='button'
+                onClick={onLocate}
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+                aria-label='Moja lokacija'>
+                <LocateFixed size={20} />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-col gap-2 min-[700px]:top-2 ${showDirections ? "max-[699px]:top-24" : "max-[699px]:top-14"}`}>
+            <Button
+              type='button'
+              onClick={() => navigate("/login")}
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'
+              aria-label='Profil'>
+              <UserRound strokeWidth={1.7} />
+            </Button>
+            <ThemeToggle />
+            <Button
+              type='button'
+              onClick={onZoomIn}
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+              aria-label='Povečaj'>
+              <Plus size={20} />
+            </Button>
+            <Button
+              type='button'
+              onClick={onZoomOut}
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+              aria-label='Pomanjšaj'>
+              <Minus size={20} />
+            </Button>
+            <Button
+              type='button'
+              onClick={onLocate}
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+              aria-label='Moja lokacija'>
+              <LocateFixed size={20} />
+            </Button>
+          </div>
+        )}
       </div>
     </>
   );

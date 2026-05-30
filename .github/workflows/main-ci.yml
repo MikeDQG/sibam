@@ -31,7 +31,12 @@ jobs:
 
       # Supabase backend
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+      # MBajk API KEY
+      MBAJK_API_KEY: ${{ secrets.MBAJK_API_KEY }}
+
+      OPEN_WEATHERMAP_API_KEY: ${{ secrets.OPEN_WEATHERMAP_API_KEY }}
 
     steps:
       - name: Checkout repository

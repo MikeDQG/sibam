@@ -19,7 +19,10 @@ public class MarpromClient {
     private static final String BASE_URL = "https://marprom-proxy.derp.si/OBA"; //
 
     public MarpromClient(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl(BASE_URL).build();
+        this.webClient = webClientBuilder
+                .baseUrl(BASE_URL)
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10 MB buffer
+                .build();
     }
 
     private String getFormattedDateHelper() {

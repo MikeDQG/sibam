@@ -1,26 +1,44 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
+import { toast } from "sonner";
 import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
-import { MainMap } from "../MainAppComponents/MainMap";
+import { MainMap, type SavedMapLocation } from "../MainAppComponents/MainMap";
+import {
+  isLocationIcon,
+  type LocationIcon,
+} from "../MainAppComponents/MapLocationPopup";
 import { RouteOptions } from "../MainAppComponents/RouteOptions";
+import type { RoutePopupSelection } from "../MainAppComponents/RoutePopup";
+import type {
+  MapPoint,
+  RouteLeg,
+  RoutePath,
+} from "../MainAppComponents/RoutePolyline";
+import { useUserSession } from "../Authorization/UserSessionProvider";
+import { MARIBOR_BOUNDS } from "../../hooks/usePlacesAutocomplete";
+
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const routeOptions = [
   {
     title: "Najhitrejša",
     time: "18 min",
-    className: "border-sky-500 bg-[#941d38] ring-4 ring-sky-500",
+    className:
+      "border-red-200 bg-red-50 text-red-950 ring-4 dark:bg-[#941d38] dark:text-white",
     icons: [Bus, Footprints, Bike],
   },
   {
     title: "Najbolj zelena",
     time: "24 min",
-    className: "border-neutral-500 bg-[#1d431b]",
+    className:
+      "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-neutral-500 dark:bg-[#1d431b] dark:text-white",
     icons: [Footprints, Bike],
   },
   {
     title: "Brez kolesa",
     time: "22 min",
-    className: "border-neutral-600 bg-[#2c2c2a]",
+    className:
+      "border-neutral-200 bg-white text-neutral-950 dark:border-neutral-600 dark:bg-[#2c2c2a] dark:text-white",
     icons: [Bus, Footprints],
   },
 ];
@@ -35,20 +53,84 @@ type MapCenter = {
   lng: number;
 };
 
+type MapLocationDraft = {
+  position: MapCenter;
+  name: string;
+  color: string;
+  icon: LocationIcon;
+};
+
+type SavedLocationResponse = {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  color?: string | null;
+  logo?: string | null;
+};
+
+const defaultLocationColor = "#b91c1c";
+const defaultLocationIcon: LocationIcon = "home";
+
+function isInsideMaribor({ lat, lng }: MapCenter) {
+  return (
+    lat >= MARIBOR_BOUNDS.low.latitude &&
+    lat <= MARIBOR_BOUNDS.high.latitude &&
+    lng >= MARIBOR_BOUNDS.low.longitude &&
+    lng <= MARIBOR_BOUNDS.high.longitude
+  );
+}
+
 export const MainAppHome = () => {
+  const { userSession, getAuthToken, fetchUserSession } = useUserSession();
   const [center, setCenter] = useState<MapCenter>(fallbackCenter);
   const [zoom, setZoom] = useState(14);
+  const [selectedLeg, setSelectedLeg] = useState<RoutePopupSelection | null>(
+    null,
+  );
+  const [markerPosition, setMarkerPosition] = useState<MapCenter | null>(null);
+  const [userLocationPosition, setUserLocationPosition] =
+    useState<MapCenter | null>(null);
+  const [destinationMarkerPosition, setDestinationMarkerPosition] =
+    useState<MapCenter | null>(null);
+  const [routePath, setRoutePath] = useState<RoutePath | null>(null);
+  const [mapLocationDraft, setMapLocationDraft] =
+    useState<MapLocationDraft | null>(null);
+  const [savedLocations, setSavedLocations] = useState<SavedMapLocation[]>([]);
+  const [deletingSavedLocationId, setDeletingSavedLocationId] = useState<
+    string | null
+  >(null);
+  const hasShownOutOfCoverageToast = useRef(false);
 
   // iskanje userjeve lokacije
-  function locateUser(zoomToUser = false) {
+  function locateUser({
+    zoomToUser = false,
+    showOutOfCoverageToast = false,
+  } = {}) {
     if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setCenter({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
+        const userPosition = {
+          lat: position.coords.latitude, //46.5575
+          lng: position.coords.longitude, // 15.6456
+        };
+
+        setUserLocationPosition(userPosition);
+
+        if (!isInsideMaribor(userPosition)) {
+          setCenter(fallbackCenter);
+          setZoom(14);
+          if (showOutOfCoverageToast && !hasShownOutOfCoverageToast.current) {
+            hasShownOutOfCoverageToast.current = true;
+            toast.info(
+              "Trenutno si izven območja pokritosti. Prikazujemo Maribor.",
+            );
+          }
+          return;
+        }
+
+        setCenter(userPosition);
 
         if (zoomToUser) {
           setZoom(16);
@@ -69,6 +151,67 @@ export const MainAppHome = () => {
     locateUser();
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchSavedLocations() {
+      const token = await getAuthToken();
+
+      if (!token) {
+        setSavedLocations([]);
+        return;
+      }
+
+      try {
+        const session = userSession ?? (await fetchUserSession(token));
+
+        const response = await fetch(`${apiUrl}/api/locations/${session.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Saved locations request failed: ${response.status}`);
+        }
+
+        const locations = (await response.json()) as SavedLocationResponse[];
+
+        if (!isActive) return;
+
+        setSavedLocations(
+          locations
+            .filter(
+              (location) =>
+                Number.isFinite(location.latitude) &&
+                Number.isFinite(location.longitude),
+            )
+            .map((location) => ({
+              id: location.id,
+              name: location.name,
+              position: {
+                lat: location.latitude,
+                lng: location.longitude,
+              },
+              color: location.color ?? defaultLocationColor,
+              icon: isLocationIcon(location.logo)
+                ? location.logo
+                : defaultLocationIcon,
+            })),
+        );
+      } catch {
+        if (!isActive) return;
+        toast.error("Shranjene lokacije niso bile naložene.");
+      }
+    }
+
+    void fetchSavedLocations();
+
+    return () => {
+      isActive = false;
+    };
+  }, [fetchUserSession, getAuthToken, userSession]);
+
   // handlanje overlay kontrol
   function handleZoomIn() {
     setZoom((currentZoom) => Math.min(currentZoom + 1, 20));
@@ -79,12 +222,183 @@ export const MainAppHome = () => {
   }
 
   function handleLocate() {
-    locateUser(true);
+    locateUser({ zoomToUser: true, showOutOfCoverageToast: true });
   }
 
   function handleCameraChanged(nextCenter: MapCenter, nextZoom: number) {
     setCenter(nextCenter);
     setZoom(nextZoom);
+  }
+
+  function handleLegClick(leg: RouteLeg, position: MapPoint) {
+    setMapLocationDraft(null);
+    setSelectedLeg({ leg, position, source: "path" });
+  }
+
+  function handleBusIconClick(
+    leg: RouteLeg,
+    position: MapPoint,
+    previousLeg?: RouteLeg,
+  ) {
+    setMapLocationDraft(null);
+    setSelectedLeg({ leg, position, previousLeg, source: "busIcon" });
+  }
+
+  function handleBikeIconClick(
+    leg: RouteLeg,
+    position: MapPoint,
+    source: "bikePickupIcon" | "bikeReturnIcon",
+  ) {
+    setMapLocationDraft(null);
+    setSelectedLeg({ leg, position, source });
+  }
+
+  function handlePlaceSelect(place: { lat: number; lng: number } | null) {
+    setRoutePath(null);
+    setSelectedLeg(null);
+    setMapLocationDraft(null);
+
+    if (!place) {
+      setMarkerPosition(null);
+      return;
+    }
+
+    setCenter({ lat: place.lat, lng: place.lng });
+    setZoom(16);
+    setMarkerPosition({ lat: place.lat, lng: place.lng });
+  }
+
+  function handleDestinationSelect(place: { lat: number; lng: number } | null) {
+    setRoutePath(null);
+    setSelectedLeg(null);
+    setMapLocationDraft(null);
+    setDestinationMarkerPosition(place);
+  }
+
+  function handlePathReceive(path: RoutePath) {
+    setRoutePath(path);
+    setSelectedLeg(null);
+    setMapLocationDraft(null);
+  }
+
+  function handleMapContextSelect(position: MapCenter) {
+    setSelectedLeg(null);
+    setCenter(position);
+    setZoom((currentZoom) => Math.max(currentZoom, 16));
+    setMapLocationDraft({
+      position,
+      name: "",
+      color: defaultLocationColor,
+      icon: defaultLocationIcon,
+    });
+  }
+
+  function handleMapLocationColorChange(color: string) {
+    setMapLocationDraft((currentDraft) =>
+      currentDraft ? { ...currentDraft, color } : currentDraft,
+    );
+  }
+
+  function handleMapLocationIconChange(icon: LocationIcon) {
+    setMapLocationDraft((currentDraft) =>
+      currentDraft ? { ...currentDraft, icon } : currentDraft,
+    );
+  }
+
+  async function handleMapLocationSave(draft: MapLocationDraft) {
+    try {
+      const token = await getAuthToken();
+
+      if (!token) {
+        toast.error("Za shranjevanje lokacije moraš biti prijavljen.");
+        return;
+      }
+
+      const session = userSession ?? (await fetchUserSession(token));
+      const locationName = draft.name.trim();
+
+      const data = {
+        userId: session.id,
+        name: locationName,
+        address: locationName,
+        latitude: draft.position.lat,
+        longitude: draft.position.lng,
+        color: draft.color,
+        icon: draft.icon,
+        logo: draft.icon,
+      };
+
+      const response = await fetch(`${apiUrl}/api/locations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+
+      const savedLocation = (await response.json()) as SavedLocationResponse;
+
+      setSavedLocations((currentLocations) => [
+        ...currentLocations,
+        {
+          id: savedLocation.id,
+          name: savedLocation.name,
+          position: {
+            lat: savedLocation.latitude,
+            lng: savedLocation.longitude,
+          },
+          color: draft.color,
+          icon: isLocationIcon(savedLocation.logo)
+            ? savedLocation.logo
+            : draft.icon,
+        },
+      ]);
+
+      toast.success("Lokacija je shranjena.");
+      setMapLocationDraft(null);
+    } catch {
+      toast.error("Lokacije ni bilo mogoče shraniti. Poskusite znova.");
+    }
+  }
+
+  async function handleSavedLocationDelete(locationId: string) {
+    if (deletingSavedLocationId === locationId) return;
+
+    setDeletingSavedLocationId(locationId);
+
+    try {
+      const token = await getAuthToken();
+
+      if (!token) {
+        toast.error("Za brisanje lokacije moraš biti prijavljen.");
+        return;
+      }
+
+      const response = await fetch(`${apiUrl}/api/locations/${locationId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Delete location request failed: ${response.status}`);
+      }
+
+      setSavedLocations((currentLocations) =>
+        currentLocations.filter((location) => location.id !== locationId),
+      );
+      toast.success("Lokacija je izbrisana.");
+    } catch {
+      toast.error("Lokacije ni bilo mogoče izbrisati.");
+    } finally {
+      setDeletingSavedLocationId(null);
+    }
   }
 
   return (
@@ -93,7 +407,25 @@ export const MainAppHome = () => {
       <MainMap
         center={center}
         zoom={zoom}
+        legs={routePath?.legs}
+        selectedLeg={selectedLeg}
+        onLegClick={handleLegClick}
+        onBusIconClick={handleBusIconClick}
+        onBikeIconClick={handleBikeIconClick}
+        onRoutePopupClose={() => setSelectedLeg(null)}
         onCameraChanged={handleCameraChanged}
+        onMapContextSelect={handleMapContextSelect}
+        mapLocationDraft={mapLocationDraft}
+        onMapLocationColorChange={handleMapLocationColorChange}
+        onMapLocationIconChange={handleMapLocationIconChange}
+        onMapLocationSave={handleMapLocationSave}
+        onMapLocationPopupClose={() => setMapLocationDraft(null)}
+        savedLocations={savedLocations}
+        deletingSavedLocationId={deletingSavedLocationId}
+        onSavedLocationDelete={handleSavedLocationDelete}
+        markerPosition={markerPosition}
+        userLocationPosition={userLocationPosition}
+        destinationMarkerPosition={destinationMarkerPosition}
       />
 
       {/* control overlay */}
@@ -101,6 +433,11 @@ export const MainAppHome = () => {
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onLocate={handleLocate}
+        currentLocation={userLocationPosition}
+        onPlaceSelect={handlePlaceSelect}
+        onDestinationSelect={handleDestinationSelect}
+        onPathReceive={handlePathReceive}
+        savedLocations={savedLocations}
       />
 
       {/* route options */}

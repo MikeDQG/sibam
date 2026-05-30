@@ -1,0 +1,296 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Frontend" id="frontend-diagram">
+    <mxGraphModel dx="2580" dy="1663" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ext_fb" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;" value="«external system»&lt;br&gt;&lt;b&gt;Firebase Auth&lt;/b&gt;&lt;br&gt;Google Cloud" vertex="1">
+          <mxGeometry height="65" width="185" x="80" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_gm" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;" value="«external system»&lt;br&gt;&lt;b&gt;Google Maps JS SDK&lt;/b&gt;&lt;br&gt;@vis.gl/react-google-maps" vertex="1">
+          <mxGeometry height="65" width="215" x="630" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_places" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;" value="«external system»&lt;br&gt;&lt;b&gt;Google Places API&lt;/b&gt;&lt;br&gt;autocomplete suggestions" vertex="1">
+          <mxGeometry height="60" width="210" x="1150" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_backend" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;" value="«external system»&lt;br&gt;&lt;b&gt;Backend API&lt;/b&gt;&lt;br&gt;Spring Boot" vertex="1">
+          <mxGeometry height="65" width="200" x="1370" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="fe_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=6;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontSize=12;align=center;" value="«subsystem»&lt;br&gt;&lt;b&gt;Frontend — React + Vite + TypeScript&lt;/b&gt;" vertex="1">
+          <mxGeometry height="960" width="1560" x="40" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="app" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;App.tsx&lt;/b&gt;&lt;br&gt;React Router — 5 routes" vertex="1">
+          <mxGeometry height="65" width="200" x="780" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="firebase_svc" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="«service»&lt;br&gt;&lt;b&gt;firebase.ts&lt;/b&gt;&lt;br&gt;FirebaseApp · getAuth()" vertex="1">
+          <mxGeometry height="60" width="185" x="80" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="lp" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;LandingPage&lt;/b&gt;&lt;br&gt;route: /" vertex="1">
+          <mxGeometry height="60" width="175" x="60" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="lg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;Login&lt;/b&gt;&lt;br&gt;route: /login" vertex="1">
+          <mxGeometry height="60" width="155" x="280" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="reg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;Register&lt;/b&gt;&lt;br&gt;route: /register" vertex="1">
+          <mxGeometry height="60" width="155" x="470" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="acc" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;AccountPage&lt;/b&gt;&lt;br&gt;route: /account" vertex="1">
+          <mxGeometry height="60" width="185" x="660" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="mah" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;MainAppHome&lt;/b&gt;&lt;br&gt;route: /home" vertex="1">
+          <mxGeometry height="60" width="185" x="900" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="lp_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=6;fillColor=#eff7ff;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;align=center;fontColor=#6c8ebf;" value="«subsystem»&lt;br&gt;&lt;b&gt;Landing Page Components&lt;/b&gt;" vertex="1">
+          <mxGeometry height="260" width="420" x="220" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;Header&lt;/b&gt;&lt;br&gt;nav + logo" vertex="1">
+          <mxGeometry height="60" width="150" x="240" y="595" as="geometry" />
+        </mxCell>
+        <mxCell id="hero" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;HeroSection&lt;/b&gt;&lt;br&gt;CTA + intro" vertex="1">
+          <mxGeometry height="60" width="165" x="420" y="595" as="geometry" />
+        </mxCell>
+        <mxCell id="feat" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;FeaturesSection&lt;/b&gt;&lt;br&gt;feature cards" vertex="1">
+          <mxGeometry height="60" width="180" x="420" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="ftr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;Footer&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="150" x="240" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="ma_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=6;fillColor=#eff7ff;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;align=center;fontColor=#6c8ebf;" value="«subsystem»&lt;br&gt;&lt;b&gt;Main App Components&lt;/b&gt;" vertex="1">
+          <mxGeometry height="450" width="840" x="740" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="api_prov" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;APIProvider&lt;/b&gt;&lt;br&gt;@vis.gl · region=SI" vertex="1">
+          <mxGeometry height="60" width="200" x="760" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="mm" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;MainMap&lt;/b&gt;&lt;br&gt;dark Google Map · origin&lt;br&gt;&amp; destination markers" vertex="1">
+          <mxGeometry height="75" width="200" x="760" y="797.5" as="geometry" />
+        </mxCell>
+        <mxCell id="maco" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;MainAppControlOverlay&lt;/b&gt;&lt;br&gt;search · zoom · transport toggles&lt;br&gt;(bus/bike) · depart/arrive time" vertex="1">
+          <mxGeometry height="80" width="220" x="1000" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="ro" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;RouteOptions&lt;/b&gt;&lt;br&gt;fastest · greenest · no-bike" vertex="1">
+          <mxGeometry height="65" width="200" x="1260" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="ww" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;WeatherWidget&lt;/b&gt;&lt;br&gt;current conditions" vertex="1">
+          <mxGeometry height="60" width="185" x="1000" y="805" as="geometry" />
+        </mxCell>
+        <mxCell id="rlo" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;RouteLoadingOverlay&lt;/b&gt;&lt;br&gt;spinner while routing" vertex="1">
+          <mxGeometry height="60" width="200" x="1260" y="805" as="geometry" />
+        </mxCell>
+        <mxCell id="usePAC" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="«hook»&lt;br&gt;&lt;b&gt;usePlacesAutocomplete&lt;/b&gt;&lt;br&gt;fetches + parses place suggestions" vertex="1">
+          <mxGeometry height="65" width="225" x="1000" y="915" as="geometry" />
+        </mxCell>
+        <mxCell id="ui_note" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#aaaaaa;fontSize=9;fontColor=#666666;" value="«shared UI»&lt;br&gt;&lt;b&gt;Button · Input · Separator&lt;/b&gt;&lt;br&gt;shadcn/ui primitives" vertex="1">
+          <mxGeometry height="65" width="200" x="760" y="915" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" edge="1" parent="1" source="firebase_svc" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ext_fb" value="«SDK»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="lp" value="«route /»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="210" />
+              <mxPoint x="290" y="360" />
+              <mxPoint x="148" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a3" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="lg" value="«route /login»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="228" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a4" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="reg" value="«route /register»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="548" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a5" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="acc" value="«route /account»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="mah" value="«route /home»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="890" y="335" />
+              <mxPoint x="992" y="335" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a7" edge="1" parent="1" source="lp" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="hdr" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="560" />
+              <mxPoint x="315" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a8" edge="1" parent="1" source="lp" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="hero" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="190" y="510" />
+              <mxPoint x="503" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a9" edge="1" parent="1" source="lp" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="feat" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="148" y="830" />
+              <mxPoint x="510" y="830" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a10" edge="1" parent="1" source="lp" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ftr" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="715" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a11" edge="1" parent="1" source="lg" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="firebase_svc" value="«signIn · GoogleAuth»">
+          <mxGeometry relative="1" x="0.0714" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="320" y="340" />
+              <mxPoint x="190" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a12" edge="1" parent="1" source="lg" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ext_backend" value="«POST /api/users/me»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="358" y="130" />
+              <mxPoint x="1440" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a13" edge="1" parent="1" source="reg" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="firebase_svc" value="«createUser»">
+          <mxGeometry relative="1" x="-0.2444" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="530" y="330" />
+              <mxPoint x="230" y="330" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a14" edge="1" parent="1" source="acc" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="firebase_svc" value="«onAuthStateChanged · signOut»">
+          <mxGeometry relative="1" x="-0.7145" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="710" y="390" />
+              <mxPoint x="160" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a15" edge="1" parent="1" source="acc" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="hdr" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="490" />
+              <mxPoint x="340" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a16" edge="1" parent="1" source="acc" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ftr" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="730" y="790" />
+              <mxPoint x="315" y="790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a17" edge="1" parent="1" source="mah" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="api_prov" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="992" y="578" />
+              <mxPoint x="870" y="578" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a18" edge="1" parent="1" source="mah" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="maco" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1000" y="578" />
+              <mxPoint x="1110" y="578" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a19" edge="1" parent="1" source="mah" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ro" value="«use»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a20" edge="1" parent="1" source="api_prov" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="mm" value="«provides map context»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a21" edge="1" parent="1" source="api_prov" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ext_gm" value="«load SDK»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a22" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ww" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1093" y="766" />
+            </Array>
+            <mxPoint x="1093" y="766" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a23" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="rlo" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1130" y="780" />
+              <mxPoint x="1360" y="780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a24" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="usePAC" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1110" y="790" />
+              <mxPoint x="1220" y="790" />
+              <mxPoint x="1220" y="880" />
+              <mxPoint x="1112" y="880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a25" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" target="firebase_svc" value="«onAuthStateChanged»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980" y="725" />
+              <mxPoint x="980" y="890" />
+              <mxPoint x="50" y="890" />
+              <mxPoint x="50" y="360" />
+              <mxPoint x="126" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a26" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ext_backend" value="«POST /api/path»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1130" y="530" />
+              <mxPoint x="1470" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a27" edge="1" parent="1" source="usePAC" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="ext_places" value="«HTTP»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1250" y="947" />
+              <mxPoint x="1250" y="150" />
+              <mxPoint x="1255" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a28" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ui_note" value="«use»">
+          <mxGeometry relative="1" x="0.4822" as="geometry">
+            <mxPoint y="-1" as="offset" />
+            <Array as="points">
+              <mxPoint x="1060" y="780" />
+              <mxPoint x="990" y="780" />
+              <mxPoint x="990" y="948" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

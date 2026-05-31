@@ -11,7 +11,7 @@ export default defineConfig({
         tailwindcss(),
         VitePWA({
             registerType: "autoUpdate",
-            includeAssets: ["logo.svg"],
+            includeAssets: ["logo.svg", "pathIcons/**", "LandingPage/**"],
             manifest: {
                 name: "ŠibaM",
                 short_name: "ŠibaM",

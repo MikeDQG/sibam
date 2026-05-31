@@ -1,0 +1,8 @@
+psycopg2-binary    
+pandas             
+scikit-learn      
+skl2onnx        
+numpy             
+python-dotenv  
+supabase
+pyarrow

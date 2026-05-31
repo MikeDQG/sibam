@@ -1,10 +1,19 @@
 import {
   APIProvider,
   AdvancedMarker,
+  InfoWindow,
   Map,
   useMap,
 } from "@vis.gl/react-google-maps";
-import { Fragment, useEffect } from "react";
+import { Trash } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
+import { useTheme } from "../ThemeProvider";
+import {
+  LocationIconGlyph,
+  MapLocationPopup,
+  type LocationIcon,
+  type MapLocationDraft,
+} from "./MapLocationPopup";
 import { RoutePopup, type RoutePopupSelection } from "./RoutePopup";
 import { RoutePolyline, type MapPoint, type RouteLeg } from "./RoutePolyline";
 
@@ -34,8 +43,26 @@ type MainMapProps = {
   ) => void;
   onRoutePopupClose?: () => void;
   onCameraChanged?: (center: MapCenter, zoom: number) => void;
+  onMapContextSelect?: (position: MapCenter) => void;
+  mapLocationDraft?: MapLocationDraft | null;
+  onMapLocationColorChange?: (color: string) => void;
+  onMapLocationIconChange?: (icon: LocationIcon) => void;
+  onMapLocationSave: (draft: MapLocationDraft) => void;
+  onMapLocationPopupClose?: () => void;
+  savedLocations?: SavedMapLocation[];
+  deletingSavedLocationId?: string | null;
+  onSavedLocationDelete?: (locationId: string) => void;
   markerPosition?: MapCenter | null;
+  userLocationPosition?: MapCenter | null;
   destinationMarkerPosition?: MapCenter | null;
+};
+
+export type SavedMapLocation = {
+  id: string;
+  position: MapCenter;
+  name: string;
+  color: string;
+  icon: LocationIcon;
 };
 
 function FitBounds({
@@ -65,6 +92,7 @@ export const MainMap = ({
   zoom,
   onCameraChanged,
   markerPosition,
+  userLocationPosition,
   destinationMarkerPosition,
   legs,
   selectedLeg,
@@ -72,12 +100,28 @@ export const MainMap = ({
   onBusIconClick,
   onBikeIconClick,
   onRoutePopupClose,
+  onMapContextSelect,
+  mapLocationDraft,
+  onMapLocationColorChange,
+  onMapLocationIconChange,
+  onMapLocationSave,
+  onMapLocationPopupClose,
+  savedLocations = [],
+  deletingSavedLocationId,
+  onSavedLocationDelete,
 }: MainMapProps) => {
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
+  const { theme } = useTheme();
+  const [deletePromptLocationId, setDeletePromptLocationId] = useState<
+    string | null
+  >(null);
+  const deletePromptLocation =
+    savedLocations.find((location) => location.id === deletePromptLocationId) ??
+    null;
 
   if (!hasApiKey) {
     return (
-      <div className='absolute inset-0 z-0 flex items-center justify-center bg-neutral-800 text-neutral-300'>
+      <div className='absolute inset-0 z-0 flex items-center justify-center bg-muted text-muted-foreground'>
         Manjka Google Maps API key
       </div>
     );
@@ -92,12 +136,33 @@ export const MainMap = ({
           onCameraChanged={(event) => {
             onCameraChanged?.(event.detail.center, event.detail.zoom);
           }}
-          colorScheme='DARK'
+          onContextmenu={(event) => {
+            event.stop();
+
+            const position = event.detail.latLng;
+            if (!position) return;
+
+            onRoutePopupClose?.();
+            onMapContextSelect?.(position);
+          }}
+          colorScheme={theme === "dark" ? "DARK" : "LIGHT"}
           gestureHandling='greedy'
+          draggable
+          scrollwheel
+          keyboardShortcuts
           disableDefaultUI
+          zoomControl={false}
           clickableIcons={false}
           mapId={mapId}
           reuseMaps>
+          {userLocationPosition && (
+            <AdvancedMarker position={userLocationPosition}>
+              <div className='relative flex h-8 w-8 items-center justify-center'>
+                <div className='absolute h-8 w-8 rounded-full bg-blue-500/20' />
+                <div className='h-4 w-4 rounded-full border-2 border-white bg-blue-600 shadow-lg' />
+              </div>
+            </AdvancedMarker>
+          )}
           {/* zacetek in konec poti */}
           {markerPosition && (
             <AdvancedMarker position={markerPosition}>
@@ -206,6 +271,87 @@ export const MainMap = ({
           })}
           {selectedLeg && (
             <RoutePopup selectedLeg={selectedLeg} onClose={onRoutePopupClose} />
+          )}
+          {savedLocations.map((location) => (
+            <AdvancedMarker
+              key={location.id}
+              position={location.position}
+              clickable={Boolean(onSavedLocationDelete)}
+              onClick={() => {
+                if (!onSavedLocationDelete) return;
+                onRoutePopupClose?.();
+                onMapLocationPopupClose?.();
+                setDeletePromptLocationId(location.id);
+              }}>
+              <div className='flex -translate-y-1 flex-col items-center gap-1'>
+                <div
+                  className='group flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
+                  style={{ backgroundColor: location.color }}>
+                  <LocationIconGlyph
+                    icon={location.icon}
+                    size={22}
+                    className='group-hover:hidden'
+                  />
+                  <Trash className='hidden group-hover:block' size={20} />
+                </div>
+                <span className='max-w-28 rounded-md bg-white/95 px-2 py-0.5 text-center text-xs font-semibold leading-tight text-neutral-900 shadow-md dark:bg-neutral-700/95 dark:text-white'>
+                  {location.name}
+                </span>
+              </div>
+            </AdvancedMarker>
+          ))}
+          {deletePromptLocation && (
+            <InfoWindow
+              position={deletePromptLocation.position}
+              onCloseClick={() => setDeletePromptLocationId(null)}
+              className='map-location-info-window'
+              shouldFocus={false}
+              pixelOffset={[0, -8]}>
+              <div className='w-56 text-foreground'>
+                <p className='text-sm font-semibold leading-tight'>
+                  Izbriši shranjeno lokacijo?
+                </p>
+                <p className='mt-3 text-xs leading-snug text-foreground-muted'>
+                  Lokacija "{deletePromptLocation.name}" bo odstranjena iz
+                  tvojih shranjenih lokacij.
+                </p>
+                <div className='mt-3 flex justify-end gap-2'>
+                  <button
+                    type='button'
+                    onClick={() => setDeletePromptLocationId(null)}
+                    className='rounded-md cursor-pointer bg-background/40 px-3 py-1.5 text-xs font-medium text-foreground-muted hover:bg-background/20'>
+                    Prekliči
+                  </button>
+                  <button
+                    type='button'
+                    disabled={
+                      deletingSavedLocationId === deletePromptLocation.id
+                    }
+                    onClick={() => {
+                      onSavedLocationDelete?.(deletePromptLocation.id);
+                      setDeletePromptLocationId(null);
+                    }}
+                    className='rounded-md cursor-pointer bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60'>
+                    Izbriši
+                  </button>
+                </div>
+              </div>
+            </InfoWindow>
+          )}
+          {mapLocationDraft && (
+            <InfoWindow
+              position={mapLocationDraft.position}
+              className='map-location-info-window'
+              onCloseClick={onMapLocationPopupClose}
+              shouldFocus={false}
+              pixelOffset={[0, -8]}>
+              <MapLocationPopup
+                draft={mapLocationDraft}
+                onColorChange={onMapLocationColorChange}
+                onIconChange={onMapLocationIconChange}
+                onSave={onMapLocationSave}
+              />
+            </InfoWindow>
           )}
         </Map>
       </APIProvider>

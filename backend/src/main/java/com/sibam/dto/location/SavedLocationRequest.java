@@ -7,5 +7,7 @@ public record SavedLocationRequest(
         String name,
         String address,
         Double latitude,
-        Double longitude
+        Double longitude,
+        String color,
+        String logo
 ) {}

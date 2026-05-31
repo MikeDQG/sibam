@@ -2,8 +2,8 @@ name: ML Retrain
 
 on:
     schedule:
-        - cron: "0 2 * * *" # vsako noč ob 2:00 UTC (3:00 Ljubljana)
-    workflow_dispatch: # možnost ročnega zagona
+        - cron: "0 1 * * *" # every night at 1:00 UTC (3:00 Ljubljana summer / CEST);
+    workflow_dispatch:
 
 jobs:
     retrain:

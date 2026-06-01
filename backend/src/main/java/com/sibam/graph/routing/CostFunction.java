@@ -14,6 +14,10 @@ public interface CostFunction {
      */
     int calculateCost(Edge edge);
 
+    default int calculateCost(Edge edge, WeatherRoutingContext weatherContext) {
+        return calculateCost(edge);
+    }
+
     /**
      * Applies mode penalty for edges.
      * - Transit edges: no penalty (baseWeight = 1.0)

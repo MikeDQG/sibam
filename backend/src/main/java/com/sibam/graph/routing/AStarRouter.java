@@ -59,6 +59,7 @@ public class AStarRouter {
     private final HeuristicService heuristicService;
     private final CostFunction costFunction;
     private final RoutingConfig routingConfig;
+    private final WeatherRoutingAdjuster weatherRoutingAdjuster;
 
     public AStarRouter(
             GraphStore graphStore,
@@ -68,7 +69,8 @@ public class AStarRouter {
             GoogleRoutesService googleRoutesService,
             HeuristicService heuristicService,
             CostFunction costFunction,
-            RoutingConfig routingConfig
+            RoutingConfig routingConfig,
+            WeatherRoutingAdjuster weatherRoutingAdjuster
     ) {
         this.graphStore = graphStore;
         this.spatialSearchService = spatialSearchService;
@@ -79,6 +81,7 @@ public class AStarRouter {
         this.heuristicService = heuristicService;
         this.costFunction = costFunction;
         this.routingConfig = routingConfig;
+        this.weatherRoutingAdjuster = weatherRoutingAdjuster;
     }
 
     public Journey findJourney(
@@ -153,6 +156,7 @@ public class AStarRouter {
                 destinationStops
         );
 
+        WeatherRoutingContext weatherContext = currentWeatherContext();
         long startMillis = toEpochMillis(startTime);
         PathResult pathResult = findPath(
                 routingGraph,
@@ -160,7 +164,8 @@ public class AStarRouter {
                 DESTINATION_NODE_ID,
                 allowBike,
                 allowBus,
-                startMillis
+                startMillis,
+                weatherContext
         );
         if (pathResult == null) {
             return null;
@@ -187,7 +192,15 @@ public class AStarRouter {
     }
 
     public PathResult findPath(int startNodeId, int goalNodeId) {
-        return findPath(requireGraph(), startNodeId, goalNodeId, true, true, toEpochMillis(LocalTime.now()));
+        return findPath(
+                requireGraph(),
+                startNodeId,
+                goalNodeId,
+                true,
+                true,
+                toEpochMillis(LocalTime.now()),
+                currentWeatherContext()
+        );
     }
 
     private PathResult findPath(
@@ -196,7 +209,8 @@ public class AStarRouter {
             int goalNodeId,
             boolean allowBike,
             boolean allowBus,
-            long startMillis
+            long startMillis,
+            WeatherRoutingContext weatherContext
     ) {
         PriorityQueue<NodeRecord> openSet =
                 new PriorityQueue<>(Comparator.comparingDouble(NodeRecord::fScore));
@@ -227,7 +241,7 @@ public class AStarRouter {
             }
 
             for (Edge edge : graph.getNeighbors(current.state().nodeId())) {
-                if (!isAllowed(edge, allowBike, allowBus)) {
+                if (!isAllowed(edge, allowBike, allowBus, weatherContext)) {
                     continue;
                 }
 
@@ -236,7 +250,8 @@ public class AStarRouter {
                         edge,
                         cameFromEdge.get(current.state()),
                         current.state().lastBusRoute(),
-                        startMillis + secondsToMillis(currentCostSeconds)
+                        startMillis + secondsToMillis(currentCostSeconds),
+                        weatherContext
                 );
                 int tentative = currentCostSeconds + relaxation.costSeconds();
                 SearchState nextState = nextState(current.state(), edge);
@@ -260,9 +275,15 @@ public class AStarRouter {
         return null;
     }
 
-    private EdgeRelaxation relaxEdge(Edge edge, Edge previousEdge, RouteInfo lastBusRoute, long currentMillis) {
+    private EdgeRelaxation relaxEdge(
+            Edge edge,
+            Edge previousEdge,
+            RouteInfo lastBusRoute,
+            long currentMillis,
+            WeatherRoutingContext weatherContext
+    ) {
         if (edge.getEdgeType() != EdgeType.BUS) {
-            int costSeconds = edgeCostSeconds(edge);
+            int costSeconds = edgeCostSeconds(edge, weatherContext);
             long arrivalMillis = currentMillis + secondsToMillis(costSeconds);
             return new EdgeRelaxation(costSeconds, currentMillis, arrivalMillis);
         }
@@ -277,7 +298,7 @@ public class AStarRouter {
         long departureMillis = nextBusDepartureMillis(edge, currentMillis);
         long arrivalMillis = departureMillis + secondsToMillis(edge.getCostSeconds());
         int costSeconds = (int) Math.max(1, Math.round((arrivalMillis - currentMillis) / 1000.0));
-        costSeconds += transferPenaltySeconds(lastBusRoute, edge);
+        costSeconds += transferPenaltySeconds(lastBusRoute, edge, weatherContext);
         return new EdgeRelaxation(costSeconds, departureMillis, arrivalMillis);
     }
 
@@ -290,19 +311,27 @@ public class AStarRouter {
         return new SearchState(edge.getToNodeId(), lastBusRoute);
     }
 
-    private int transferPenaltySeconds(RouteInfo previousRoute, Edge currentEdge) {
+    private int transferPenaltySeconds(
+            RouteInfo previousRoute,
+            Edge currentEdge,
+            WeatherRoutingContext weatherContext
+    ) {
         if (previousRoute == null || currentEdge.getEdgeType() != EdgeType.BUS) {
             return 0;
         }
 
         RouteInfo currentRoute = currentEdge.getRouteInfo();
         if (currentRoute == null) {
-            return routingConfig.getTransferPenaltySeconds();
+            return adjustedTransferPenaltySeconds(weatherContext);
         }
 
         boolean sameLine = previousRoute.lineId() == currentRoute.lineId();
         boolean sameRoute = previousRoute.routeId() == currentRoute.routeId();
-        return sameLine || sameRoute ? 0 : routingConfig.getTransferPenaltySeconds();
+        if (sameLine || sameRoute) {
+            return 0;
+        }
+
+        return adjustedTransferPenaltySeconds(weatherContext);
     }
 
     private long nextBusDepartureMillis(Edge edge, long currentMillis) {
@@ -411,7 +440,12 @@ public class AStarRouter {
                 .trim();
     }
 
-    private boolean isAllowed(Edge edge, boolean allowBike, boolean allowBus) {
+    private boolean isAllowed(
+            Edge edge,
+            boolean allowBike,
+            boolean allowBus,
+            WeatherRoutingContext weatherContext
+    ) {
         if (edge.getEdgeType() == EdgeType.BIKE) {
             return allowBike;
         }
@@ -420,7 +454,35 @@ public class AStarRouter {
             return allowBus;
         }
 
+        if (weatherRoutingAdjuster != null
+                && !weatherRoutingAdjuster.isEdgeAllowed(
+                edge.getEdgeType(),
+                edge.getDistanceMeters(),
+                weatherContext
+        )) {
+            return false;
+        }
+
         return true;
+    }
+
+    private int adjustedTransferPenaltySeconds(WeatherRoutingContext weatherContext) {
+        if (weatherRoutingAdjuster == null) {
+            return routingConfig.getTransferPenaltySeconds();
+        }
+
+        return weatherRoutingAdjuster.adjustedTransferPenaltySeconds(
+                routingConfig.getTransferPenaltySeconds(),
+                weatherContext
+        );
+    }
+
+    private WeatherRoutingContext currentWeatherContext() {
+        if (weatherRoutingAdjuster == null) {
+            return WeatherRoutingContext.neutral();
+        }
+
+        return weatherRoutingAdjuster.currentWeather();
     }
 
     private PathResult reconstruct(
@@ -490,6 +552,14 @@ public class AStarRouter {
                     firstTiming.departureMillis(),
                     lastTiming.arrivalMillis()
             ));
+            addSameStopTransferLegIfNeeded(
+                    graph,
+                    legs,
+                    previousEdge,
+                    currentEdge,
+                    lastTiming.arrivalMillis(),
+                    pathResult.getTimings().get(i).departureMillis()
+            );
 
             legStartEdge = currentEdge;
             previousEdge = currentEdge;
@@ -540,6 +610,59 @@ public class AStarRouter {
         return true;
     }
 
+    private void addSameStopTransferLegIfNeeded(
+            Graph graph,
+            List<Leg> legs,
+            Edge previousEdge,
+            Edge currentEdge,
+            long previousArrivalMillis,
+            long currentDepartureMillis
+    ) {
+        if (!isSameStopBusTransfer(previousEdge, currentEdge)) {
+            return;
+        }
+
+        GeoPoint stopPoint = nodePoint(graph, previousEdge.getToNodeId());
+        int transferSeconds = (int) Math.max(0, Math.round(
+                (currentDepartureMillis - previousArrivalMillis) / 1000.0
+        ));
+
+        legs.add(new Leg(
+                "TRANSFER",
+                stopPoint,
+                stopPoint,
+                String.valueOf(secondsToMillis(transferSeconds)),
+                "0",
+                List.of(stopPoint),
+                null,
+                null,
+                null,
+                null,
+                String.valueOf(previousArrivalMillis),
+                String.valueOf(currentDepartureMillis)
+        ));
+    }
+
+    private boolean isSameStopBusTransfer(Edge previousEdge, Edge currentEdge) {
+        if (previousEdge.getEdgeType() != EdgeType.BUS || currentEdge.getEdgeType() != EdgeType.BUS) {
+            return false;
+        }
+
+        if (previousEdge.getToNodeId() != currentEdge.getFromNodeId()) {
+            return false;
+        }
+
+        RouteInfo previousRoute = previousEdge.getRouteInfo();
+        RouteInfo currentRoute = currentEdge.getRouteInfo();
+        if (previousRoute == null || currentRoute == null) {
+            return true;
+        }
+
+        boolean sameLine = previousRoute.lineId() == currentRoute.lineId();
+        boolean sameRoute = previousRoute.routeId() == currentRoute.routeId();
+        return !sameLine && !sameRoute;
+    }
+
     private int durationSeconds(PathStepTiming firstTiming, PathStepTiming lastTiming) {
         return (int) Math.max(0, Math.round((lastTiming.arrivalMillis() - firstTiming.departureMillis()) / 1000.0));
     }
@@ -579,7 +702,8 @@ public class AStarRouter {
         return switch (edgeType) {
             case BUS -> "BUS";
             case BIKE -> "BIKE";
-            case WALK, TRANSFER -> "WALK";
+            case TRANSFER -> "TRANSFER";
+            case WALK -> "WALK";
         };
     }
 
@@ -641,8 +765,7 @@ public class AStarRouter {
 
     private boolean navigationSupported(Edge firstEdge) {
         return firstEdge.getEdgeType() == EdgeType.WALK
-                || firstEdge.getEdgeType() == EdgeType.BIKE
-                || firstEdge.getEdgeType() == EdgeType.TRANSFER;
+                || firstEdge.getEdgeType() == EdgeType.BIKE;
     }
 
     private List<GeoPoint> localPolyline(Graph graph, List<Edge> edges, Edge firstEdge, Edge lastEdge) {
@@ -722,8 +845,8 @@ public class AStarRouter {
         return heuristicService.estimate(current, goal);
     }
 
-    private int edgeCostSeconds(Edge edge) {
-        return costFunction.calculateCost(edge);
+    private int edgeCostSeconds(Edge edge, WeatherRoutingContext weatherContext) {
+        return costFunction.calculateCost(edge, weatherContext);
     }
 
     private long toEpochMillis(LocalTime time) {

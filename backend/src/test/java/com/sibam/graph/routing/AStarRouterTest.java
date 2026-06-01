@@ -52,7 +52,8 @@ class AStarRouterTest {
                 mock(GoogleRoutesService.class),
                 new HeuristicService(),
                 new WeightedCostFunction(routingConfig()),
-                routingConfig()
+                routingConfig(),
+                null
         );
 
         Journey journey = router.findJourney(
@@ -180,11 +181,53 @@ class AStarRouterTest {
         assertThat(journey.legs().getFirst().steps().getFirst().maneuver()).isEqualTo("DEPART");
     }
 
+    @Test
+    void sameStopBusChangeCreatesZeroDistanceTransferLeg() {
+        RouteInfo routeA = new RouteInfo(1, 101, "A", "1");
+        RouteInfo routeB = new RouteInfo(2, 202, "B", "2");
+        Node start = new BusNode(1, 46.0, 15.0, "Start");
+        Node transferStop = new BusNode(2, 46.0, 15.001, "Transfer");
+        Node destination = new BusNode(3, 46.0, 15.002, "Destination");
+        Graph graph = new Graph(
+                Map.of(
+                        start.getId(), start,
+                        transferStop.getId(), transferStop,
+                        destination.getId(), destination
+                ),
+                Map.of(
+                        1, List.of(bus(1, 2, 1, routeA)),
+                        2, List.of(bus(2, 3, 1, routeB)),
+                        3, List.of()
+                )
+        );
+
+        Journey journey = routerFor(graph, mock(GoogleRoutesService.class), routingConfig(0)).findJourney(
+                start.getLat(),
+                start.getLon(),
+                destination.getLat(),
+                destination.getLon(),
+                null,
+                null,
+                LocalTime.NOON,
+                true,
+                true
+        );
+
+        assertThat(journey.legs()).extracting("mode")
+                .containsExactly("WALK", "BUS", "TRANSFER", "BUS", "WALK");
+        assertThat(journey.legs().get(2).distance()).isEqualTo("0");
+        assertThat(journey.legs().get(2).origin()).isEqualTo(journey.legs().get(2).destination());
+    }
+
     private AStarRouter routerFor(Graph graph) {
         return routerFor(graph, mock(GoogleRoutesService.class));
     }
 
     private AStarRouter routerFor(Graph graph, GoogleRoutesService googleRoutesService) {
+        return routerFor(graph, googleRoutesService, routingConfig());
+    }
+
+    private AStarRouter routerFor(Graph graph, GoogleRoutesService googleRoutesService, RoutingConfig routingConfig) {
         InMemoryGraphStore graphStore = new InMemoryGraphStore();
         graphStore.replaceGraph(graph);
         HelperService helperService = new HelperService();
@@ -197,8 +240,9 @@ class AStarRouterTest {
                 vaoSerializer,
                 googleRoutesService,
                 new HeuristicService(),
-                new WeightedCostFunction(routingConfig()),
-                routingConfig()
+                new WeightedCostFunction(routingConfig),
+                routingConfig,
+                null
         );
     }
 
@@ -208,5 +252,9 @@ class AStarRouterTest {
 
     private RoutingConfig routingConfig() {
         return new RoutingConfig(300, 1000, 5.0, 3.0, 1.5);
+    }
+
+    private RoutingConfig routingConfig(int transferPenaltySeconds) {
+        return new RoutingConfig(transferPenaltySeconds, 1000, 5.0, 3.0, 1.5);
     }
 }

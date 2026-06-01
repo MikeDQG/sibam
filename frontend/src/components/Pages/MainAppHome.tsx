@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
 import { toast } from "sonner";
-import { MainAppControlOverlay } from "../MainAppComponents/MainAppControlOverlay";
+import {
+  MainAppControlOverlay,
+  type RouteComputeError,
+} from "../MainAppComponents/MainAppControlOverlay";
 import { MainMap, type SavedMapLocation } from "../MainAppComponents/MainMap";
 import {
   isLocationIcon,
@@ -94,6 +97,8 @@ export const MainAppHome = () => {
   const [destinationMarkerPosition, setDestinationMarkerPosition] =
     useState<MapCenter | null>(null);
   const [routePath, setRoutePath] = useState<RoutePath | null>(null);
+  const [routeComputeError, setRouteComputeError] =
+    useState<RouteComputeError | null>(null);
   const [mapLocationDraft, setMapLocationDraft] =
     useState<MapLocationDraft | null>(null);
   const [savedLocations, setSavedLocations] = useState<SavedMapLocation[]>([]);
@@ -255,6 +260,7 @@ export const MainAppHome = () => {
 
   function handlePlaceSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setRouteComputeError(null);
     setSelectedLeg(null);
     setMapLocationDraft(null);
 
@@ -270,6 +276,7 @@ export const MainAppHome = () => {
 
   function handleDestinationSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setRouteComputeError(null);
     setSelectedLeg(null);
     setMapLocationDraft(null);
     setDestinationMarkerPosition(place);
@@ -277,6 +284,14 @@ export const MainAppHome = () => {
 
   function handlePathReceive(path: RoutePath) {
     setRoutePath(path);
+    setRouteComputeError(null);
+    setSelectedLeg(null);
+    setMapLocationDraft(null);
+  }
+
+  function handlePathError(error: RouteComputeError) {
+    setRoutePath(null);
+    setRouteComputeError(error);
     setSelectedLeg(null);
     setMapLocationDraft(null);
   }
@@ -437,11 +452,12 @@ export const MainAppHome = () => {
         onPlaceSelect={handlePlaceSelect}
         onDestinationSelect={handleDestinationSelect}
         onPathReceive={handlePathReceive}
+        onPathError={handlePathError}
         savedLocations={savedLocations}
       />
 
       {/* route options */}
-      <RouteOptions routes={routeOptions} />
+      <RouteOptions routes={routeOptions} computeError={routeComputeError} />
     </main>
   );
 };

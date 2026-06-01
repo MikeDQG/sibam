@@ -144,8 +144,8 @@ public class AStarRouter {
             return null;
         }
 
-        validateAccessDistance("origin", originLat, originLon, originStops.getFirst());
-        validateAccessDistance("destination", destinationLat, destinationLon, destinationStops.getFirst());
+        validateAccessDistance(originAddress.isBlank() ? originAddress : "Izhodišče", originLat, originLon, originStops.getFirst());
+        validateAccessDistance(destinationAddress.isBlank() ? destinationAddress : "Cilj", destinationLat, destinationLon, destinationStops.getFirst());
 
         Graph routingGraph = withUserWalkingEdges(
                 graph,

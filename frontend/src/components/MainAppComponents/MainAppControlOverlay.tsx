@@ -38,7 +38,18 @@ type MainAppControlOverlayProps = {
   onPlaceSelect?: (place: { lat: number; lng: number } | null) => void;
   onDestinationSelect?: (place: { lat: number; lng: number } | null) => void;
   onPathReceive?: (path: RoutePath) => void;
+  onPathError?: (error: RouteComputeError) => void;
   savedLocations?: SavedSearchLocation[];
+};
+
+export type RouteComputeError = {
+  code: string;
+  message?: string;
+};
+
+type ComputePathErrorResponse = {
+  code?: unknown;
+  message?: unknown;
 };
 
 type Coordinates = {
@@ -73,6 +84,7 @@ export const MainAppControlOverlay = ({
   onPlaceSelect,
   onDestinationSelect,
   onPathReceive,
+  onPathError,
   savedLocations = [],
 }: MainAppControlOverlayProps) => {
   const navigate = useNavigate();
@@ -402,13 +414,42 @@ export const MainAppControlOverlay = ({
         `${import.meta.env.VITE_API_URL}/compute?${params}`,
       );
       if (!res.ok) {
-        throw new Error("Route request failed");
+        onPathError?.(await readComputePathError(res));
+        return;
       }
 
       const journey = (await res.json()) as RoutePath;
       onPathReceive?.(journey);
+    } catch (error) {
+      onPathError?.({
+        code: "ROUTE_REQUEST_FAILED",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Route request failed before the server response was read.",
+      });
     } finally {
       setIsLoadingRoute(false);
+    }
+  }
+
+  async function readComputePathError(
+    response: Response,
+  ): Promise<RouteComputeError> {
+    try {
+      const data = (await response.json()) as ComputePathErrorResponse;
+      return {
+        code:
+          typeof data.code === "string" && data.code.trim()
+            ? data.code
+            : `HTTP_${response.status}`,
+        message: typeof data.message === "string" ? data.message : undefined,
+      };
+    } catch {
+      return {
+        code: `HTTP_${response.status}`,
+        message: response.statusText || "Route request failed.",
+      };
     }
   }
   useEffect(() => {

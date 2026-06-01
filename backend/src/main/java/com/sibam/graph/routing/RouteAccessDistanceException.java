@@ -7,7 +7,8 @@ public class RouteAccessDistanceException extends RuntimeException {
     private final int maxDistanceMeters;
 
     public RouteAccessDistanceException(String endpoint, double distanceMeters, int maxDistanceMeters) {
-        super(endpoint + " is too far from the nearest bike or bus stop");
+//        super(endpoint + " is too far from the nearest bike or bus stop");
+        super(endpoint + " je predaleč od najbližje BIKE ali BUS postajališča");
         this.endpoint = endpoint;
         this.distanceMeters = distanceMeters;
         this.maxDistanceMeters = maxDistanceMeters;

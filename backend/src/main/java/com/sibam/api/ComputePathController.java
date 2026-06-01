@@ -7,7 +7,6 @@ import com.sibam.graph.model.GeoPoint;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.routing.AStarRouter;
 import com.sibam.graph.routing.RouteAccessDistanceException;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -79,7 +78,7 @@ public class ComputePathController {
             log.info("Failed to compute path: {}", e.getMessage());
             return ResponseEntity.badRequest().body(new ApiErrorResponse(
                     "error",
-                    "OUTSIDE_SERVICE_AREA",
+                    "IZVEN_OBMOCJA_POTI", // "OUTSIDE_SERVICE_AREA",
                     e.getMessage(),
                     e.getEndpoint(),
                     e.getDistanceMeters(),

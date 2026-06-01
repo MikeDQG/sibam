@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sibam.graph.model.EdgeType;
 import com.sibam.graph.model.GeoPoint;
+import com.sibam.graph.model.output.NavigationStep;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -41,9 +42,18 @@ public class GoogleRoutesService {
     }
 
     public List<GeoPoint> fetchPolyline(GeoPoint origin, GeoPoint destination, EdgeType edgeType) {
-        if (apiKey == null || apiKey.isBlank()) {
-            log.warn("Google Routes API key missing; skipping polyline fetch.");
+        RouteDetails details = fetchRouteDetails(origin, destination, edgeType);
+        if (details == null || details.polyline().isEmpty()) {
             return List.of(origin, destination);
+        }
+
+        return details.polyline();
+    }
+
+    public RouteDetails fetchRouteDetails(GeoPoint origin, GeoPoint destination, EdgeType edgeType) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("Google Routes API key missing; skipping route details fetch.");
+            return null;
         }
 
         try {
@@ -64,13 +74,13 @@ public class GoogleRoutesService {
                     .block();
 
             if (response == null || response.isBlank()) {
-                return List.of(origin, destination);
+                return null;
             }
 
-            return parsePolyline(response, origin, destination);
+            return parseRouteDetails(response, origin, destination);
         } catch (Exception e) {
-            log.warn("Failed to fetch polyline from Google Routes: {}", e.toString());
-            return List.of(origin, destination);
+            log.warn("Failed to fetch route details from Google Routes: {}", e.toString());
+            return null;
         }
     }
 
@@ -103,15 +113,20 @@ public class GoogleRoutesService {
         return "WALK";
     }
 
-    private List<GeoPoint> parsePolyline(String response, GeoPoint fallbackStart, GeoPoint fallbackEnd) throws Exception {
+    RouteDetails parseRouteDetails(String response, GeoPoint fallbackStart, GeoPoint fallbackEnd) throws Exception {
         JsonNode root = objectMapper.readTree(response);
         JsonNode routes = root.path("routes");
         if (!routes.isArray() || routes.isEmpty()) {
-            return List.of(fallbackStart, fallbackEnd);
+            return new RouteDetails(List.of(fallbackStart, fallbackEnd), List.of());
         }
         JsonNode first = routes.get(0);
-        JsonNode polyline = first.path("polyline");
+        List<GeoPoint> routePolyline = parsePolyline(first.path("polyline"), fallbackStart, fallbackEnd);
+        List<NavigationStep> steps = parseSteps(first.path("legs"));
 
+        return new RouteDetails(routePolyline, steps);
+    }
+
+    private List<GeoPoint> parsePolyline(JsonNode polyline, GeoPoint fallbackStart, GeoPoint fallbackEnd) {
         if ("GEO_JSON_LINESTRING".equalsIgnoreCase(polylineEncoding)) {
             JsonNode linestring = polyline.path("geoJsonLinestring");
             JsonNode coords = linestring.path("coordinates");
@@ -136,6 +151,53 @@ public class GoogleRoutesService {
                 return List.of(fallbackStart, fallbackEnd);
             }
             return decodeEncodedPolyline(encoded);
+        }
+    }
+
+    private List<NavigationStep> parseSteps(JsonNode legs) {
+        if (!legs.isArray() || legs.isEmpty()) {
+            return List.of();
+        }
+
+        List<NavigationStep> steps = new ArrayList<>();
+        for (JsonNode leg : legs) {
+            JsonNode routeSteps = leg.path("steps");
+            if (!routeSteps.isArray()) {
+                continue;
+            }
+
+            for (JsonNode step : routeSteps) {
+                JsonNode instruction = step.path("navigationInstruction");
+                steps.add(new NavigationStep(
+                        instruction.path("instructions").asText(null),
+                        instruction.path("maneuver").asText(null),
+                        step.path("distanceMeters").asInt(0),
+                        durationSeconds(step),
+                        step.has("polyline") ? step.path("polyline").deepCopy() : null
+                ));
+            }
+        }
+
+        return List.copyOf(steps);
+    }
+
+    private long durationSeconds(JsonNode step) {
+        String duration = step.path("duration").asText(null);
+        if (duration == null || duration.isBlank()) {
+            duration = step.path("staticDuration").asText(null);
+        }
+
+        if (duration == null || duration.isBlank()) {
+            return 0;
+        }
+
+        try {
+            String seconds = duration.endsWith("s")
+                    ? duration.substring(0, duration.length() - 1)
+                    : duration;
+            return Math.max(0, Math.round(Double.parseDouble(seconds)));
+        } catch (NumberFormatException ignored) {
+            return 0;
         }
     }
 
@@ -173,5 +235,15 @@ public class GoogleRoutesService {
             return List.of();
         }
         return poly;
+    }
+
+    public record RouteDetails(
+            List<GeoPoint> polyline,
+            List<NavigationStep> steps
+    ) {
+        public RouteDetails {
+            polyline = polyline == null ? List.of() : List.copyOf(polyline);
+            steps = steps == null ? List.of() : List.copyOf(steps);
+        }
     }
 }

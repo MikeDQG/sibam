@@ -10,6 +10,7 @@ import com.sibam.graph.model.Node;
 import com.sibam.graph.model.RouteInfo;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.model.output.Leg;
+import com.sibam.graph.model.output.NavigationStep;
 import com.sibam.graph.builder.WalkingEdgeBuilder;
 import com.sibam.graph.spatial.HelperService;
 import com.sibam.graph.spatial.SpatialSearchService;
@@ -19,7 +20,8 @@ import com.sibam.engine.vao.LineScheduleVao;
 import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.StopScheduleVao;
 import com.sibam.service.GoogleRoutesService;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -38,9 +40,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 
-@Slf4j
 @Service
 public class AStarRouter {
+
+    private static final Logger log = LoggerFactory.getLogger(AStarRouter.class);
 
     private static final int ORIGIN_NODE_ID = -1;
     private static final int DESTINATION_NODE_ID = -2;
@@ -552,6 +555,7 @@ public class AStarRouter {
             long arrivalMillis
     ) {
         RouteInfo routeInfo = firstEdge.getRouteInfo();
+        LegNavigation navigation = legNavigation(graph, edges, firstEdge, lastEdge);
 
         return new Leg(
                 toMode(firstEdge.getEdgeType()),
@@ -559,13 +563,15 @@ public class AStarRouter {
                 nodePoint(graph, lastEdge.getToNodeId()),
                 String.valueOf(secondsToMillis(durationSeconds)),
                 String.valueOf(distanceMeters),
-                polyline(graph, edges, firstEdge, lastEdge),
+                navigation.polyline(),
                 routeInfo == null ? null : routeInfo.lineCode(),
                 routeInfo == null ? null : routeInfo.headsignName(),
                 freeStands(graph, firstEdge, lastEdge),
                 freeBikes(graph, firstEdge),
                 String.valueOf(departureMillis),
-                String.valueOf(arrivalMillis)
+                String.valueOf(arrivalMillis),
+                navigation.navigationAvailable(),
+                navigation.steps()
         );
     }
 
@@ -608,21 +614,40 @@ public class AStarRouter {
         return new GeoPoint(node.getLat(), node.getLon());
     }
 
-    private List<GeoPoint> polyline(Graph graph, List<Edge> edges, Edge firstEdge, Edge lastEdge) {
+    private LegNavigation legNavigation(Graph graph, List<Edge> edges, Edge firstEdge, Edge lastEdge) {
         GeoPoint from = nodePoint(graph, firstEdge.getFromNodeId());
         GeoPoint to = nodePoint(graph, lastEdge.getToNodeId());
 
-        // For WALK and BIKE legs fetch polyline from Google Routes API
-        if (firstEdge.getEdgeType() == EdgeType.WALK || firstEdge.getEdgeType() == EdgeType.BIKE) {
+        if (navigationSupported(firstEdge)) {
             try {
-                List<GeoPoint> apiPolyline = googleRoutesService.fetchPolyline(from, to, firstEdge.getEdgeType());
-                if (apiPolyline != null && !apiPolyline.isEmpty()) {
-                    return apiPolyline;
+                GoogleRoutesService.RouteDetails routeDetails =
+                        googleRoutesService.fetchRouteDetails(from, to, firstEdge.getEdgeType());
+                if (routeDetails != null) {
+                    List<GeoPoint> polyline = routeDetails.polyline().isEmpty()
+                            ? localPolyline(graph, edges, firstEdge, lastEdge)
+                            : routeDetails.polyline();
+                    List<NavigationStep> steps = routeDetails.steps();
+                    return new LegNavigation(polyline, !steps.isEmpty(), steps.isEmpty() ? null : steps);
                 }
-            } catch (Exception ignored) {
-                // Fallback to local polyline logic below
+            } catch (Exception e) {
+                log.warn("Google navigation details unavailable for {} leg: {}", firstEdge.getEdgeType(), e.toString());
             }
+
+            return new LegNavigation(localPolyline(graph, edges, firstEdge, lastEdge), false, null);
         }
+
+        return new LegNavigation(localPolyline(graph, edges, firstEdge, lastEdge), null, null);
+    }
+
+    private boolean navigationSupported(Edge firstEdge) {
+        return firstEdge.getEdgeType() == EdgeType.WALK
+                || firstEdge.getEdgeType() == EdgeType.BIKE
+                || firstEdge.getEdgeType() == EdgeType.TRANSFER;
+    }
+
+    private List<GeoPoint> localPolyline(Graph graph, List<Edge> edges, Edge firstEdge, Edge lastEdge) {
+        GeoPoint from = nodePoint(graph, firstEdge.getFromNodeId());
+        GeoPoint to = nodePoint(graph, lastEdge.getToNodeId());
 
         if (firstEdge.getEdgeType() == EdgeType.TRANSFER) {
             return List.of(from, to);
@@ -726,5 +751,12 @@ public class AStarRouter {
     }
 
     private record EdgeRelaxation(int costSeconds, long departureMillis, long arrivalMillis) {
+    }
+
+    private record LegNavigation(
+            List<GeoPoint> polyline,
+            Boolean navigationAvailable,
+            List<NavigationStep> steps
+    ) {
     }
 }

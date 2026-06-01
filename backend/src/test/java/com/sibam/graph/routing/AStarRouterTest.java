@@ -8,6 +8,7 @@ import com.sibam.graph.model.Graph;
 import com.sibam.graph.model.Node;
 import com.sibam.graph.model.RouteInfo;
 import com.sibam.graph.model.output.Journey;
+import com.sibam.graph.model.output.NavigationStep;
 import com.sibam.graph.spatial.HelperService;
 import com.sibam.graph.spatial.SpatialSearchService;
 import com.sibam.graph.storage.InMemoryGraphStore;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
@@ -127,7 +130,61 @@ class AStarRouterTest {
         assertThat(result.getTotalCostSeconds()).isEqualTo(300);
     }
 
+    @Test
+    void walkLegIncludesNavigationStepsWhenGoogleReturnsThem() {
+        double originLat = 46.538077;
+        double originLon = 15.603520;
+        double destinationLat = 46.538493;
+        double destinationLon = 15.611431;
+
+        Node nearbyStop = new BusNode(1, 46.538100, 15.603600, "Nearby");
+        Graph graph = new Graph(
+                Map.of(nearbyStop.getId(), nearbyStop),
+                Map.of(nearbyStop.getId(), new ArrayList<>())
+        );
+
+        GoogleRoutesService googleRoutesService = mock(GoogleRoutesService.class);
+        when(googleRoutesService.fetchRouteDetails(any(), any(), eq(EdgeType.WALK)))
+                .thenReturn(new GoogleRoutesService.RouteDetails(
+                        List.of(
+                                new com.sibam.graph.model.GeoPoint(originLat, originLon),
+                                new com.sibam.graph.model.GeoPoint(destinationLat, destinationLon)
+                        ),
+                        List.of(new NavigationStep(
+                                "Head east on Maroltova ulica toward Pohorska ulica",
+                                "DEPART",
+                                40,
+                                6,
+                                null
+                        ))
+                ));
+
+        Journey journey = routerFor(graph, googleRoutesService).findJourney(
+                originLat,
+                originLon,
+                destinationLat,
+                destinationLon,
+                null,
+                null,
+                LocalTime.NOON,
+                true,
+                true
+        );
+
+        assertThat(journey.legs()).hasSize(1);
+        assertThat(journey.legs().getFirst().mode()).isEqualTo("WALK");
+        assertThat(journey.legs().getFirst().navigationAvailable()).isTrue();
+        assertThat(journey.legs().getFirst().steps()).hasSize(1);
+        assertThat(journey.legs().getFirst().steps().getFirst().instruction())
+                .isEqualTo("Head east on Maroltova ulica toward Pohorska ulica");
+        assertThat(journey.legs().getFirst().steps().getFirst().maneuver()).isEqualTo("DEPART");
+    }
+
     private AStarRouter routerFor(Graph graph) {
+        return routerFor(graph, mock(GoogleRoutesService.class));
+    }
+
+    private AStarRouter routerFor(Graph graph, GoogleRoutesService googleRoutesService) {
         InMemoryGraphStore graphStore = new InMemoryGraphStore();
         graphStore.replaceGraph(graph);
         HelperService helperService = new HelperService();
@@ -138,7 +195,7 @@ class AStarRouterTest {
                 new SpatialSearchService(helperService),
                 helperService,
                 vaoSerializer,
-                mock(GoogleRoutesService.class),
+                googleRoutesService,
                 new HeuristicService(),
                 new WeightedCostFunction(routingConfig()),
                 routingConfig()

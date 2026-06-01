@@ -5,16 +5,18 @@ import com.sibam.graph.bootstrap.GraphBootstrap;
 import com.sibam.graph.model.GeoPoint;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.routing.AStarRouter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalTime;
 import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping("/compute")
 public class ComputePathController {
+
+    private static final Logger log = LoggerFactory.getLogger(ComputePathController.class);
     
     private final VaoSerializer vaoSerializer;
     private final GraphBootstrap graphBootstrap;

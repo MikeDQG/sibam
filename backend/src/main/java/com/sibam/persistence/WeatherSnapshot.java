@@ -1,7 +1,6 @@
 package com.sibam.persistence;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -11,7 +10,6 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "weather_snapshots")
-@Data
 public class WeatherSnapshot {
 
     @Id
@@ -38,4 +36,68 @@ public class WeatherSnapshot {
 
     @Column(name = "recorded_at", nullable = false)
     private OffsetDateTime recordedAt;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(double temperature) {
+        this.temperature = temperature;
+    }
+
+    public double getFeelsLike() {
+        return feelsLike;
+    }
+
+    public void setFeelsLike(double feelsLike) {
+        this.feelsLike = feelsLike;
+    }
+
+    public int getHumidity() {
+        return humidity;
+    }
+
+    public void setHumidity(int humidity) {
+        this.humidity = humidity;
+    }
+
+    public double getWindSpeed() {
+        return windSpeed;
+    }
+
+    public void setWindSpeed(double windSpeed) {
+        this.windSpeed = windSpeed;
+    }
+
+    public Double getRain() {
+        return rain;
+    }
+
+    public void setRain(Double rain) {
+        this.rain = rain;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public OffsetDateTime getRecordedAt() {
+        return recordedAt;
+    }
+
+    public void setRecordedAt(OffsetDateTime recordedAt) {
+        this.recordedAt = recordedAt;
+    }
 }

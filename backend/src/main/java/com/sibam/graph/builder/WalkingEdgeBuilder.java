@@ -4,6 +4,7 @@ import com.sibam.graph.model.Edge;
 import com.sibam.graph.model.EdgeType;
 import com.sibam.graph.model.GeoPoint;
 import com.sibam.graph.model.Node;
+import com.sibam.graph.spatial.DistanceCalculator;
 import com.sibam.graph.spatial.HelperService;
 
 import java.util.List;
@@ -17,11 +18,12 @@ public class WalkingEdgeBuilder {
     }
 
     public Edge build(Node from, Node to) {
-        int distance = (int) Math.round(helperService.haversineMeters(
-                from.getLat(),
-                from.getLon(),
-                to.getLat(),
-                to.getLon()
+        GeoPoint fromPoint = new GeoPoint(from.getLat(), from.getLon());
+        GeoPoint toPoint = new GeoPoint(to.getLat(), to.getLon());
+        int distance = (int) Math.round(DistanceCalculator.correctedDistanceMeters(
+                fromPoint,
+                toPoint,
+                EdgeType.WALK
         ));
         int walkingSeconds = (int) Math.max(1, Math.round(distance / helperService.getWalkingSpeedMps()));
 
@@ -33,8 +35,8 @@ public class WalkingEdgeBuilder {
                 walkingSeconds,
                 null,
                 List.of(
-                        new GeoPoint(from.getLat(), from.getLon()),
-                        new GeoPoint(to.getLat(), to.getLon())
+                        fromPoint,
+                        toPoint
                 )
         );
     }

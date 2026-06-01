@@ -28,7 +28,7 @@ public class GoogleRoutesService {
     @Value("${routes.google.api-key:}")
     private String apiKey;
 
-    @Value("${routes.google.field-mask:routes.duration,routes.distanceMeters,routes.polyline.geoJsonLinestring}")
+    @Value("${routes.google.field-mask:routes.legs.steps,routes.duration,routes.distanceMeters,routes.polyline.geoJsonLinestring}")
     private String fieldMask;
 
     @Value("${routes.google.polyline-encoding:GEO_JSON_LINESTRING}")

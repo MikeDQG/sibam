@@ -11,7 +11,6 @@ import com.sibam.graph.model.RouteInfo;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.model.output.Leg;
 import com.sibam.graph.builder.WalkingEdgeBuilder;
-import com.sibam.graph.spatial.DistanceCalculator;
 import com.sibam.graph.spatial.HelperService;
 import com.sibam.graph.spatial.SpatialSearchService;
 import com.sibam.graph.storage.GraphStore;
@@ -20,6 +19,7 @@ import com.sibam.engine.vao.LineScheduleVao;
 import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.StopScheduleVao;
 import com.sibam.service.GoogleRoutesService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -38,18 +38,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 
+@Slf4j
 @Service
 public class AStarRouter {
 
     private static final int ORIGIN_NODE_ID = -1;
     private static final int DESTINATION_NODE_ID = -2;
     private static final int NEAREST_STOP_LIMIT = 5;
-    private static final double BIKE_SPEED_MPS = 4.5;
-    private static final int TRANSFER_PENALTY_SECONDS = 300;
-    private static final int WALK_LONG_DISTANCE_THRESHOLD_METERS = 1_000;
-    private static final int BIKE_LONG_DISTANCE_THRESHOLD_METERS = 1_000;
-    private static final double WALK_LONG_DISTANCE_COST_MULTIPLIER = 1.5;
-    private static final double BIKE_LONG_DISTANCE_COST_MULTIPLIER = 1.5;
     private static final DateTimeFormatter DEPARTURE_TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
 
     private final GraphStore graphStore;
@@ -59,6 +54,8 @@ public class AStarRouter {
     private final WalkingEdgeBuilder walkingEdgeBuilder;
     private final GoogleRoutesService googleRoutesService;
     private final HeuristicService heuristicService;
+    private final CostFunction costFunction;
+    private final RoutingConfig routingConfig;
 
     public AStarRouter(
             GraphStore graphStore,
@@ -66,7 +63,9 @@ public class AStarRouter {
             HelperService helperService,
             VaoSerializer vaoSerializer,
             GoogleRoutesService googleRoutesService,
-            HeuristicService heuristicService
+            HeuristicService heuristicService,
+            CostFunction costFunction,
+            RoutingConfig routingConfig
     ) {
         this.graphStore = graphStore;
         this.spatialSearchService = spatialSearchService;
@@ -75,6 +74,8 @@ public class AStarRouter {
         this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
         this.googleRoutesService = googleRoutesService;
         this.heuristicService = heuristicService;
+        this.costFunction = costFunction;
+        this.routingConfig = routingConfig;
     }
 
     public Journey findJourney(
@@ -162,6 +163,15 @@ public class AStarRouter {
             return null;
         }
 
+        log.info(
+                "Path created with heuristics: \ntransferPenaltySeconds={} \nbikeDistanceThresholdMeters={} \nbikeLongDistanceMultiplier={} \nbikeShortDistanceMultiplier={} \nwalkLongDistanceMultiplier={}",
+                routingConfig.getTransferPenaltySeconds(),
+                routingConfig.getBikeDistanceThresholdMeters(),
+                routingConfig.getBikeLongDistanceMultiplier(),
+                routingConfig.getBikeShortDistanceMultiplier(),
+                routingConfig.getWalkLongDistanceMultiplier()
+                );
+
         return toJourney(
                 routingGraph,
                 pathResult,
@@ -188,55 +198,57 @@ public class AStarRouter {
         PriorityQueue<NodeRecord> openSet =
                 new PriorityQueue<>(Comparator.comparingDouble(NodeRecord::fScore));
 
-        Map<Integer, Integer> gScore = new HashMap<>();
-        Map<Integer, Integer> cameFrom = new HashMap<>();
-        Map<Integer, Edge> cameFromEdge = new HashMap<>();
-        Map<Integer, PathStepTiming> cameFromTiming = new HashMap<>();
+        SearchState startState = new SearchState(startNodeId, null);
+        Map<SearchState, Integer> gScore = new HashMap<>();
+        Map<SearchState, SearchState> cameFrom = new HashMap<>();
+        Map<SearchState, Edge> cameFromEdge = new HashMap<>();
+        Map<SearchState, PathStepTiming> cameFromTiming = new HashMap<>();
 
-        gScore.put(startNodeId, 0);
-        openSet.add(new NodeRecord(startNodeId, heuristicSeconds(graph, startNodeId, goalNodeId, null)));
+        gScore.put(startState, 0);
+        openSet.add(new NodeRecord(startState, heuristicSeconds(graph, startNodeId, goalNodeId)));
 
         while (!openSet.isEmpty()) {
             NodeRecord current = openSet.poll();
-            if (!gScore.containsKey(current.nodeId())) {
+            if (!gScore.containsKey(current.state())) {
                 continue;
             }
 
-            if (current.nodeId() == goalNodeId) {
+            if (current.state().nodeId() == goalNodeId) {
                 return reconstruct(
                         cameFrom,
                         cameFromEdge,
                         cameFromTiming,
-                        current.nodeId(),
-                        gScore.get(goalNodeId)
+                        current.state(),
+                        gScore.get(current.state())
                 );
             }
 
-            for (Edge edge : graph.getNeighbors(current.nodeId())) {
+            for (Edge edge : graph.getNeighbors(current.state().nodeId())) {
                 if (!isAllowed(edge, allowBike, allowBus)) {
                     continue;
                 }
 
-                int currentCostSeconds = gScore.get(current.nodeId());
+                int currentCostSeconds = gScore.get(current.state());
                 EdgeRelaxation relaxation = relaxEdge(
-                        graph,
                         edge,
-                        cameFromEdge.get(current.nodeId()),
+                        cameFromEdge.get(current.state()),
+                        current.state().lastBusRoute(),
                         startMillis + secondsToMillis(currentCostSeconds)
                 );
                 int tentative = currentCostSeconds + relaxation.costSeconds();
+                SearchState nextState = nextState(current.state(), edge);
 
-                if (tentative < gScore.getOrDefault(edge.getToNodeId(), Integer.MAX_VALUE)) {
-                    cameFrom.put(edge.getToNodeId(), current.nodeId());
-                    cameFromEdge.put(edge.getToNodeId(), edge);
-                    cameFromTiming.put(edge.getToNodeId(), new PathStepTiming(
+                if (tentative < gScore.getOrDefault(nextState, Integer.MAX_VALUE)) {
+                    cameFrom.put(nextState, current.state());
+                    cameFromEdge.put(nextState, edge);
+                    cameFromTiming.put(nextState, new PathStepTiming(
                             relaxation.departureMillis(),
                             relaxation.arrivalMillis()
                     ));
-                    gScore.put(edge.getToNodeId(), tentative);
+                    gScore.put(nextState, tentative);
                     openSet.add(new NodeRecord(
-                            edge.getToNodeId(),
-                            tentative + heuristicSeconds(graph, edge.getToNodeId(), goalNodeId, edge.getEdgeType())
+                            nextState,
+                            tentative + heuristicSeconds(graph, edge.getToNodeId(), goalNodeId)
                     ));
                 }
             }
@@ -245,9 +257,9 @@ public class AStarRouter {
         return null;
     }
 
-    private EdgeRelaxation relaxEdge(Graph graph, Edge edge, Edge previousEdge, long currentMillis) {
+    private EdgeRelaxation relaxEdge(Edge edge, Edge previousEdge, RouteInfo lastBusRoute, long currentMillis) {
         if (edge.getEdgeType() != EdgeType.BUS) {
-            int costSeconds = edgeCostSeconds(graph, edge);
+            int costSeconds = edgeCostSeconds(edge);
             long arrivalMillis = currentMillis + secondsToMillis(costSeconds);
             return new EdgeRelaxation(costSeconds, currentMillis, arrivalMillis);
         }
@@ -262,26 +274,32 @@ public class AStarRouter {
         long departureMillis = nextBusDepartureMillis(edge, currentMillis);
         long arrivalMillis = departureMillis + secondsToMillis(edge.getCostSeconds());
         int costSeconds = (int) Math.max(1, Math.round((arrivalMillis - currentMillis) / 1000.0));
-        costSeconds += transferPenaltySeconds(previousEdge, edge);
+        costSeconds += transferPenaltySeconds(lastBusRoute, edge);
         return new EdgeRelaxation(costSeconds, departureMillis, arrivalMillis);
     }
 
-    private int transferPenaltySeconds(Edge previousEdge, Edge currentEdge) {
-        if (previousEdge == null
-                || previousEdge.getEdgeType() != EdgeType.BUS
-                || currentEdge.getEdgeType() != EdgeType.BUS) {
+    private SearchState nextState(SearchState currentState, Edge edge) {
+        RouteInfo lastBusRoute = currentState.lastBusRoute();
+        if (edge.getEdgeType() == EdgeType.BUS) {
+            lastBusRoute = edge.getRouteInfo();
+        }
+
+        return new SearchState(edge.getToNodeId(), lastBusRoute);
+    }
+
+    private int transferPenaltySeconds(RouteInfo previousRoute, Edge currentEdge) {
+        if (previousRoute == null || currentEdge.getEdgeType() != EdgeType.BUS) {
             return 0;
         }
 
-        RouteInfo previousRoute = previousEdge.getRouteInfo();
         RouteInfo currentRoute = currentEdge.getRouteInfo();
-        if (previousRoute == null || currentRoute == null) {
-            return TRANSFER_PENALTY_SECONDS;
+        if (currentRoute == null) {
+            return routingConfig.getTransferPenaltySeconds();
         }
 
         boolean sameLine = previousRoute.lineId() == currentRoute.lineId();
         boolean sameRoute = previousRoute.routeId() == currentRoute.routeId();
-        return sameLine || sameRoute ? 0 : TRANSFER_PENALTY_SECONDS;
+        return sameLine || sameRoute ? 0 : routingConfig.getTransferPenaltySeconds();
     }
 
     private long nextBusDepartureMillis(Edge edge, long currentMillis) {
@@ -403,23 +421,23 @@ public class AStarRouter {
     }
 
     private PathResult reconstruct(
-            Map<Integer, Integer> cameFrom,
-            Map<Integer, Edge> cameFromEdge,
-            Map<Integer, PathStepTiming> cameFromTiming,
-            int current,
+            Map<SearchState, SearchState> cameFrom,
+            Map<SearchState, Edge> cameFromEdge,
+            Map<SearchState, PathStepTiming> cameFromTiming,
+            SearchState current,
             int totalCost
     ) {
         List<Integer> path = new ArrayList<>();
         List<Edge> edges = new ArrayList<>();
         List<PathStepTiming> timings = new ArrayList<>();
 
-        path.add(current);
+        path.add(current.nodeId());
 
         while (cameFrom.containsKey(current)) {
             edges.add(cameFromEdge.get(current));
             timings.add(cameFromTiming.get(current));
             current = cameFrom.get(current);
-            path.add(current);
+            path.add(current.nodeId());
         }
 
         Collections.reverse(path);
@@ -510,11 +528,13 @@ public class AStarRouter {
             return false;
         }
 
-        if (previousEdge.getEdgeType() != EdgeType.BUS) {
-            return true;
+        // For transit edges, only merge if on the same route
+        if (previousEdge.getEdgeType() == EdgeType.BUS) {
+            return Objects.equals(previousEdge.getRouteInfo(), currentEdge.getRouteInfo());
         }
 
-        return Objects.equals(previousEdge.getRouteInfo(), currentEdge.getRouteInfo());
+        // For walk, bike, and transfer edges, always merge consecutive same-type edges
+        return true;
     }
 
     private int durationSeconds(PathStepTiming firstTiming, PathStepTiming lastTiming) {
@@ -667,51 +687,18 @@ public class AStarRouter {
         return new Graph(nodes, adjacencyList);
     }
 
-    private double heuristicSeconds(Graph graph, int currentNodeId, int goalNodeId, EdgeType edgeType) {
+    private double heuristicSeconds(Graph graph, int currentNodeId, int goalNodeId) {
         Node current = graph.getNodes().get(currentNodeId);
         Node goal = graph.getNodes().get(goalNodeId);
         if (current == null || goal == null) {
             return 0;
         }
 
-        return heuristicService.estimate(current, goal, edgeType);
+        return heuristicService.estimate(current, goal);
     }
 
-    private int edgeCostSeconds(Graph graph, Edge edge) {
-        if (edge.getEdgeType() != EdgeType.WALK && edge.getEdgeType() != EdgeType.BIKE) {
-            return edge.getCostSeconds();
-        }
-
-        Node from = graph.getNodes().get(edge.getFromNodeId());
-        Node to = graph.getNodes().get(edge.getToNodeId());
-        if (from == null || to == null) {
-            return edge.getCostSeconds();
-        }
-
-        GeoPoint fromPoint = new GeoPoint(from.getLat(), from.getLon());
-        GeoPoint toPoint = new GeoPoint(to.getLat(), to.getLon());
-        double distanceMeters = DistanceCalculator.correctedDistanceMeters(
-                fromPoint,
-                toPoint,
-                edge.getEdgeType()
-        );
-        double speedMps = edge.getEdgeType() == EdgeType.WALK
-                ? helperService.getWalkingSpeedMps()
-                : BIKE_SPEED_MPS;
-        int baseCostSeconds = (int) Math.max(1, Math.round(distanceMeters / speedMps));
-        return applyModePenalty(edge.getEdgeType(), distanceMeters, baseCostSeconds);
-    }
-
-    private int applyModePenalty(EdgeType edgeType, double distanceMeters, int baseCostSeconds) {
-        if (edgeType == EdgeType.WALK && distanceMeters > WALK_LONG_DISTANCE_THRESHOLD_METERS) {
-            return (int) Math.max(1, Math.round(baseCostSeconds * WALK_LONG_DISTANCE_COST_MULTIPLIER));
-        }
-
-        if (edgeType == EdgeType.BIKE && distanceMeters > BIKE_LONG_DISTANCE_THRESHOLD_METERS) {
-            return (int) Math.max(1, Math.round(baseCostSeconds * BIKE_LONG_DISTANCE_COST_MULTIPLIER));
-        }
-
-        return baseCostSeconds;
+    private int edgeCostSeconds(Edge edge) {
+        return costFunction.calculateCost(edge);
     }
 
     private long toEpochMillis(LocalTime time) {
@@ -732,7 +719,10 @@ public class AStarRouter {
         return graph;
     }
 
-    private record NodeRecord(int nodeId, double fScore) {
+    private record SearchState(int nodeId, RouteInfo lastBusRoute) {
+    }
+
+    private record NodeRecord(SearchState state, double fScore) {
     }
 
     private record EdgeRelaxation(int costSeconds, long departureMillis, long arrivalMillis) {

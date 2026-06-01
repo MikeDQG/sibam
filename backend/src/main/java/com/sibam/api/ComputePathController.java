@@ -5,11 +5,13 @@ import com.sibam.graph.bootstrap.GraphBootstrap;
 import com.sibam.graph.model.GeoPoint;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.routing.AStarRouter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalTime;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/compute")
 public class ComputePathController {
@@ -65,6 +67,8 @@ public class ComputePathController {
                 bike,
                 bus
         );
+
+        log.info("Received path computation request with origin ({}, {})", originLat, originLon);
 
         if (journey == null) {
             return new Journey(

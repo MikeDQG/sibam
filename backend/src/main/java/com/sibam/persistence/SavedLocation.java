@@ -93,4 +93,21 @@ public class SavedLocation {
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
 }

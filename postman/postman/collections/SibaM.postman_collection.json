@@ -301,7 +301,7 @@
         "header": [
           {
             "key": "X-Goog-FieldMask",
-            "value": "routes.duration,routes.distanceMeters,routes.polyline.geoJsonLinestring",
+            "value": "routes.legs.steps,routes.duration,routes.distanceMeters,routes.polyline.geoJsonLinestring",
             "type": "text",
             "uuid": "2ba9a8ac-7d54-4585-a503-5672b62ebed3"
           },

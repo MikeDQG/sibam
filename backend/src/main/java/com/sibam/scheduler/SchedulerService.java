@@ -3,19 +3,19 @@ package com.sibam.scheduler;
 import com.sibam.service.GTFSRTDataService;
 import com.sibam.service.MBajkDataService;
 import com.sibam.service.WeatherDataService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class SchedulerService {
+    private static final Logger log = LoggerFactory.getLogger(SchedulerService.class);
+
     private final MBajkDataService mbajkDataService;
     private final WeatherDataService weatherDataService;
     private final GTFSRTDataService gtfsRTDataService;
@@ -29,6 +29,16 @@ public class SchedulerService {
 
     @Value("${schedulers.fetch-bus-ingestion.on}")
     private boolean fetchBusIngestion;
+
+    public SchedulerService(
+            MBajkDataService mbajkDataService,
+            WeatherDataService weatherDataService,
+            GTFSRTDataService gtfsRTDataService
+    ) {
+        this.mbajkDataService = mbajkDataService;
+        this.weatherDataService = weatherDataService;
+        this.gtfsRTDataService = gtfsRTDataService;
+    }
 
     private boolean isWithinOperatingHours() {
         int hour = OffsetDateTime.now(LJUBLJANA).getHour();

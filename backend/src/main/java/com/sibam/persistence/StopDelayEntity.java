@@ -1,7 +1,6 @@
 package com.sibam.persistence;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.util.UUID;
 
 /**
@@ -10,7 +9,6 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "stop_delay_snapshots")
-@Data
 public class StopDelayEntity {
 
     @Id
@@ -26,4 +24,36 @@ public class StopDelayEntity {
 
     @Column(name = "delay_seconds", nullable = false)
     private int delaySeconds;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public TripEntity getTrip() {
+        return trip;
+    }
+
+    public void setTrip(TripEntity trip) {
+        this.trip = trip;
+    }
+
+    public int getStopSequence() {
+        return stopSequence;
+    }
+
+    public void setStopSequence(int stopSequence) {
+        this.stopSequence = stopSequence;
+    }
+
+    public int getDelaySeconds() {
+        return delaySeconds;
+    }
+
+    public void setDelaySeconds(int delaySeconds) {
+        this.delaySeconds = delaySeconds;
+    }
 }

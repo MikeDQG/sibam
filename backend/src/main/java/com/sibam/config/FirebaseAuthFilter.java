@@ -6,12 +6,20 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.util.Set;
 
 @Component
 public class FirebaseAuthFilter extends OncePerRequestFilter {
+
+    private final Set<String> allowedOrigins;
+
+    public FirebaseAuthFilter(@Value("${allowed.origins}") String[] origins) {
+        this.allowedOrigins = Set.of(origins);
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -35,8 +43,11 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
                 request.setAttribute("uid", decodedToken.getUid());
                 request.setAttribute("email", decodedToken.getEmail());
             } catch (Exception e) {
-                response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-                response.setHeader("Access-Control-Allow-Credentials", "true");
+                String origin = request.getHeader("Origin");
+                if (origin != null && allowedOrigins.contains(origin)) {
+                    response.setHeader("Access-Control-Allow-Origin", origin);
+                    response.setHeader("Access-Control-Allow-Credentials", "true");
+                }
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }

@@ -1,7 +1,6 @@
 package com.sibam.persistence;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -11,7 +10,6 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "bike_station_snapshots")
-@Data
 public class BikeStationSnapshot {
 
     @Id
@@ -39,4 +37,68 @@ public class BikeStationSnapshot {
 
     @Column(name = "recorded_at", nullable = false)
     private OffsetDateTime recordedAt;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public BikeStation getStation() {
+        return station;
+    }
+
+    public void setStation(BikeStation station) {
+        this.station = station;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public int getBikes() {
+        return bikes;
+    }
+
+    public void setBikes(int bikes) {
+        this.bikes = bikes;
+    }
+
+    public int getStands() {
+        return stands;
+    }
+
+    public void setStands(int stands) {
+        this.stands = stands;
+    }
+
+    public int getMechanicalBikes() {
+        return mechanicalBikes;
+    }
+
+    public void setMechanicalBikes(int mechanicalBikes) {
+        this.mechanicalBikes = mechanicalBikes;
+    }
+
+    public int getElectricalBikes() {
+        return electricalBikes;
+    }
+
+    public void setElectricalBikes(int electricalBikes) {
+        this.electricalBikes = electricalBikes;
+    }
+
+    public OffsetDateTime getRecordedAt() {
+        return recordedAt;
+    }
+
+    public void setRecordedAt(OffsetDateTime recordedAt) {
+        this.recordedAt = recordedAt;
+    }
 }

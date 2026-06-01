@@ -144,6 +144,9 @@ public class AStarRouter {
             return null;
         }
 
+        validateAccessDistance(originAddress.isBlank() ? originAddress : "Izhodišče", originLat, originLon, originStops.getFirst());
+        validateAccessDistance(destinationAddress.isBlank() ? destinationAddress : "Cilj", destinationLat, destinationLon, destinationStops.getFirst());
+
         Graph routingGraph = withUserWalkingEdges(
                 graph,
                 originLat,
@@ -833,6 +836,20 @@ public class AStarRouter {
         adjacencyList.get(origin.getId()).add(walkingEdgeBuilder.build(origin, destination));
 
         return new Graph(nodes, adjacencyList);
+    }
+
+    private void validateAccessDistance(String endpoint, double lat, double lon, Node nearestStop) {
+        int maxDistanceMeters = routingConfig.getMaxAccessDistanceMeters();
+        double distanceMeters = helperService.haversineMeters(
+                lat,
+                lon,
+                nearestStop.getLat(),
+                nearestStop.getLon()
+        );
+
+        if (distanceMeters > maxDistanceMeters) {
+            throw new RouteAccessDistanceException(endpoint, distanceMeters, maxDistanceMeters);
+        }
     }
 
     private double heuristicSeconds(Graph graph, int currentNodeId, int goalNodeId) {

@@ -13,16 +13,34 @@ jobs:
     name: Backend Build (Dev)
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: sa
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: backend
 
     env:
-      DB_URL: jdbc:h2:mem:testdb
+      DB_URL: jdbc:postgresql://localhost:5432/testdb
       DB_USERNAME: sa
-      DB_PASSWORD: ""
-      DB_CLASS_NAME: org.h2.Driver
-      MBAJK_API_KEY: ph
+      DB_PASSWORD: password
+      DB_CLASS_NAME: org.postgresql.Driver
+      MBAJK_API_KEY: dummy
+      OPEN_WEATHERMAP_API_KEY: dummy
+      SUPABASE_URL: http://dummy
+      SUPABASE_SERVICE_KEY: dummy
 
     steps:
       - name: Checkout

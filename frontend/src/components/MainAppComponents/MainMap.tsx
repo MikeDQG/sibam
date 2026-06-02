@@ -55,6 +55,7 @@ type MainMapProps = {
   markerPosition?: MapCenter | null;
   userLocationPosition?: MapCenter | null;
   destinationMarkerPosition?: MapCenter | null;
+  routeFitBoundsTrigger?: number;
 };
 
 export type SavedMapLocation = {
@@ -109,6 +110,7 @@ export const MainMap = ({
   savedLocations = [],
   deletingSavedLocationId,
   onSavedLocationDelete,
+  routeFitBoundsTrigger,
 }: MainMapProps) => {
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
   const { theme } = useTheme();
@@ -156,7 +158,10 @@ export const MainMap = ({
           mapId={mapId}
           reuseMaps>
           {userLocationPosition && (
-            <AdvancedMarker position={userLocationPosition}>
+            <AdvancedMarker
+              position={userLocationPosition}
+              anchorLeft='-50%'
+              anchorTop='-50%'>
               <div className='relative flex h-8 w-8 items-center justify-center'>
                 <div className='absolute h-8 w-8 rounded-full bg-blue-500/20' />
                 <div className='h-4 w-4 rounded-full border-2 border-white bg-blue-600 shadow-lg' />
@@ -164,20 +169,7 @@ export const MainMap = ({
             </AdvancedMarker>
           )}
           {/* zacetek in konec poti */}
-          {markerPosition && (
-            <AdvancedMarker position={markerPosition}>
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  backgroundColor: "#3b82f6",
-                  border: "3px solid white",
-                  boxShadow: "0 5px 30px rgb(114, 114, 114)",
-                }}
-              />
-            </AdvancedMarker>
-          )}
+          {markerPosition && <AdvancedMarker position={markerPosition} />}
           {destinationMarkerPosition && (
             <AdvancedMarker position={destinationMarkerPosition} />
           )}
@@ -187,7 +179,13 @@ export const MainMap = ({
               destination={destinationMarkerPosition}
             />
           )}
-          {legs && <RoutePolyline legs={legs} onLegClick={onLegClick} />}
+          {legs && (
+            <RoutePolyline
+              legs={legs}
+              fitBoundsTrigger={routeFitBoundsTrigger}
+              onLegClick={onLegClick}
+            />
+          )}
           {legs?.map((leg, index) => {
             const firstPoint = leg.polyline[0];
             if (!firstPoint || leg.mode === "WALK") return null;
@@ -206,6 +204,8 @@ export const MainMap = ({
                 <AdvancedMarker
                   position={markerPosition}
                   clickable={true}
+                  anchorLeft='-50%'
+                  anchorTop='-50%'
                   onClick={() => {
                     if (leg.mode === "BIKE") {
                       onBikeIconClick?.(
@@ -249,6 +249,8 @@ export const MainMap = ({
                       lng: lastPoint.lon,
                     }}
                     clickable={true}
+                    anchorLeft='-50%'
+                    anchorTop='-50%'
                     onClick={() => {
                       onBikeIconClick?.(
                         leg,
@@ -277,13 +279,15 @@ export const MainMap = ({
               key={location.id}
               position={location.position}
               clickable={Boolean(onSavedLocationDelete)}
+              anchorLeft='-50%'
+              anchorTop='-20px'
               onClick={() => {
                 if (!onSavedLocationDelete) return;
                 onRoutePopupClose?.();
                 onMapLocationPopupClose?.();
                 setDeletePromptLocationId(location.id);
               }}>
-              <div className='flex -translate-y-1 flex-col items-center gap-1'>
+              <div className='flex flex-col items-center gap-1'>
                 <div
                   className='group flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
                   style={{ backgroundColor: location.color }}>

@@ -178,12 +178,6 @@ export const AccountPage = () => {
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center bg-[url('/LandingPage/background.jpeg')] bg-cover bg-center px-6 pt-25">
-      <img
-        src='/logo.svg'
-        className='absolute left-9 top-6 h-15 w-auto cursor-pointer'
-        alt='Logo'
-        onClick={() => navigate("/")}
-      />
       <div className='flex w-full max-w-[80vw] flex-col gap-6 rounded-lg bg-card/95 p-10 text-card-foreground shadow-xl backdrop-blur-sm dark:bg-neutral-700/95'>
         <button
           type='button'

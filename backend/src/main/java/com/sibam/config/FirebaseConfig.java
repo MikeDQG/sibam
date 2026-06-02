@@ -7,8 +7,10 @@ import org.springframework.context.annotation.Configuration;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class FirebaseConfig {
@@ -19,11 +21,18 @@ public class FirebaseConfig {
     public void initializeFirebase() throws IOException {
         logger.info("Inicializacija Firebase...");
 
-        InputStream serviceAccount = getClass().getClassLoader()
-                .getResourceAsStream("firebase-service-account.json");
+        InputStream serviceAccount;
+
+        String serviceAccountJson = System.getenv("FIREBASE_SERVICE_ACCOUNT_JSON");
+        if (serviceAccountJson != null && !serviceAccountJson.isBlank()) {
+            serviceAccount = new ByteArrayInputStream(serviceAccountJson.getBytes(StandardCharsets.UTF_8));
+        } else {
+            serviceAccount = getClass().getClassLoader()
+                    .getResourceAsStream("firebase-service-account.json");
+        }
 
         if (serviceAccount == null) {
-            logger.error("firebase-service-account.json ni bil najden!");
+            logger.error("Firebase service account not found — set FIREBASE_SERVICE_ACCOUNT_JSON env var!");
             return;
         }
 

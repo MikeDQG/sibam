@@ -156,7 +156,10 @@ export const MainMap = ({
           mapId={mapId}
           reuseMaps>
           {userLocationPosition && (
-            <AdvancedMarker position={userLocationPosition}>
+            <AdvancedMarker
+              position={userLocationPosition}
+              anchorLeft='-50%'
+              anchorTop='-50%'>
               <div className='relative flex h-8 w-8 items-center justify-center'>
                 <div className='absolute h-8 w-8 rounded-full bg-blue-500/20' />
                 <div className='h-4 w-4 rounded-full border-2 border-white bg-blue-600 shadow-lg' />
@@ -165,7 +168,10 @@ export const MainMap = ({
           )}
           {/* zacetek in konec poti */}
           {markerPosition && (
-            <AdvancedMarker position={markerPosition}>
+            <AdvancedMarker
+              position={markerPosition}
+              anchorLeft='-50%'
+              anchorTop='-50%'>
               <div
                 style={{
                   width: 24,
@@ -179,7 +185,11 @@ export const MainMap = ({
             </AdvancedMarker>
           )}
           {destinationMarkerPosition && (
-            <AdvancedMarker position={destinationMarkerPosition} />
+            <AdvancedMarker
+              position={destinationMarkerPosition}
+              anchorLeft='-50%'
+              anchorTop='-50%'
+            />
           )}
           {markerPosition && destinationMarkerPosition && (
             <FitBounds
@@ -206,6 +216,8 @@ export const MainMap = ({
                 <AdvancedMarker
                   position={markerPosition}
                   clickable={true}
+                  anchorLeft='-50%'
+                  anchorTop='-50%'
                   onClick={() => {
                     if (leg.mode === "BIKE") {
                       onBikeIconClick?.(
@@ -249,6 +261,8 @@ export const MainMap = ({
                       lng: lastPoint.lon,
                     }}
                     clickable={true}
+                    anchorLeft='-50%'
+                    anchorTop='-50%'
                     onClick={() => {
                       onBikeIconClick?.(
                         leg,
@@ -277,13 +291,15 @@ export const MainMap = ({
               key={location.id}
               position={location.position}
               clickable={Boolean(onSavedLocationDelete)}
+              anchorLeft='-50%'
+              anchorTop='-20px'
               onClick={() => {
                 if (!onSavedLocationDelete) return;
                 onRoutePopupClose?.();
                 onMapLocationPopupClose?.();
                 setDeletePromptLocationId(location.id);
               }}>
-              <div className='flex -translate-y-1 flex-col items-center gap-1'>
+              <div className='flex flex-col items-center gap-1'>
                 <div
                   className='group flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
                   style={{ backgroundColor: location.color }}>

@@ -419,6 +419,8 @@ export const MainAppControlOverlay = ({
       }
 
       const journey = (await res.json()) as RoutePath;
+
+      console.log("Received route path: ", journey);
       onPathReceive?.(journey);
     } catch (error) {
       onPathError?.({

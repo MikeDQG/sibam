@@ -7,7 +7,8 @@ public record NavigationStep(
         String instruction,
         String maneuver,
         int distanceMeters,
-        long durationSeconds,
-        Object polyline
+        int durationSeconds,
+        int startPolylineIndex,
+        int endPolylineIndex
 ) {
 }

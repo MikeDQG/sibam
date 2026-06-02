@@ -157,7 +157,8 @@ class AStarRouterTest {
                                 "DEPART",
                                 40,
                                 6,
-                                null
+                                0,
+                                1
                         ))
                 ));
 

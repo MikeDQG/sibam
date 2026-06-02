@@ -21,7 +21,7 @@
           }
         },
         "url": {
-          "raw": "localhost:8080/compute?originLat= 0.1&originLon= 0.1&destinationLat= 0.1&destinationLon= 0.1&leaveNow= true &leaveAt= 293892389893 &arriveBy= 293892389893 &bike= true &bus= true &userId= sjdfb7e4tfg74g74",
+          "raw": "localhost:8080/compute?originLat=46.5590632099911&originLon=15.637694437383283&destinationLat=46.54141403781715&destinationLon=15.649238665336387&leaveNow=true&bike=true&bus=true&userId=sjdfb7e4tfg74g74",
           "host": [
             "localhost"
           ],
@@ -32,53 +32,55 @@
           "query": [
             {
               "key": "originLat",
-              "value": " 0.1",
-              "type": "text"
+              "value": "46.5590632099911",
+              "uuid": "eab44303-e5b4-483c-be0e-072eed712865"
             },
             {
               "key": "originLon",
-              "value": " 0.1",
-              "type": "text"
+              "value": "15.637694437383283",
+              "uuid": "15db1b69-2dc1-48f3-b20d-0275da3ce90d"
             },
             {
               "key": "destinationLat",
-              "value": " 0.1",
-              "type": "text"
+              "value": "46.54141403781715",
+              "uuid": "d2c18ef2-dd1c-4d24-ac20-91cf97dc47b4"
             },
             {
               "key": "destinationLon",
-              "value": " 0.1",
-              "type": "text"
+              "value": "15.649238665336387",
+              "uuid": "dd2c4c60-2a52-437f-a6c4-7960e6e802fd"
             },
             {
               "key": "leaveNow",
-              "value": " true ",
-              "type": "text"
+              "value": "true",
+              "uuid": "6d94bcb4-e3d0-4c57-8162-58994ead3235"
             },
             {
               "key": "leaveAt",
-              "value": " 293892389893 ",
-              "type": "text"
+              "value": "293892389893",
+              "uuid": "3b45123d-db9d-47b3-8a26-6fea8be16324",
+              "disabled": true
             },
             {
               "key": "arriveBy",
-              "value": " 293892389893 ",
-              "type": "text"
+              "value": " 293892389893",
+              "uuid": "de2300d9-a851-4c5f-a581-5f7943ac5078",
+              "disabled": true
             },
             {
               "key": "bike",
-              "value": " true ",
-              "type": "text"
+              "value": "true",
+              "uuid": "e72b2172-dc2e-4d94-979c-286eb79c813b"
             },
             {
               "key": "bus",
-              "value": " true ",
-              "type": "text"
+              "value": "true",
+              "uuid": "d8018597-d0d2-41cb-8731-6e4dca5257f3"
             },
             {
               "key": "userId",
-              "value": " sjdfb7e4tfg74g74",
-              "type": "text"
+              "value": "sjdfb7e4tfg74g74",
+              "uuid": "318e2054-43b3-40a3-adc9-1e3afda0d44a"
             }
           ]
         }
@@ -136,7 +138,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67&IncludeShape=true",
+          "raw": "https://marprom-proxy.derp.si/OBA/GetRoutes?lineId=67&IncludeShape=true&Date=2026-06-02",
           "protocol": "https",
           "host": [
             "marprom-proxy",
@@ -160,9 +162,8 @@
             },
             {
               "key": "Date",
-              "value": "2026-05-08",
-              "uuid": "be0a02f9-c4f6-4478-9042-dd6f2a043c92",
-              "disabled": true
+              "value": "2026-06-02",
+              "uuid": "be0a02f9-c4f6-4478-9042-dd6f2a043c92"
             }
           ]
         }
@@ -176,7 +177,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "https://marprom-proxy.derp.si/OBA/GetStopPointSheduleForLine?lineId=67",
+          "raw": "https://marprom-proxy.derp.si/OBA/GetStopPointSheduleForLine?lineId=67&Date=2026-06-02",
           "protocol": "https",
           "host": [
             "marprom-proxy",
@@ -195,9 +196,8 @@
             },
             {
               "key": "Date",
-              "value": "2026-05-08",
-              "uuid": "3bde32bc-8eff-4963-b848-7cbf6e5b6704",
-              "disabled": true
+              "value": "2026-06-02",
+              "uuid": "3bde32bc-8eff-4963-b848-7cbf6e5b6704"
             }
           ]
         }
@@ -211,7 +211,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67&IncludeShape=true",
+          "raw": "https://marprom-proxy.derp.si/OBA/GetTrips?lineId=67&IncludeShape=true&Date=2026-06-02",
           "protocol": "https",
           "host": [
             "marprom-proxy",
@@ -235,8 +235,7 @@
             },
             {
               "key": "Date",
-              "value": "2026-05-08",
-              "disabled": true
+              "value": "2026-06-02"
             }
           ]
         }
@@ -277,18 +276,6 @@
               "uuid": "f898ae1a-bca1-4034-872f-b1108a134c03"
             }
           ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "getBusStopsMap",
-      "id": "797d4cbe-18b2-4d17-8315-3ad25864c0e9",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": ""
         }
       },
       "response": []

@@ -15,6 +15,7 @@ import com.sibam.graph.storage.InMemoryGraphStore;
 import com.sibam.service.GoogleRoutesService;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
@@ -257,6 +259,9 @@ class AStarRouterTest {
         HelperService helperService = new HelperService();
         VaoSerializer vaoSerializer = mock(VaoSerializer.class);
         when(vaoSerializer.getSchedulesMap()).thenReturn(Map.of());
+        when(vaoSerializer.getSchedulesMap(any(LocalDate.class))).thenReturn(Map.of());
+        when(vaoSerializer.getScheduleDates()).thenReturn(List.of());
+        when(vaoSerializer.isRouteActiveOnDate(anyInt(), any(LocalDate.class))).thenReturn(true);
         return new AStarRouter(
                 graphStore,
                 new SpatialSearchService(helperService),

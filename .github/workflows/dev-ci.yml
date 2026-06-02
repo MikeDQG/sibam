@@ -35,11 +35,20 @@ jobs:
           java-version: 21
           cache: maven
 
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
       - name: Make Maven wrapper executable
         run: chmod +x mvnw
 
-      - name: Build backend (no tests)
-        run: ./mvnw clean package -DskipTests
+      - name: Build and analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=MikeDQG_sibam -Dspring.profiles.active=ci
 
 
   frontend:

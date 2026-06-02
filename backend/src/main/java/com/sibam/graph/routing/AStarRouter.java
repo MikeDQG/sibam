@@ -16,14 +16,18 @@ import com.sibam.graph.spatial.HelperService;
 import com.sibam.graph.spatial.SpatialSearchService;
 import com.sibam.graph.storage.GraphStore;
 import com.sibam.engine.VaoSerializer;
+import com.sibam.engine.vao.BikeLegPredictionVao;
 import com.sibam.engine.vao.LineScheduleVao;
 import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.StopScheduleVao;
+import com.sibam.dto.prediction.BikePredictionRequest;
+import com.sibam.service.BikePredictionService;
 import com.sibam.service.GoogleRoutesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -60,6 +64,7 @@ public class AStarRouter {
     private final CostFunction costFunction;
     private final RoutingConfig routingConfig;
     private final WeatherRoutingAdjuster weatherRoutingAdjuster;
+    private final BikePredictionService bikePredictionService;
 
     public AStarRouter(
             GraphStore graphStore,
@@ -70,7 +75,8 @@ public class AStarRouter {
             HeuristicService heuristicService,
             CostFunction costFunction,
             RoutingConfig routingConfig,
-            WeatherRoutingAdjuster weatherRoutingAdjuster
+            WeatherRoutingAdjuster weatherRoutingAdjuster,
+            BikePredictionService bikePredictionService
     ) {
         this.graphStore = graphStore;
         this.spatialSearchService = spatialSearchService;
@@ -82,6 +88,7 @@ public class AStarRouter {
         this.costFunction = costFunction;
         this.routingConfig = routingConfig;
         this.weatherRoutingAdjuster = weatherRoutingAdjuster;
+        this.bikePredictionService = bikePredictionService;
     }
 
     public Journey findJourney(
@@ -190,7 +197,8 @@ public class AStarRouter {
                 originAddress,
                 new GeoPoint(destinationLat, destinationLon),
                 destinationAddress,
-                startTime
+                startTime,
+                weatherContext
         );
     }
 
@@ -522,7 +530,8 @@ public class AStarRouter {
             String originAddress,
             GeoPoint destination,
             String destinationAddress,
-            LocalTime startTime
+            LocalTime startTime,
+            WeatherRoutingContext weatherContext
     ) {
         if (pathResult.getEdges().isEmpty()) {
             return new Journey("success", origin, originAddress, destination, destinationAddress, "0", "0", List.of());
@@ -553,7 +562,8 @@ public class AStarRouter {
                     durationSeconds(firstTiming, lastTiming),
                     legDistanceMeters,
                     firstTiming.departureMillis(),
-                    lastTiming.arrivalMillis()
+                    lastTiming.arrivalMillis(),
+                    weatherContext
             ));
             addSameStopTransferLegIfNeeded(
                     graph,
@@ -580,7 +590,8 @@ public class AStarRouter {
                 durationSeconds(firstTiming, lastTiming),
                 legDistanceMeters,
                 firstTiming.departureMillis(),
-                lastTiming.arrivalMillis()
+                lastTiming.arrivalMillis(),
+                weatherContext
         ));
 
         int totalDistanceMeters = pathResult.getEdges().stream()
@@ -678,7 +689,8 @@ public class AStarRouter {
             int durationSeconds,
             int distanceMeters,
             long departureMillis,
-            long arrivalMillis
+            long arrivalMillis,
+            WeatherRoutingContext weatherContext
     ) {
         RouteInfo routeInfo = firstEdge.getRouteInfo();
         LegNavigation navigation = legNavigation(graph, edges, firstEdge, lastEdge);
@@ -697,8 +709,60 @@ public class AStarRouter {
                 String.valueOf(departureMillis),
                 String.valueOf(arrivalMillis),
                 navigation.navigationAvailable(),
-                navigation.steps()
+                navigation.steps(),
+                computeBikePrediction(graph, firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext)
         );
+    }
+
+    private BikeLegPredictionVao computeBikePrediction(
+            Graph graph,
+            Edge firstEdge,
+            Edge lastEdge,
+            long departureMillis,
+            long arrivalMillis,
+            WeatherRoutingContext weatherContext
+    ) {
+        if (firstEdge.getEdgeType() != EdgeType.BIKE) {
+            return null;
+        }
+
+        Node pickupNode = graph.getNodes().get(firstEdge.getFromNodeId());
+        Node returnNode = graph.getNodes().get(lastEdge.getToNodeId());
+        if (!(pickupNode instanceof BikeNode pickup) || !(returnNode instanceof BikeNode returnStation)) {
+            return null;
+        }
+
+        try {
+            LocalDateTime pickupTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ZoneId.systemDefault());
+            LocalDateTime returnTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(arrivalMillis), ZoneId.systemDefault());
+            float temperature = weatherContext.temperatureCelsius() != null ? weatherContext.temperatureCelsius().floatValue() : 15f;
+            float rain = weatherContext.rainMm() != null ? weatherContext.rainMm() : 0f;
+            float windSpeed = weatherContext.windSpeedMs() != null ? weatherContext.windSpeedMs() : 0f;
+
+            int pickupDow = pickupTime.getDayOfWeek().getValue();
+            var pickupResponse = bikePredictionService.predict(new BikePredictionRequest(
+                    pickup.getStationNumber(),
+                    pickupTime.getHour(), pickupDow, pickupDow >= 6 ? 1 : 0,
+                    temperature, rain, windSpeed
+            ));
+
+            int returnDow = returnTime.getDayOfWeek().getValue();
+            var returnResponse = bikePredictionService.predict(new BikePredictionRequest(
+                    returnStation.getStationNumber(),
+                    returnTime.getHour(), returnDow, returnDow >= 6 ? 1 : 0,
+                    temperature, rain, windSpeed
+            ));
+
+            return new BikeLegPredictionVao(
+                    pickupResponse.predictedBikes(),
+                    pickupResponse.bikeAvailableProbability(),
+                    returnResponse.predictedStands(),
+                    returnResponse.standAvailableProbability()
+            );
+        } catch (Exception e) {
+            log.warn("Bike prediction unavailable, skipping enrichment: {}", e.getMessage());
+            return null;
+        }
     }
 
     private String toMode(EdgeType edgeType) {

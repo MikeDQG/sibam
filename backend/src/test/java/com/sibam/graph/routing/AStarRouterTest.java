@@ -54,6 +54,7 @@ class AStarRouterTest {
                 new HeuristicService(),
                 new WeightedCostFunction(routingConfig()),
                 routingConfig(),
+                null,
                 null
         );
 
@@ -266,6 +267,7 @@ class AStarRouterTest {
                 new HeuristicService(),
                 new WeightedCostFunction(routingConfig),
                 routingConfig,
+                null,
                 null
         );
     }

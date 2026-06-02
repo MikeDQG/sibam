@@ -87,7 +87,9 @@ public class WeatherRoutingAdjuster {
         boolean rainAmount = snapshot.getRain() != null
                 && snapshot.getRain() > routingConfig.getRainThresholdMillimeters();
         boolean rainCondition = isRainCondition(snapshot.getCondition());
-        return new WeatherRoutingContext(snapshot.getTemperature(), rainAmount || rainCondition);
+        float rainMm = snapshot.getRain() != null ? snapshot.getRain().floatValue() : 0f;
+        float windSpeedMs = (float) snapshot.getWindSpeed();
+        return new WeatherRoutingContext(snapshot.getTemperature(), rainAmount || rainCondition, rainMm, windSpeedMs);
     }
 
     private double edgeMultiplier(EdgeType edgeType, WeatherRoutingContext weather) {

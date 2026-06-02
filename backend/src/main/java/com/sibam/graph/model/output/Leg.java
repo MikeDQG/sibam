@@ -1,6 +1,7 @@
 package com.sibam.graph.model.output;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sibam.engine.vao.BikeLegPredictionVao;
 import com.sibam.graph.model.GeoPoint;
 
 import java.util.List;
@@ -21,7 +22,9 @@ public record Leg(
         @JsonInclude(JsonInclude.Include.NON_NULL)
         Boolean navigationAvailable,
         @JsonInclude(JsonInclude.Include.NON_NULL)
-        List<NavigationStep> steps
+        List<NavigationStep> steps,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        BikeLegPredictionVao bikePrediction
 ) {
     public Leg(
             String mode,
@@ -50,6 +53,7 @@ public record Leg(
                 freeBikes,
                 departure,
                 arrival,
+                null,
                 null,
                 null
         );

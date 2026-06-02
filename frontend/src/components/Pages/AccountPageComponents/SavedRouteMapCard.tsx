@@ -45,6 +45,27 @@ function formatRouteDate(value?: string | null) {
   }).format(date);
 }
 
+function formatRouteDuration(value?: string | number | null) {
+  const duration = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(duration)) return null;
+
+  return `${Math.round(duration / 60000)} min`;
+}
+
+function formatRouteDistance(value?: string | number | null) {
+  const distance = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(distance)) return null;
+
+  const meters = Math.round(distance);
+  const kilometers = Math.floor(meters / 1000);
+  const remainingMeters = meters % 1000;
+
+  if (kilometers <= 0) return `${remainingMeters} m`;
+  if (remainingMeters === 0) return `${kilometers} km`;
+
+  return `${kilometers} km ${remainingMeters} m`;
+}
+
 function getRouteCenter(journey: RoutePath) {
   const firstPoint = journey.legs
     .flatMap((leg) => leg.polyline)
@@ -93,8 +114,9 @@ function getRouteEndpoints(journey: RoutePath) {
 
   return {
     origin:
-      getJourneyPoint(journey.origin as Parameters<typeof getJourneyPoint>[0]) ??
-      getJourneyPoint(firstPolylinePoint),
+      getJourneyPoint(
+        journey.origin as Parameters<typeof getJourneyPoint>[0],
+      ) ?? getJourneyPoint(firstPolylinePoint),
     destination:
       getJourneyPoint(
         journey.destination as Parameters<typeof getJourneyPoint>[0],
@@ -141,9 +163,7 @@ function SavedRouteTransferMarkers({ journey }: { journey: RoutePath }) {
         const iconSrc =
           leg.mode === "BIKE" ? "pathIcons/mBajk.png" : "pathIcons/marprom.png";
         const iconAlt =
-          leg.mode === "BIKE"
-            ? "Bajk postaja za prevzem"
-            : "Avtobusna postaja";
+          leg.mode === "BIKE" ? "Bajk postaja za prevzem" : "Avtobusna postaja";
 
         return (
           <Fragment key={index}>
@@ -187,6 +207,8 @@ export function SavedRouteMapCard({
   const { theme } = useTheme();
   const createdAt = formatRouteDate(route.createdAt);
   const center = getRouteCenter(route.journey);
+  const formattedDuration = formatRouteDuration(route.duration);
+  const formattedDistance = formatRouteDistance(route.distance);
 
   return (
     <article
@@ -196,9 +218,9 @@ export function SavedRouteMapCard({
         <h3 className='max-h-10 overflow-hidden text-sm font-semibold leading-tight'>
           {route.name}
         </h3>
-        {(route.duration || route.distance) && (
+        {(formattedDuration || formattedDistance) && (
           <p className='mt-0.5 text-xs text-muted-foreground dark:text-neutral-300'>
-            {[route.duration, route.distance].filter(Boolean).join(" • ")}
+            {[formattedDuration, formattedDistance].filter(Boolean).join(" • ")}
           </p>
         )}
         {(route.originLabel || route.destinationLabel) && (

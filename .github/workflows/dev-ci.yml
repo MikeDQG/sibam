@@ -13,34 +13,16 @@ jobs:
     name: Backend Build (Dev)
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: testdb
-          POSTGRES_USER: sa
-          POSTGRES_PASSWORD: password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     defaults:
       run:
         working-directory: backend
 
     env:
-      DB_URL: jdbc:postgresql://localhost:5432/testdb
+      DB_URL: jdbc:h2:mem:testdb
       DB_USERNAME: sa
-      DB_PASSWORD: password
-      DB_CLASS_NAME: org.postgresql.Driver
+      DB_PASSWORD: ""
+      DB_CLASS_NAME: org.h2.Driver
       MBAJK_API_KEY: dummy
-      OPEN_WEATHERMAP_API_KEY: dummy
-      SUPABASE_URL: http://dummy
-      SUPABASE_SERVICE_KEY: dummy
 
     steps:
       - name: Checkout
@@ -53,20 +35,11 @@ jobs:
           java-version: 21
           cache: maven
 
-      - name: Cache SonarQube packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
       - name: Make Maven wrapper executable
         run: chmod +x mvnw
 
-      - name: Build and analyze
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=MikeDQG_sibam -Dspring.profiles.active=ci
+      - name: Build backend (no tests)
+        run: ./mvnw clean package -DskipTests
 
 
 

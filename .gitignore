@@ -47,3 +47,6 @@ docker-compose.yml
 
 # Firebase local cache
 .firebase/
+
+# Playwright auth state
+e2e/.auth/

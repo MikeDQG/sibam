@@ -99,7 +99,7 @@ class ComputePathControllerTest {
                         .param("bus", "true"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.code").value("OUTSIDE_SERVICE_AREA"))
+                .andExpect(jsonPath("$.code").value("IZVEN_OBMOCJA_POTI"))
                 .andExpect(jsonPath("$.endpoint").value("origin"))
                 .andExpect(jsonPath("$.distanceMeters").value(3200.0))
                 .andExpect(jsonPath("$.maxDistanceMeters").value(3000));

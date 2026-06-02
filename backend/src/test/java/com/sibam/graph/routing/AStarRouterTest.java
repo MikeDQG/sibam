@@ -240,7 +240,7 @@ class AStarRouterTest {
                 true
         ))
                 .isInstanceOf(RouteAccessDistanceException.class)
-                .hasMessageContaining("origin");
+                .hasMessageContaining("Izhodišče");
     }
 
     private AStarRouter routerFor(Graph graph) {

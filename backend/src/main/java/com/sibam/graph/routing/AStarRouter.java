@@ -21,7 +21,12 @@ import com.sibam.engine.vao.LineScheduleVao;
 import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.StopScheduleVao;
 import com.sibam.dto.prediction.BikePredictionRequest;
+import com.sibam.dto.prediction.BusDelayPredictionRequest;
+import com.sibam.engine.vao.BusLegDelayVao;
+import com.sibam.engine.vao.BusStopVao;
+import com.sibam.engine.vao.RouteVao;
 import com.sibam.service.BikePredictionService;
+import com.sibam.service.BusDelayPredictionService;
 import com.sibam.service.GoogleRoutesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +70,7 @@ public class AStarRouter {
     private final RoutingConfig routingConfig;
     private final WeatherRoutingAdjuster weatherRoutingAdjuster;
     private final BikePredictionService bikePredictionService;
+    private final BusDelayPredictionService busDelayPredictionService;
 
     public AStarRouter(
             GraphStore graphStore,
@@ -76,7 +82,8 @@ public class AStarRouter {
             CostFunction costFunction,
             RoutingConfig routingConfig,
             WeatherRoutingAdjuster weatherRoutingAdjuster,
-            BikePredictionService bikePredictionService
+            BikePredictionService bikePredictionService,
+            BusDelayPredictionService busDelayPredictionService
     ) {
         this.graphStore = graphStore;
         this.spatialSearchService = spatialSearchService;
@@ -89,6 +96,7 @@ public class AStarRouter {
         this.routingConfig = routingConfig;
         this.weatherRoutingAdjuster = weatherRoutingAdjuster;
         this.bikePredictionService = bikePredictionService;
+        this.busDelayPredictionService = busDelayPredictionService;
     }
 
     public Journey findJourney(
@@ -710,7 +718,8 @@ public class AStarRouter {
                 String.valueOf(arrivalMillis),
                 navigation.navigationAvailable(),
                 navigation.steps(),
-                computeBikePrediction(graph, firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext)
+                computeBikePrediction(graph, firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext),
+                computeBusDelayPrediction(firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext)
         );
     }
 
@@ -763,6 +772,65 @@ public class AStarRouter {
             log.warn("Bike prediction unavailable, skipping enrichment: {}", e.getMessage());
             return null;
         }
+    }
+
+    private BusLegDelayVao computeBusDelayPrediction(
+            Edge firstEdge,
+            Edge lastEdge,
+            long departureMillis,
+            long arrivalMillis,
+            WeatherRoutingContext weatherContext
+    ) {
+        if (firstEdge.getEdgeType() != EdgeType.BUS) {
+            return null;
+        }
+
+        RouteInfo routeInfo = firstEdge.getRouteInfo();
+        if (routeInfo == null) {
+            return null;
+        }
+
+        int lineId = routeInfo.lineId();
+
+        int boardStopId = firstEdge.getScheduleStopPointId() != null
+                ? firstEdge.getScheduleStopPointId()
+                : firstEdge.getFromNodeId();
+
+        float temperature = weatherContext.temperatureCelsius() != null ? weatherContext.temperatureCelsius().floatValue() : 15f;
+        float rain = weatherContext.rainMm() != null ? weatherContext.rainMm() : 0f;
+        float windSpeed = weatherContext.windSpeedMs() != null ? weatherContext.windSpeedMs() : 0f;
+
+        try {
+            LocalDateTime boardTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ZoneId.systemDefault());
+            int boardDow = boardTime.getDayOfWeek().getValue();
+            int boardSeq = lookupStopSequence(lineId, boardStopId);
+            int boardingDelay = busDelayPredictionService.predictDelay(
+                    lineId, boardSeq,
+                    boardTime.getHour(), boardDow, boardDow >= 6 ? 1 : 0,
+                    temperature, rain, windSpeed,
+                    boardStopId
+            );
+
+            return new BusLegDelayVao(boardingDelay);
+        } catch (Exception e) {
+            log.warn("Bus delay prediction unavailable, skipping enrichment: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private int lookupStopSequence(int lineId, int stopId) {
+        for (RouteVao route : vaoSerializer.getRoutesMap().values()) {
+            if (route.LineId() != lineId || route.busStops() == null) {
+                continue;
+            }
+            List<BusStopVao> stops = route.busStops();
+            for (int i = 0; i < stops.size(); i++) {
+                if (stops.get(i).id() == stopId) {
+                    return i + 1;
+                }
+            }
+        }
+        return 1;
     }
 
     private String toMode(EdgeType edgeType) {

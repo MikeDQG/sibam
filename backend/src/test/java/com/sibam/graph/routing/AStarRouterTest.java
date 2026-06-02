@@ -63,6 +63,7 @@ class AStarRouterTest {
                 new WeightedCostFunction(routingConfig()),
                 routingConfig(),
                 null,
+                null,
                 null
         );
 
@@ -329,7 +330,7 @@ class AStarRouterTest {
                 new BusStopVao(15, "D", null, 46.0, 15.0005),
                 new BusStopVao(20, "E", null, 46.0, 15.001)
         );
-        RouteVao routeVao = new RouteVao(1001, lineId, "P18", "Pekre", List.of(), stops);
+        RouteVao routeVao = new RouteVao(1001, lineId, "P18", "Pekre", "Pekre", List.of(), stops);
 
         BusDelayPredictionService predService = mock(BusDelayPredictionService.class);
         when(predService.predictDelay(anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
@@ -19,7 +20,7 @@ public class SchedulerService {
     private final MBajkDataService mbajkDataService;
     private final WeatherDataService weatherDataService;
     private final GTFSRTDataService gtfsRTDataService;
-    private static final ZoneId LJUBLJANA = ZoneId.of("Europe/Ljubljana");
+    private final Clock clock;
 
     @Value("${schedulers.fetch-bike-ingestion.on}")
     private boolean fetchBikeIngestion;
@@ -33,15 +34,17 @@ public class SchedulerService {
     public SchedulerService(
             MBajkDataService mbajkDataService,
             WeatherDataService weatherDataService,
-            GTFSRTDataService gtfsRTDataService
+            GTFSRTDataService gtfsRTDataService,
+            Clock clock
     ) {
         this.mbajkDataService = mbajkDataService;
         this.weatherDataService = weatherDataService;
         this.gtfsRTDataService = gtfsRTDataService;
+        this.clock = clock;
     }
 
     private boolean isWithinOperatingHours() {
-        int hour = OffsetDateTime.now(LJUBLJANA).getHour();
+        int hour = OffsetDateTime.now(clock).getHour();
         return hour >= 5 && hour < 23;
     }
 
@@ -50,7 +53,7 @@ public class SchedulerService {
      */
     @Scheduled(fixedRate = 1000 * 60 * 5)
     public void fetchBikeIngestion() {
-        OffsetDateTime fetchedAt = OffsetDateTime.now(LJUBLJANA);
+        OffsetDateTime fetchedAt = OffsetDateTime.now(clock);
         if (!isWithinOperatingHours()) {
             log.info("Skipping bike ingestion, not within operating hours");
             return;
@@ -72,7 +75,7 @@ public class SchedulerService {
      */
     @Scheduled(fixedRate = 1000 * 60 * 60)
     public void fetchWeatherIngestion() {
-        OffsetDateTime fetchedAt = OffsetDateTime.now(LJUBLJANA);
+        OffsetDateTime fetchedAt = OffsetDateTime.now(clock);
         if (!isWithinOperatingHours()) {
             log.info("Skipping weather ingestion, not within operating hours");
             return;
@@ -102,7 +105,7 @@ public class SchedulerService {
             log.info("Skipping bus trips ingestion, blocked by config");
             return;
         }
-        OffsetDateTime fetchedAt = OffsetDateTime.now(LJUBLJANA);
+        OffsetDateTime fetchedAt = OffsetDateTime.now(clock);
 
         try {
             gtfsRTDataService.ingestRealtimeTrips(fetchedAt);

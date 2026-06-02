@@ -63,21 +63,21 @@ export const Login = () => {
   };
 
   return (
-    <div className='relative flex min-h-screen w-full items-center justify-end bg-neutral-800'>
+    <div className='relative flex min-h-screen w-full items-center justify-end bg-neutral-800 max-[699px]:justify-center'>
       <img
         src='logo.svg'
-        className='absolute left-9 top-6 h-15 w-auto z-2 cursor-pointer'
+        className='absolute left-9 top-6 z-2 h-15 w-auto cursor-pointer max-[699px]:hidden'
         alt='Logo'
         onClick={() => navigate("/")}
       />
       <img
-        className='absolute left-0 top-0 h-full w-[80%] max-w-[80%] object-cover'
+        className='absolute left-0 top-0 h-full w-[80%] max-w-[80%] object-cover max-[699px]:hidden'
         src='/LandingPage/background.jpeg'
         alt='Background'
       />
       <ThemeToggle className='absolute right-7 top-6 z-20' />
-      <div className='z-10 flex min-h-screen w-lg max-w-137.5 py-5 pr-5 lg:w-full lg:max-w-[50%]'>
-        <div className='relative flex w-full flex-col items-center gap-8 rounded-lg bg-card pt-20 text-card-foreground shadow-xl dark:bg-neutral-700'>
+      <div className='z-10 flex min-h-screen w-lg max-w-137.5 py-5 pr-5 max-[699px]:w-full max-[699px]:max-w-none max-[699px]:p-0 lg:w-full lg:max-w-[50%]'>
+        <div className='relative flex w-full flex-col items-center gap-8 rounded-lg bg-card pt-20 text-card-foreground shadow-xl max-[699px]:min-h-screen max-[699px]:rounded-none dark:bg-neutral-700'>
           <button
             type='button'
             onClick={() => navigate("/")}

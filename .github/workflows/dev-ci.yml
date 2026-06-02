@@ -22,7 +22,7 @@ jobs:
       DB_USERNAME: sa
       DB_PASSWORD: ""
       DB_CLASS_NAME: org.h2.Driver
-      MBAJK_API_KEY: ph
+      MBAJK_API_KEY: dummy
 
     steps:
       - name: Checkout
@@ -40,6 +40,7 @@ jobs:
 
       - name: Build backend (no tests)
         run: ./mvnw clean package -DskipTests
+
 
 
   frontend:

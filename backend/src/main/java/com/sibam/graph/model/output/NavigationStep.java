@@ -1,7 +1,6 @@
 package com.sibam.graph.model.output;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.JsonNode;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record NavigationStep(
@@ -9,6 +8,6 @@ public record NavigationStep(
         String maneuver,
         int distanceMeters,
         long durationSeconds,
-        JsonNode polyline
+        Object polyline
 ) {
 }

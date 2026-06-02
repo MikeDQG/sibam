@@ -19,6 +19,7 @@ import type {
 } from "../MainAppComponents/RoutePolyline";
 import { useUserSession } from "../Authorization/UserSessionProvider";
 import { MARIBOR_BOUNDS } from "../../hooks/usePlacesAutocomplete";
+import type { SavedAccountRoute } from "./AccountPageComponents/SavedRouteMapCard";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -72,6 +73,20 @@ type SavedLocationResponse = {
   logo?: string | null;
 };
 
+type SavedRouteResponse = {
+  id: string;
+  name?: string | null;
+  journey?: RoutePath & {
+    duration?: string | null;
+    distance?: string | null;
+    origin_address?: string | null;
+    originAddress?: string | null;
+    destination_address?: string | null;
+    destinationAddress?: string | null;
+  };
+  createdAt?: string | null;
+};
+
 const defaultLocationColor = "#b91c1c";
 const defaultLocationIcon: LocationIcon = "home";
 
@@ -82,6 +97,74 @@ function isInsideMaribor({ lat, lng }: MapCenter) {
     lng >= MARIBOR_BOUNDS.low.longitude &&
     lng <= MARIBOR_BOUNDS.high.longitude
   );
+}
+
+function normalizeSavedRoute(
+  route: SavedRouteResponse,
+): SavedAccountRoute | null {
+  const journey = route.journey;
+  const hasDrawableRoute = journey?.legs?.some((leg) => leg.polyline.length);
+
+  if (!journey || !hasDrawableRoute) return null;
+
+  return {
+    id: route.id,
+    name: route.name?.trim() || "Shranjena pot",
+    journey,
+    duration: journey.duration,
+    distance: journey.distance,
+    originLabel: journey.origin_address ?? journey.originAddress,
+    destinationLabel: journey.destination_address ?? journey.destinationAddress,
+    modes: Array.from(
+      new Set(
+        (journey.legs ?? [])
+          .map((leg) => leg.mode?.trim())
+          .filter((mode): mode is string => Boolean(mode)),
+      ),
+    ),
+    createdAt: route.createdAt,
+  };
+}
+
+function getJourneyPoint(
+  point:
+    | {
+        lat?: number;
+        lon?: number;
+        lng?: number;
+      }
+    | null
+    | undefined,
+): MapCenter | null {
+  if (!point) return null;
+
+  const lat = point.lat;
+  const lng = point.lng ?? point.lon;
+  if (
+    typeof lat !== "number" ||
+    typeof lng !== "number" ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng)
+  ) {
+    return null;
+  }
+
+  return { lat, lng };
+}
+
+function getRouteEndpoints(path: RoutePath) {
+  const firstLeg = path.legs[0];
+  const lastLeg = path.legs.at(-1);
+
+  return {
+    origin:
+      getJourneyPoint(path.origin as Parameters<typeof getJourneyPoint>[0]) ??
+      getJourneyPoint(firstLeg?.polyline[0]),
+    destination:
+      getJourneyPoint(
+        path.destination as Parameters<typeof getJourneyPoint>[0],
+      ) ?? getJourneyPoint(lastLeg?.polyline.at(-1)),
+  };
 }
 
 export const MainAppHome = () => {
@@ -99,6 +182,7 @@ export const MainAppHome = () => {
   const [destinationMarkerPosition, setDestinationMarkerPosition] =
     useState<MapCenter | null>(null);
   const [routePath, setRoutePath] = useState<RoutePath | null>(null);
+  const [isShowingSavedRoute, setIsShowingSavedRoute] = useState(false);
   const [isFollowingRoute, setIsFollowingRoute] = useState(false);
   const [routeFitBoundsTrigger, setRouteFitBoundsTrigger] = useState(0);
   const [routeComputeError, setRouteComputeError] =
@@ -106,6 +190,7 @@ export const MainAppHome = () => {
   const [mapLocationDraft, setMapLocationDraft] =
     useState<MapLocationDraft | null>(null);
   const [savedLocations, setSavedLocations] = useState<SavedMapLocation[]>([]);
+  const [savedRoutes, setSavedRoutes] = useState<SavedAccountRoute[]>([]);
   const [deletingSavedLocationId, setDeletingSavedLocationId] = useState<
     string | null
   >(null);
@@ -365,6 +450,52 @@ export const MainAppHome = () => {
     };
   }, [fetchUserSession, getAuthToken, userSession]);
 
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchSavedRoutes() {
+      const token = await getAuthToken();
+
+      if (!token) {
+        setSavedRoutes([]);
+        return;
+      }
+
+      try {
+        const session = userSession ?? (await fetchUserSession(token));
+
+        const response = await fetch(`${apiUrl}/api/paths/${session.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Saved routes request failed: ${response.status}`);
+        }
+
+        const routes = (await response.json()) as SavedRouteResponse[];
+
+        if (!isActive) return;
+
+        setSavedRoutes(
+          routes
+            .map(normalizeSavedRoute)
+            .filter((route): route is SavedAccountRoute => Boolean(route)),
+        );
+      } catch {
+        if (!isActive) return;
+        toast.error("Shranjene poti niso bile naložene.");
+      }
+    }
+
+    void fetchSavedRoutes();
+
+    return () => {
+      isActive = false;
+    };
+  }, [fetchUserSession, getAuthToken, userSession]);
+
   // handlanje overlay kontrol
   function handleZoomIn() {
     setZoom((currentZoom) => Math.min(currentZoom + 1, 20));
@@ -408,6 +539,7 @@ export const MainAppHome = () => {
 
   function handlePlaceSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
     setSelectedLeg(null);
@@ -425,6 +557,7 @@ export const MainAppHome = () => {
 
   function handleDestinationSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
     setSelectedLeg(null);
@@ -434,10 +567,25 @@ export const MainAppHome = () => {
 
   function handlePathReceive(path: RoutePath) {
     setRoutePath(path);
+    setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
     setSelectedLeg(null);
     setMapLocationDraft(null);
+  }
+
+  function handleSavedRouteSelect(route: SavedAccountRoute) {
+    const endpoints = getRouteEndpoints(route.journey);
+
+    setRoutePath(route.journey);
+    setIsShowingSavedRoute(true);
+    setIsFollowingRoute(false);
+    setRouteComputeError(null);
+    setSelectedLeg(null);
+    setMapLocationDraft(null);
+    setMarkerPosition(endpoints.origin);
+    setDestinationMarkerPosition(endpoints.destination);
+    setRouteFitBoundsTrigger((currentTrigger) => currentTrigger + 1);
   }
 
   function handleStartRouteFollowing() {
@@ -451,6 +599,7 @@ export const MainAppHome = () => {
 
   function handlePathError(error: RouteComputeError) {
     setRoutePath(null);
+    setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(error);
     setSelectedLeg(null);
@@ -618,6 +767,13 @@ export const MainAppHome = () => {
         throw new Error(`Save route request failed: ${response.status}`);
       }
 
+      const savedRoute = normalizeSavedRoute(
+        (await response.json()) as SavedRouteResponse,
+      );
+      if (savedRoute) {
+        setSavedRoutes((currentRoutes) => [...currentRoutes, savedRoute]);
+      }
+
       toast.success("Pot je shranjena.");
     } catch {
       toast.error("Poti ni bilo mogoče shraniti. Poskusite znova.");
@@ -667,6 +823,8 @@ export const MainAppHome = () => {
         onStartRoute={handleStartRouteFollowing}
         onEndRoute={handleEndRouteFollowing}
         savedLocations={savedLocations}
+        savedRoutes={savedRoutes}
+        onSavedRouteSelect={handleSavedRouteSelect}
       />
 
       {/* route options */}
@@ -676,6 +834,7 @@ export const MainAppHome = () => {
         computeError={routeComputeError}
         canSaveRoute={Boolean(routePath)}
         hasFetchedRoute={Boolean(routePath)}
+        isSavedRoute={isShowingSavedRoute}
         onSaveRoute={handleRouteSave}
       />
     </main>

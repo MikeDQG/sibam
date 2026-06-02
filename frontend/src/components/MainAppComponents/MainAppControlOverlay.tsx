@@ -622,8 +622,12 @@ export const MainAppControlOverlay = ({
                       !isRouteActive &&
                       (!originCoords || !destinationCoords)
                     }
-                    className='ml-auto flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-200 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 max-[560px]:order-3 max-[560px]:col-start-2 max-[560px]:row-start-1 max-[560px]:ml-0 max-[560px]:rounded-lg max-[560px]:px-3 max-[430px]:!col-start-1 max-[430px]:!row-start-1 max-[430px]:w-full dark:bg-neutral-200 dark:hover:bg-neutral-50'>
-                    {isRouteActive ? "Končaj" : hasRoute ? "Začni" : "Najdi pot"}
+                    className='ml-auto flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-50 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-200 max-[560px]:order-3 max-[560px]:col-start-2 max-[560px]:row-start-1 max-[560px]:ml-0 max-[560px]:rounded-lg max-[560px]:px-3 max-[430px]:!col-start-1 max-[430px]:!row-start-1 max-[430px]:w-full dark:bg-neutral-200 dark:hover:bg-neutral-50 dark:disabled:bg-neutral-200 dark:disabled:hover:bg-neutral-200'>
+                    {isRouteActive
+                      ? "Končaj"
+                      : hasRoute
+                        ? "Začni"
+                        : "Najdi pot"}
                   </button>
                 </div>
               </>

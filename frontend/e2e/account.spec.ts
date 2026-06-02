@@ -20,8 +20,8 @@ test.describe('Account page', () => {
     await expect(page.getByRole('heading', { name: 'Shranjene lokacije' })).toBeVisible({ timeout: 10000 });
   });
 
-  test('shows recent routes section', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Zadnje poti' })).toBeVisible({ timeout: 10000 });
+  test('shows saved routes section', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'Shranjene poti' })).toBeVisible({ timeout: 10000 });
   });
 
   test('navigates back to home', async ({ page }) => {

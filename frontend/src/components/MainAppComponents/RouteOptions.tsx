@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { RouteErrorBox } from "./RouteErrorBox";
 
 type route = {
   title: string;
@@ -9,9 +10,13 @@ type route = {
 
 type RouteOptionProps = {
   routes: route[];
+  computeError?: {
+    code: string;
+    message?: string;
+  } | null;
 };
 
-export const RouteOptions = ({ routes }: RouteOptionProps) => {
+export const RouteOptions = ({ routes, computeError }: RouteOptionProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const dragStartY = useRef(0);
   const dragStartOffset = useRef(0);
@@ -31,14 +36,20 @@ export const RouteOptions = ({ routes }: RouteOptionProps) => {
       );
 
       setMaxOffsetY(nextMaxOffset);
-      setOffsetY(nextMaxOffset); // ob prvi renderju naj bo sheet zaprt (offset enak maxOffsetu)
+      setOffsetY(computeError ? 0 : nextMaxOffset); // ob prvi renderju naj bo sheet zaprt (offset enak maxOffsetu)
     };
 
     updateSheetHeight();
     window.addEventListener("resize", updateSheetHeight);
 
     return () => window.removeEventListener("resize", updateSheetHeight);
-  }, []);
+  }, [computeError]);
+
+  useEffect(() => {
+    if (computeError) {
+      setOffsetY(0);
+    }
+  }, [computeError]);
 
   const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
     dragStartY.current = event.clientY;
@@ -92,6 +103,10 @@ export const RouteOptions = ({ routes }: RouteOptionProps) => {
         onPointerCancel={handlePointerUp}>
         <span className='h-1.5 w-17 rounded-full bg-muted-foreground/50 dark:bg-[#aaa69d]' />
       </button>
+
+      {computeError && (
+        <RouteErrorBox code={computeError.code} message={computeError.message} />
+      )}
 
       <div className='grid grid-cols-3 gap-9'>
         {routes.map((option) => (

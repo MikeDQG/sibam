@@ -41,6 +41,7 @@ public class RoutingConfig {
     private final double coolBikeMultiplier;
     private final double hotWalkMultiplier;
     private final double hotBikeMultiplier;
+    private final int maxAccessDistanceMeters;
 
     @Autowired
     public RoutingConfig(
@@ -62,7 +63,8 @@ public class RoutingConfig {
             @Value("${routing.weather.cool-walk-multiplier:1.2}") double coolWalkMultiplier,
             @Value("${routing.weather.cool-bike-multiplier:1.3}") double coolBikeMultiplier,
             @Value("${routing.weather.hot-walk-multiplier:1.3}") double hotWalkMultiplier,
-            @Value("${routing.weather.hot-bike-multiplier:1.1}") double hotBikeMultiplier
+            @Value("${routing.weather.hot-bike-multiplier:1.1}") double hotBikeMultiplier,
+            @Value("${routing.max-access-distance-meters:3000}") int maxAccessDistanceMeters
     ) {
         this.transferPenaltySeconds = transferPenaltySeconds;
         this.bikeDistanceThresholdMeters = bikeDistanceThresholdMeters;
@@ -83,6 +85,7 @@ public class RoutingConfig {
         this.coolBikeMultiplier = coolBikeMultiplier;
         this.hotWalkMultiplier = hotWalkMultiplier;
         this.hotBikeMultiplier = hotBikeMultiplier;
+        this.maxAccessDistanceMeters = maxAccessDistanceMeters;
     }
 
     public RoutingConfig(
@@ -111,7 +114,8 @@ public class RoutingConfig {
                 1.2,
                 1.3,
                 1.3,
-                1.1
+                1.1,
+                3000
         );
     }
 
@@ -189,5 +193,9 @@ public class RoutingConfig {
 
     public double getHotBikeMultiplier() {
         return hotBikeMultiplier;
+    }
+
+    public int getMaxAccessDistanceMeters() {
+        return maxAccessDistanceMeters;
     }
 }

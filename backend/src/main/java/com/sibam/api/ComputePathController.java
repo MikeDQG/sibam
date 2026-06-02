@@ -1,12 +1,15 @@
 package com.sibam.api;
 
 import com.sibam.engine.VaoSerializer;
+import com.sibam.dto.ApiErrorResponse;
 import com.sibam.graph.bootstrap.GraphBootstrap;
 import com.sibam.graph.model.GeoPoint;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.routing.AStarRouter;
+import com.sibam.graph.routing.RouteAccessDistanceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalTime;
@@ -33,7 +36,7 @@ public class ComputePathController {
     }
 
     @GetMapping
-    public Journey computePath(
+    public ResponseEntity<?> computePath(
             @RequestParam double originLat,
             @RequestParam double originLon,
             @RequestParam double destinationLat,
@@ -58,22 +61,35 @@ public class ComputePathController {
         LocalTime startTime = resolveStartTime(leaveNow, leaveAt);
         String resolvedOriginAddress = resolveAddress(originAddress, originAddressSnake);
         String resolvedDestinationAddress = resolveAddress(destinationAddress, destinationAddressSnake);
-        Journey journey = aStarRouter.findJourney(
-                originLat,
-                originLon,
-                destinationLat,
-                destinationLon,
-                resolvedOriginAddress,
-                resolvedDestinationAddress,
-                startTime,
-                bike,
-                bus
-        );
+        Journey journey;
+        try {
+            journey = aStarRouter.findJourney(
+                    originLat,
+                    originLon,
+                    destinationLat,
+                    destinationLon,
+                    resolvedOriginAddress,
+                    resolvedDestinationAddress,
+                    startTime,
+                    bike,
+                    bus
+            );
+        } catch (RouteAccessDistanceException e) {
+            log.info("Failed to compute path: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new ApiErrorResponse(
+                    "error",
+                    "IZVEN_OBMOCJA_POTI", // "OUTSIDE_SERVICE_AREA",
+                    e.getMessage(),
+                    e.getEndpoint(),
+                    e.getDistanceMeters(),
+                    e.getMaxDistanceMeters()
+            ));
+        }
 
         log.info("Received path computation request with origin ({}, {})", originLat, originLon);
 
         if (journey == null) {
-            return new Journey(
+            return ResponseEntity.ok(new Journey(
                     "not_found",
                     new GeoPoint(originLat, originLon),
                     resolvedOriginAddress,
@@ -82,10 +98,10 @@ public class ComputePathController {
                     "0",
                     "0",
                     List.of()
-            );
+            ));
         }
 
-        return journey;
+        return ResponseEntity.ok(journey);
     }
 
 

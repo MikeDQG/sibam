@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -32,10 +33,10 @@ class AStarRouterTest {
     void journeyKeepsRequestedCoordinatesAndOnlyUsesNearestNodesForEdges() {
         double originLat = 46.538077;
         double originLon = 15.603520;
-        double destinationLat = 46.561754;
-        double destinationLon = 15.629752;
+        double destinationLat = 46.540000;
+        double destinationLon = 15.606000;
 
-        Node nearbyStop = new BusNode(1, 46.55947, 15.64502, "Slomskov trg");
+        Node nearbyStop = new BusNode(1, 46.539000, 15.604500, "Nearby stop");
         Graph graph = new Graph(
                 Map.of(nearbyStop.getId(), nearbyStop),
                 Map.of(nearbyStop.getId(), new ArrayList<>())
@@ -217,6 +218,29 @@ class AStarRouterTest {
                 .containsExactly("WALK", "BUS", "TRANSFER", "BUS", "WALK");
         assertThat(journey.legs().get(2).distance()).isEqualTo("0");
         assertThat(journey.legs().get(2).origin()).isEqualTo(journey.legs().get(2).destination());
+    }
+
+    @Test
+    void rejectsRouteWhenOriginIsTooFarFromNearestStop() {
+        Node nearbyStop = new BusNode(1, 46.0, 15.0, "Only stop");
+        Graph graph = new Graph(
+                Map.of(nearbyStop.getId(), nearbyStop),
+                Map.of(nearbyStop.getId(), new ArrayList<>())
+        );
+
+        assertThatThrownBy(() -> routerFor(graph).findJourney(
+                46.5,
+                15.5,
+                nearbyStop.getLat(),
+                nearbyStop.getLon(),
+                null,
+                null,
+                LocalTime.NOON,
+                true,
+                true
+        ))
+                .isInstanceOf(RouteAccessDistanceException.class)
+                .hasMessageContaining("Izhodišče");
     }
 
     private AStarRouter routerFor(Graph graph) {

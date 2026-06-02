@@ -31,13 +31,13 @@ const routeOptions = [
       "border-red-200 bg-red-50 text-red-950 ring-4 dark:bg-[#941d38] dark:text-white",
     icons: [Bus, Footprints, Bike],
   },
-  {
-    title: "Najbolj zelena",
-    time: "24 min",
-    className:
-      "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-neutral-500 dark:bg-[#1d431b] dark:text-white",
-    icons: [Footprints, Bike],
-  },
+  // {
+  //   title: "Najbolj zelena",
+  //   time: "24 min",
+  //   className:
+  //     "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-neutral-500 dark:bg-[#1d431b] dark:text-white",
+  //   icons: [Footprints, Bike],
+  // },
   {
     title: "Brez kolesa",
     time: "22 min",

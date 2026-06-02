@@ -647,7 +647,7 @@ export const MainAppControlOverlay = ({
           {/* searchbar */}
           <div
             ref={containerRef}
-            className='pointer-events-auto flex min-w-0 flex-1 flex-col gap-1 min-[700px]:w-110 min-[700px]:flex-none'>
+            className='pointer-events-auto flex min-w-0 flex-1 flex-col gap-1 min-[700px]:w-[38rem] min-[700px]:flex-none'>
             {showDirections ? (
               <>
                 <div className='relative'>
@@ -723,24 +723,24 @@ export const MainAppControlOverlay = ({
                 {renderLocationDropdown("origin")}
                 {renderLocationDropdown("destination")}
                 {renderSavedRoutesDropdown()}
-                <div className='flex items-center gap-2 max-[560px]:grid max-[560px]:grid-cols-2 max-[560px]:items-stretch max-[430px]:!grid-cols-1'>
-                  <div className='flex items-center gap-2 max-[560px]:order-3 max-[560px]:col-start-1 max-[560px]:row-start-3 max-[560px]:grid max-[560px]:grid-cols-2 max-[430px]:!row-start-4'>
+                <div className='flex items-center gap-2 max-[615px]:grid max-[615px]:grid-cols-2 max-[615px]:items-stretch max-[430px]:!grid-cols-1'>
+                  <div className='flex items-center gap-2 max-[615px]:order-3 max-[615px]:col-start-1 max-[615px]:row-start-3 max-[615px]:grid max-[615px]:grid-cols-2 max-[430px]:!row-start-4'>
                     <button
                       type='button'
                       onClick={() => setUseBus((v) => !v)}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[560px]:justify-center max-[560px]:px-2 ${useBus ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[615px]:justify-center max-[615px]:px-2 ${useBus ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
                       <Bus size={14} />
                       Bus
                     </button>
                     <button
                       type='button'
                       onClick={() => setUseBike((v) => !v)}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[560px]:justify-center max-[560px]:px-2 ${useBike ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[615px]:justify-center max-[615px]:px-2 ${useBike ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
                       <Bike size={14} />
                       Kolo
                     </button>
                   </div>
-                  <div className='flex min-w-[155px] overflow-hidden rounded-lg bg-white text-neutral-900 shadow-md max-[560px]:order-2 max-[560px]:col-start-1 max-[560px]:row-start-2 max-[560px]:w-full max-[430px]:!row-start-3 dark:bg-neutral-700 dark:text-white'>
+                  <div className='flex min-w-[190px] overflow-hidden rounded-lg bg-white text-neutral-900 shadow-md max-[615px]:order-2 max-[615px]:col-start-1 max-[615px]:row-start-2 max-[615px]:w-full max-[430px]:!row-start-3 dark:bg-neutral-700 dark:text-white'>
                     <button
                       type='button'
                       onClick={() =>
@@ -748,7 +748,7 @@ export const MainAppControlOverlay = ({
                           m === "depart" ? "arrive" : "depart",
                         )
                       }
-                      className='min-w-0 flex-1 whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted max-[560px]:px-2 dark:text-white dark:hover:bg-neutral-600'>
+                      className='min-w-[5.6rem] flex-1 whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted max-[615px]:px-2 dark:text-white dark:hover:bg-neutral-600'>
                       {timeMode === "depart" ? "Odhod ob" : "Prihod do"}
                     </button>
                     <div className='w-px bg-border dark:bg-neutral-600' />
@@ -756,7 +756,7 @@ export const MainAppControlOverlay = ({
                       type='time'
                       value={selectedTime}
                       onChange={(e) => setSelectedTime(e.target.value)}
-                      className='w-[5.5rem] bg-transparent px-2 py-1.5 text-sm focus:outline-none max-[560px]:w-[4.7rem] max-[560px]:px-1.5 dark:text-white'
+                      className='w-[5.5rem] bg-transparent px-2 py-1.5 text-sm focus:outline-none max-[615px]:w-[4.7rem] max-[615px]:px-1.5 dark:text-white'
                     />
                   </div>
                   <button
@@ -767,7 +767,7 @@ export const MainAppControlOverlay = ({
                       !isRouteActive &&
                       (!originCoords || !destinationCoords)
                     }
-                    className='ml-auto flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-50 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-200 max-[560px]:order-4 max-[560px]:col-start-2 max-[560px]:row-start-2 max-[560px]:ml-0 max-[560px]:rounded-lg max-[560px]:px-3 max-[430px]:!col-start-1 max-[430px]:!row-start-2 max-[430px]:w-full dark:bg-neutral-200 dark:hover:bg-neutral-50 dark:disabled:bg-neutral-200 dark:disabled:hover:bg-neutral-200'>
+                    className='ml-auto flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-50 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-200 max-[615px]:order-4 max-[615px]:col-start-2 max-[615px]:row-start-2 max-[615px]:ml-0 max-[615px]:rounded-lg max-[615px]:px-3 max-[430px]:!col-start-1 max-[430px]:!row-start-2 max-[430px]:w-full dark:bg-neutral-200 dark:hover:bg-neutral-50 dark:disabled:bg-neutral-200 dark:disabled:hover:bg-neutral-200'>
                     {isRouteActive
                       ? "Končaj"
                       : hasRoute
@@ -781,10 +781,10 @@ export const MainAppControlOverlay = ({
                       destination.setIsOpen(false);
                       setIsSavedRoutesOpen((isOpen) => !isOpen);
                     }}
-                    className='flex h-8 w-8 items-center justify-center whitespace-nowrap rounded-md bg-white/95 text-neutral-900 shadow-md transition-colors hover:text-red-700 max-[560px]:order-1 max-[560px]:col-span-2 max-[560px]:h-auto max-[560px]:w-full max-[560px]:gap-1.5 max-[560px]:px-3 max-[560px]:py-1.5 max-[560px]:text-sm max-[560px]:font-semibold max-[430px]:!col-span-1 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+                    className='flex h-8 min-w-9 items-center justify-center whitespace-nowrap rounded-md bg-white/95 text-neutral-900 shadow-md transition-colors hover:text-red-700 max-[615px]:order-1 max-[615px]:col-span-2 max-[615px]:h-auto max-[615px]:w-full max-[615px]:gap-1.5 max-[615px]:px-3 max-[615px]:py-1.5 max-[615px]:text-sm max-[615px]:font-semibold max-[430px]:!col-span-1 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
                     aria-label='Shranjene poti'>
                     <Bookmark size={16} />
-                    <span className='hidden max-[560px]:inline'>
+                    <span className='hidden max-[615px]:inline'>
                       Shranjene poti
                     </span>
                   </button>

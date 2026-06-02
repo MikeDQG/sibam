@@ -28,6 +28,7 @@ import {
 } from "../../hooks/usePlacesAutocomplete";
 import { LocationIconGlyph, type LocationIcon } from "./MapLocationPopup";
 
+const apiUrl = import.meta.env.VITE_API_URL;
 const placesApiKey = import.meta.env.VITE_PLACES_API_KEY as string;
 
 type MainAppControlOverlayProps = {
@@ -39,6 +40,10 @@ type MainAppControlOverlayProps = {
   onDestinationSelect?: (place: { lat: number; lng: number } | null) => void;
   onPathReceive?: (path: RoutePath) => void;
   onPathError?: (error: RouteComputeError) => void;
+  hasRoute?: boolean;
+  isRouteActive?: boolean;
+  onStartRoute?: () => void;
+  onEndRoute?: () => void;
   savedLocations?: SavedSearchLocation[];
 };
 
@@ -85,6 +90,10 @@ export const MainAppControlOverlay = ({
   onDestinationSelect,
   onPathReceive,
   onPathError,
+  hasRoute = false,
+  isRouteActive = false,
+  onStartRoute,
+  onEndRoute,
   savedLocations = [],
 }: MainAppControlOverlayProps) => {
   const navigate = useNavigate();
@@ -384,6 +393,16 @@ export const MainAppControlOverlay = ({
   }
 
   async function handleRouteRequest() {
+    if (isRouteActive) {
+      onEndRoute?.();
+      return;
+    }
+
+    if (hasRoute) {
+      onStartRoute?.();
+      return;
+    }
+
     if (!originCoords || !destinationCoords) return;
 
     setIsLoadingRoute(true);
@@ -410,9 +429,7 @@ export const MainAppControlOverlay = ({
         params.set("userId", auth.currentUser.uid);
       }
 
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/compute?${params}`,
-      );
+      const res = await fetch(`${apiUrl}/compute?${params}`);
       if (!res.ok) {
         onPathError?.(await readComputePathError(res));
         return;
@@ -561,24 +578,24 @@ export const MainAppControlOverlay = ({
                 </div>
                 {renderLocationDropdown("origin")}
                 {renderLocationDropdown("destination")}
-                <div className='flex items-center gap-2 max-[470px]:grid max-[470px]:grid-cols-2 max-[470px]:items-stretch'>
-                  <div className='flex items-center gap-2 max-[470px]:order-2 max-[470px]:col-start-1 max-[470px]:row-start-2 max-[470px]:grid max-[470px]:grid-cols-2'>
+                <div className='flex items-center gap-2 max-[560px]:grid max-[560px]:grid-cols-2 max-[560px]:items-stretch max-[430px]:!grid-cols-1'>
+                  <div className='flex items-center gap-2 max-[560px]:order-2 max-[560px]:col-start-1 max-[560px]:row-start-2 max-[560px]:grid max-[560px]:grid-cols-2 max-[430px]:!row-start-3'>
                     <button
                       type='button'
                       onClick={() => setUseBus((v) => !v)}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[470px]:justify-center max-[470px]:px-2 ${useBus ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[560px]:justify-center max-[560px]:px-2 ${useBus ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
                       <Bus size={14} />
                       Bus
                     </button>
                     <button
                       type='button'
                       onClick={() => setUseBike((v) => !v)}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[470px]:justify-center max-[470px]:px-2 ${useBike ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[560px]:justify-center max-[560px]:px-2 ${useBike ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
                       <Bike size={14} />
                       Kolo
                     </button>
                   </div>
-                  <div className='flex min-w-[155px] overflow-hidden rounded-lg bg-white text-neutral-900 shadow-md max-[470px]:order-1 max-[470px]:col-start-1 max-[470px]:row-start-1 max-[470px]:w-full dark:bg-neutral-700 dark:text-white'>
+                  <div className='flex min-w-[155px] overflow-hidden rounded-lg bg-white text-neutral-900 shadow-md max-[560px]:order-1 max-[560px]:col-start-1 max-[560px]:row-start-1 max-[560px]:w-full max-[430px]:!row-start-2 dark:bg-neutral-700 dark:text-white'>
                     <button
                       type='button'
                       onClick={() =>
@@ -586,7 +603,7 @@ export const MainAppControlOverlay = ({
                           m === "depart" ? "arrive" : "depart",
                         )
                       }
-                      className='min-w-0 flex-1 whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted max-[470px]:px-2 dark:text-white dark:hover:bg-neutral-600'>
+                      className='min-w-0 flex-1 whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted max-[560px]:px-2 dark:text-white dark:hover:bg-neutral-600'>
                       {timeMode === "depart" ? "Odhod ob" : "Prihod do"}
                     </button>
                     <div className='w-px bg-border dark:bg-neutral-600' />
@@ -594,15 +611,19 @@ export const MainAppControlOverlay = ({
                       type='time'
                       value={selectedTime}
                       onChange={(e) => setSelectedTime(e.target.value)}
-                      className='w-[5.5rem] bg-transparent px-2 py-1.5 text-sm focus:outline-none max-[470px]:w-[4.7rem] max-[470px]:px-1.5 dark:text-white'
+                      className='w-[5.5rem] bg-transparent px-2 py-1.5 text-sm focus:outline-none max-[560px]:w-[4.7rem] max-[560px]:px-1.5 dark:text-white'
                     />
                   </div>
                   <button
                     type='button'
                     onClick={handleRouteRequest}
-                    disabled={!originCoords || !destinationCoords}
-                    className='ml-auto flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-200 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 max-[470px]:order-3 max-[470px]:col-start-2 max-[470px]:row-start-1 max-[470px]:ml-0 max-[470px]:rounded-lg max-[470px]:px-3 dark:bg-neutral-200 dark:hover:bg-neutral-50'>
-                    Najdi pot
+                    disabled={
+                      !hasRoute &&
+                      !isRouteActive &&
+                      (!originCoords || !destinationCoords)
+                    }
+                    className='ml-auto flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-200 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 max-[560px]:order-3 max-[560px]:col-start-2 max-[560px]:row-start-1 max-[560px]:ml-0 max-[560px]:rounded-lg max-[560px]:px-3 max-[430px]:!col-start-1 max-[430px]:!row-start-1 max-[430px]:w-full dark:bg-neutral-200 dark:hover:bg-neutral-50'>
+                    {isRouteActive ? "Končaj" : hasRoute ? "Začni" : "Najdi pot"}
                   </button>
                 </div>
               </>

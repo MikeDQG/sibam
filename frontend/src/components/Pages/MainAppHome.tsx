@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -94,9 +94,13 @@ export const MainAppHome = () => {
   const [markerPosition, setMarkerPosition] = useState<MapCenter | null>(null);
   const [userLocationPosition, setUserLocationPosition] =
     useState<MapCenter | null>(null);
+  const [displayedUserLocationPosition, setDisplayedUserLocationPosition] =
+    useState<MapCenter | null>(null);
   const [destinationMarkerPosition, setDestinationMarkerPosition] =
     useState<MapCenter | null>(null);
   const [routePath, setRoutePath] = useState<RoutePath | null>(null);
+  const [isFollowingRoute, setIsFollowingRoute] = useState(false);
+  const [routeFitBoundsTrigger, setRouteFitBoundsTrigger] = useState(0);
   const [routeComputeError, setRouteComputeError] =
     useState<RouteComputeError | null>(null);
   const [mapLocationDraft, setMapLocationDraft] =
@@ -106,6 +110,38 @@ export const MainAppHome = () => {
     string | null
   >(null);
   const hasShownOutOfCoverageToast = useRef(false);
+  const displayedUserLocationPositionRef = useRef<MapCenter | null>(null);
+  const userLocationAnimationFrameRef = useRef<number | null>(null);
+
+  function updateDisplayedUserLocationPosition(position: MapCenter | null) {
+    displayedUserLocationPositionRef.current = position;
+    setDisplayedUserLocationPosition(position);
+  }
+
+  const applyUserLocation = useCallback(
+    (position: GeolocationPosition, source: "watch" | "poll" = "watch") => {
+      const userPosition = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+
+      if (import.meta.env.DEV) {
+        console.log("User location update", {
+          source,
+          ...userPosition,
+          accuracy: position.coords.accuracy,
+        });
+      }
+
+      setUserLocationPosition(userPosition);
+
+      if (isFollowingRoute) {
+        setCenter(userPosition);
+        setZoom((currentZoom) => Math.max(currentZoom, 17));
+      }
+    },
+    [isFollowingRoute],
+  );
 
   // iskanje userjeve lokacije
   function locateUser({
@@ -155,6 +191,118 @@ export const MainAppHome = () => {
   useEffect(() => {
     locateUser();
   }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => applyUserLocation(position, "watch"),
+      () => undefined,
+      {
+        enableHighAccuracy: true,
+        timeout: 3000,
+        maximumAge: 0,
+      },
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [applyUserLocation]);
+
+  useEffect(() => {
+    if (!navigator.geolocation || !isFollowingRoute) return;
+
+    let isActive = true;
+    let isRequestPending = false;
+
+    const requestCurrentLocation = () => {
+      if (isRequestPending) return;
+
+      isRequestPending = true;
+      // console.log("polling current location");
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          isRequestPending = false;
+          if (!isActive) return;
+
+          applyUserLocation(position, "poll");
+        },
+        (/*error*/) => {
+          isRequestPending = false;
+          if (!isActive) return;
+
+          // console.log("poll location error", error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 5000,
+        },
+      );
+    };
+
+    requestCurrentLocation();
+
+    const intervalId = window.setInterval(requestCurrentLocation, 3000);
+
+    return () => {
+      isActive = false;
+      window.clearInterval(intervalId);
+    };
+  }, [applyUserLocation, isFollowingRoute]);
+
+  useEffect(() => {
+    if (userLocationAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(userLocationAnimationFrameRef.current);
+      userLocationAnimationFrameRef.current = null;
+    }
+
+    if (!userLocationPosition) {
+      updateDisplayedUserLocationPosition(null);
+      return;
+    }
+
+    if (!isFollowingRoute) {
+      updateDisplayedUserLocationPosition(userLocationPosition);
+      return;
+    }
+
+    const startPosition =
+      displayedUserLocationPositionRef.current ?? userLocationPosition;
+    const endPosition = userLocationPosition;
+    const startTime = performance.now();
+    const durationMs = 700;
+
+    function animateFrame(now: number) {
+      const progress = Math.min((now - startTime) / durationMs, 1);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+      updateDisplayedUserLocationPosition({
+        lat:
+          startPosition.lat +
+          (endPosition.lat - startPosition.lat) * easedProgress,
+        lng:
+          startPosition.lng +
+          (endPosition.lng - startPosition.lng) * easedProgress,
+      });
+
+      if (progress < 1) {
+        userLocationAnimationFrameRef.current =
+          requestAnimationFrame(animateFrame);
+      } else {
+        userLocationAnimationFrameRef.current = null;
+      }
+    }
+
+    userLocationAnimationFrameRef.current = requestAnimationFrame(animateFrame);
+
+    return () => {
+      if (userLocationAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(userLocationAnimationFrameRef.current);
+        userLocationAnimationFrameRef.current = null;
+      }
+    };
+  }, [isFollowingRoute, userLocationPosition]);
 
   useEffect(() => {
     let isActive = true;
@@ -260,6 +408,7 @@ export const MainAppHome = () => {
 
   function handlePlaceSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setIsFollowingRoute(false);
     setRouteComputeError(null);
     setSelectedLeg(null);
     setMapLocationDraft(null);
@@ -276,6 +425,7 @@ export const MainAppHome = () => {
 
   function handleDestinationSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setIsFollowingRoute(false);
     setRouteComputeError(null);
     setSelectedLeg(null);
     setMapLocationDraft(null);
@@ -284,16 +434,34 @@ export const MainAppHome = () => {
 
   function handlePathReceive(path: RoutePath) {
     setRoutePath(path);
+    setIsFollowingRoute(false);
     setRouteComputeError(null);
     setSelectedLeg(null);
     setMapLocationDraft(null);
   }
 
+  function handleStartRouteFollowing() {
+    if (userLocationPosition) {
+      setCenter(userLocationPosition);
+      setZoom((currentZoom) => Math.max(currentZoom, 17));
+    }
+
+    setIsFollowingRoute(true);
+  }
+
   function handlePathError(error: RouteComputeError) {
     setRoutePath(null);
+    setIsFollowingRoute(false);
     setRouteComputeError(error);
     setSelectedLeg(null);
     setMapLocationDraft(null);
+  }
+
+  function handleEndRouteFollowing() {
+    setIsFollowingRoute(false);
+    setSelectedLeg(null);
+    setMapLocationDraft(null);
+    setRouteFitBoundsTrigger((currentTrigger) => currentTrigger + 1);
   }
 
   function handleMapContextSelect(position: MapCenter) {
@@ -446,7 +614,7 @@ export const MainAppHome = () => {
       });
 
       if (!response.ok) {
-        console.log("Route failed to save: ", await response.text());
+        // console.log("Route failed to save: ", await response.text());
         throw new Error(`Save route request failed: ${response.status}`);
       }
 
@@ -479,8 +647,9 @@ export const MainAppHome = () => {
         deletingSavedLocationId={deletingSavedLocationId}
         onSavedLocationDelete={handleSavedLocationDelete}
         markerPosition={markerPosition}
-        userLocationPosition={userLocationPosition}
+        userLocationPosition={displayedUserLocationPosition}
         destinationMarkerPosition={destinationMarkerPosition}
+        routeFitBoundsTrigger={routeFitBoundsTrigger}
       />
 
       {/* control overlay */}
@@ -493,12 +662,17 @@ export const MainAppHome = () => {
         onDestinationSelect={handleDestinationSelect}
         onPathReceive={handlePathReceive}
         onPathError={handlePathError}
+        hasRoute={Boolean(routePath)}
+        isRouteActive={isFollowingRoute}
+        onStartRoute={handleStartRouteFollowing}
+        onEndRoute={handleEndRouteFollowing}
         savedLocations={savedLocations}
       />
 
       {/* route options */}
       <RouteOptions
         routes={routeOptions}
+        legs={routePath?.legs}
         computeError={routeComputeError}
         canSaveRoute={Boolean(routePath)}
         hasFetchedRoute={Boolean(routePath)}

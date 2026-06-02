@@ -65,6 +65,9 @@ export type RouteLeg = {
     lat: number;
     lon: number;
   }[];
+  steps?: {
+    instruction?: string | null;
+  }[];
 };
 
 export type RoutePath = {
@@ -74,6 +77,7 @@ export type RoutePath = {
 
 type RoutePolylineProps = {
   legs: RouteLeg[];
+  fitBoundsTrigger?: number;
   onLegClick?: (leg: RouteLeg, position: MapPoint) => void;
 };
 
@@ -83,7 +87,11 @@ const legColors: Record<string, string> = {
   BUS: "#721121",
 };
 
-export const RoutePolyline = ({ legs, onLegClick }: RoutePolylineProps) => {
+export const RoutePolyline = ({
+  legs,
+  fitBoundsTrigger = 0,
+  onLegClick,
+}: RoutePolylineProps) => {
   const map = useMap();
   const onLegClickRef = useRef(onLegClick);
 
@@ -195,7 +203,7 @@ export const RoutePolyline = ({ legs, onLegClick }: RoutePolylineProps) => {
         polyline.setMap(null);
       });
     };
-  }, [map, legs]);
+  }, [fitBoundsTrigger, map, legs]);
 
   return null;
 };

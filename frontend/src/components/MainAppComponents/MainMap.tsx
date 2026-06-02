@@ -55,6 +55,7 @@ type MainMapProps = {
   markerPosition?: MapCenter | null;
   userLocationPosition?: MapCenter | null;
   destinationMarkerPosition?: MapCenter | null;
+  routeFitBoundsTrigger?: number;
 };
 
 export type SavedMapLocation = {
@@ -109,6 +110,7 @@ export const MainMap = ({
   savedLocations = [],
   deletingSavedLocationId,
   onSavedLocationDelete,
+  routeFitBoundsTrigger,
 }: MainMapProps) => {
   const hasApiKey = apiKey && apiKey !== "your_google_maps_api_key";
   const { theme } = useTheme();
@@ -167,29 +169,9 @@ export const MainMap = ({
             </AdvancedMarker>
           )}
           {/* zacetek in konec poti */}
-          {markerPosition && (
-            <AdvancedMarker
-              position={markerPosition}
-              anchorLeft='-50%'
-              anchorTop='-50%'>
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  backgroundColor: "#3b82f6",
-                  border: "3px solid white",
-                  boxShadow: "0 5px 30px rgb(114, 114, 114)",
-                }}
-              />
-            </AdvancedMarker>
-          )}
+          {markerPosition && <AdvancedMarker position={markerPosition} />}
           {destinationMarkerPosition && (
-            <AdvancedMarker
-              position={destinationMarkerPosition}
-              anchorLeft='-50%'
-              anchorTop='-50%'
-            />
+            <AdvancedMarker position={destinationMarkerPosition} />
           )}
           {markerPosition && destinationMarkerPosition && (
             <FitBounds
@@ -197,7 +179,13 @@ export const MainMap = ({
               destination={destinationMarkerPosition}
             />
           )}
-          {legs && <RoutePolyline legs={legs} onLegClick={onLegClick} />}
+          {legs && (
+            <RoutePolyline
+              legs={legs}
+              fitBoundsTrigger={routeFitBoundsTrigger}
+              onLegClick={onLegClick}
+            />
+          )}
           {legs?.map((leg, index) => {
             const firstPoint = leg.polyline[0];
             if (!firstPoint || leg.mode === "WALK") return null;

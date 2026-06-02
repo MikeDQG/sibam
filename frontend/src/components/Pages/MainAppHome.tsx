@@ -416,6 +416,46 @@ export const MainAppHome = () => {
     }
   }
 
+  async function handleRouteSave(name: string) {
+    try {
+      const token = await getAuthToken();
+
+      if (!token) {
+        toast.error("Za shranjevanje poti moraš biti prijavljen.");
+        return;
+      }
+
+      if (!routePath) {
+        toast.error("Najprej izračunaj pot.");
+        return;
+      }
+
+      const session = userSession ?? (await fetchUserSession(token));
+
+      const response = await fetch(`${apiUrl}/api/paths`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: session.id,
+          name,
+          journey: routePath,
+        }),
+      });
+
+      if (!response.ok) {
+        console.log("Route failed to save: ", await response.text());
+        throw new Error(`Save route request failed: ${response.status}`);
+      }
+
+      toast.success("Pot je shranjena.");
+    } catch {
+      toast.error("Poti ni bilo mogoče shraniti. Poskusite znova.");
+    }
+  }
+
   return (
     <main className='relative min-h-screen overflow-hidden'>
       {/* map */}
@@ -457,7 +497,13 @@ export const MainAppHome = () => {
       />
 
       {/* route options */}
-      <RouteOptions routes={routeOptions} computeError={routeComputeError} />
+      <RouteOptions
+        routes={routeOptions}
+        computeError={routeComputeError}
+        canSaveRoute={Boolean(routePath)}
+        hasFetchedRoute={Boolean(routePath)}
+        onSaveRoute={handleRouteSave}
+      />
     </main>
   );
 };

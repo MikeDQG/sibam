@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RouteErrorBox } from "./RouteErrorBox";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
 type route = {
   title: string;
@@ -14,15 +16,29 @@ type RouteOptionProps = {
     code: string;
     message?: string;
   } | null;
+  canSaveRoute?: boolean;
+  hasFetchedRoute?: boolean;
+  onSaveRoute?: (name: string) => Promise<void>;
 };
 
-export const RouteOptions = ({ routes, computeError }: RouteOptionProps) => {
+export const RouteOptions = ({
+  routes,
+  computeError,
+  canSaveRoute = true,
+  hasFetchedRoute = true,
+  onSaveRoute,
+}: RouteOptionProps) => {
   const sectionRef = useRef<HTMLElement>(null);
   const dragStartY = useRef(0);
   const dragStartOffset = useRef(0);
   const didDrag = useRef(false);
   const [offsetY, setOffsetY] = useState(44);
   const [maxOffsetY, setMaxOffsetY] = useState(0);
+  const [editingRouteTitle, setEditingRouteTitle] = useState<string | null>(
+    null,
+  );
+  const [routeName, setRouteName] = useState("");
+  const [savingRouteTitle, setSavingRouteTitle] = useState<string | null>(null);
 
   // initial nastavitev maxOffseta
   useEffect(() => {
@@ -87,10 +103,34 @@ export const RouteOptions = ({ routes, computeError }: RouteOptionProps) => {
     );
   };
 
+  const startRouteSave = (routeTitle: string) => {
+    setEditingRouteTitle(routeTitle);
+    setRouteName("");
+  };
+
+  const submitRouteSave = async (routeTitle: string) => {
+    const trimmedName = routeName.trim();
+
+    if (!trimmedName || savingRouteTitle) return;
+
+    setSavingRouteTitle(routeTitle);
+
+    try {
+      await onSaveRoute?.(trimmedName);
+      setEditingRouteTitle(null);
+      setRouteName("");
+    } finally {
+      setSavingRouteTitle(null);
+    }
+  };
+
+  const getButtonClassName = (className: string) =>
+    className.replace(/\bring-\S+/g, "").trim();
+
   return (
     <section
       ref={sectionRef}
-      className='fixed bottom-0 left-0 right-0 z-30 h-[80vh] rounded-t-[18px] bg-card px-[6.3%] pb-13 pt-13 text-card-foreground shadow-2xl transition-transform duration-200 ease-out dark:bg-[#292927]'
+      className='fixed bottom-0 left-0 right-0 z-30 h-[80vh] overflow-y-auto rounded-t-[18px] bg-card px-[6.3%] pb-13 pt-13 text-card-foreground shadow-2xl transition-transform duration-200 ease-out dark:bg-[#292927]'
       style={{ transform: `translateY(${offsetY}px)` }}>
       <button
         type='button'
@@ -105,29 +145,83 @@ export const RouteOptions = ({ routes, computeError }: RouteOptionProps) => {
       </button>
 
       {computeError && (
-        <RouteErrorBox code={computeError.code} message={computeError.message} />
+        <RouteErrorBox
+          code={computeError.code}
+          message={computeError.message}
+        />
       )}
 
-      <div className='grid grid-cols-3 gap-9'>
-        {routes.map((option) => (
-          <button
-            key={option.title}
-            type='button'
-            className={`h-40 rounded-[18px] border px-12 py-7 text-left shadow-lg ${option.className}`}>
-            <span className='text-[25px] font-normal text-current/70 dark:text-[#b2ada4]'>
-              {option.title}
-            </span>
-            <strong className='mt-2 block text-[32px] font-bold leading-none'>
-              {option.time}
-            </strong>
-            <div className='mt-4 flex items-center gap-3 text-current/60 dark:text-[#aaa69d]'>
-              {option.icons.map((Icon, iconIndex) => (
-                <Icon key={iconIndex} />
-              ))}
-            </div>
-          </button>
-        ))}
-      </div>
+      {!computeError && !hasFetchedRoute ? (
+        <div className='flex h-40 items-center justify-center rounded-[18px] border border-border bg-muted px-8 text-center text-lg font-medium text-muted-foreground shadow-md dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'>
+          Za izbiranje načina poti najprej vnesite željeno pot.
+        </div>
+      ) : (
+        <div className='flex flex-col gap-7 lg:flex-row lg:gap-9'>
+          {routes.map((option) => {
+            const isSelected = option.className.includes("ring-4");
+            const buttonClassName = getButtonClassName(option.className);
+
+            return (
+              <div
+                key={option.title}
+                className='flex w-full flex-col gap-3 lg:min-w-0 lg:flex-1'>
+                <article
+                  className={`min-h-40 rounded-[18px] border px-8 py-7 text-left shadow-lg lg:px-12 ${option.className} ${
+                    isSelected
+                      ? "border-white/80 shadow-white/20 dark:border-white/70 dark:shadow-white/10"
+                      : ""
+                  }`}>
+                  <span className='block wrap-break-words text-[25px] font-normal leading-tight text-current/70 dark:text-[#b2ada4]'>
+                    {option.title}
+                  </span>
+                  <strong className='mt-2 block text-[32px] font-bold leading-none'>
+                    {option.time}
+                  </strong>
+                  <div className='mt-4 flex items-center gap-3 text-current/60 dark:text-[#aaa69d]'>
+                    {option.icons.map((Icon, iconIndex) => (
+                      <Icon key={iconIndex} />
+                    ))}
+                  </div>
+                </article>
+
+                <div className='w-full'>
+                  {editingRouteTitle === option.title ? (
+                    <div className='flex flex-col gap-3'>
+                      <Input
+                        value={routeName}
+                        onChange={(event) => setRouteName(event.target.value)}
+                        placeholder='Ime poti'
+                        aria-label='Ime poti'
+                        className='h-11 rounded-[18px] bg-card text-card-foreground shadow-md dark:bg-[#292927]'
+                      />
+                      <Button
+                        type='button'
+                        onClick={() => void submitRouteSave(option.title)}
+                        disabled={
+                          !routeName.trim() || savingRouteTitle !== null
+                        }
+                        className={`h-11 w-full rounded-[18px] border shadow-md hover:brightness-95 ${buttonClassName}`}>
+                        {savingRouteTitle === option.title
+                          ? "Shranjevanje ..."
+                          : "Shrani"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type='button'
+                      variant='secondary'
+                      onClick={() => startRouteSave(option.title)}
+                      disabled={!canSaveRoute}
+                      className={`h-11 w-full rounded-[18px] border shadow-md hover:brightness-95 ${buttonClassName}`}>
+                      Shrani pot
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 };

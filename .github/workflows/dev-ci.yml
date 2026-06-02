@@ -69,6 +69,7 @@ jobs:
         run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=MikeDQG_sibam -Dspring.profiles.active=ci
 
 
+
   frontend:
     name: Frontend Build (Dev)
     runs-on: ubuntu-latest

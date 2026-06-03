@@ -9,3 +9,4 @@ Ta dokument pove, v kateri frontend dokumentaciji lahko najdemo posamezne vsebin
 - `shranjevanje-poti-in-lokacij/shranjevanje-poti-in-lokacij.md` opisuje shranjevanje lokacij, shranjevanje poti, hitro brisanje shranjene lokacije na zemljevidu in brisanje shranjenih podatkov prek API klicev.
 - `uporabniski-profil/funkcionalnosti.md` opisuje funkcionalnosti uporabniskega profila, prikaz prijavljenega racuna, shranjene lokacije, shranjene poti, flow brisanja kartic in odjavo.
 - `mockanje-lokacije-uporabnika/mock-lokacija.md` opisuje, kako lahko za lokalno testiranje rocno mockamo trenutno lokacijo uporabnika v `MainAppHome.applyUserLocation`.
+- `testiranje/testni-nacrt-frontenda.md` vsebuje array frontend elementov za testiranje in opisuje, kaj je treba potestirati pri splosnih funkcionalnih sklopih.

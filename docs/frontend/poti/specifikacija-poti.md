@@ -52,6 +52,9 @@ Klik na avtobusno ikono odpre popup z informacijami o avtobusu:
 
 - naslov `Avtobus`;
 - cas odhoda avtobusa, ce je podan v `leg.departure`.
+- pricakovana zamuda v minutah, ce je podana v `leg.busDelayPrediction.predictedBoardingDelaySeconds`.
+
+Zamuda avtobusa je v podatkih podana v sekundah. `RoutePopup` jo pri prikazu pretvori v minute z `Math.round(predictedBoardingDelaySeconds / 60)` in vrstico prikaze z labelom `Pricakovana zamuda (min)`. Ce `busDelayPrediction` manjka, ce `predictedBoardingDelaySeconds` ni stevilo ali vrednost ni koncna, se vrstica za zamudo ne prikaze.
 
 Ce je avtobusni leg neposredno po kolesarskem leg-u, popup lahko prikaze tudi stevilo prostih stojal za oddajo kolesa iz prejsnjega kolesarskega leg-a.
 
@@ -59,11 +62,20 @@ Klik na MBajk ikono za prevzem prikaze:
 
 - naslov `Kolo`;
 - stevilo prostih koles, ce je podano v `leg.freeBikes`.
+- napoved stevila prostih koles, ce je podana v `leg.bikePrediction.predictedBikesAtPickup`. Ce je podana tudi `leg.bikePrediction.pickupBikeAvailableProbability`, se verjetnost prikaze desno od napovedane stevilke v isti vrstici. Ob hoverju na procent se prikaze tooltip `Natancnost napovedi koles ob prihodu`.
 
 Klik na MBajk ikono za oddajo prikaze:
 
 - naslov `Kolo`;
 - stevilo prostih stojal, ce je podano v `leg.freeStands`.
+- napoved stevila prostih stojal, ce je podana v `leg.bikePrediction.predictedStandsAtReturn`. Ce je podana tudi `leg.bikePrediction.returnStandAvailableProbability`, se verjetnost prikaze desno od napovedane stevilke v isti vrstici. Ob hoverju na procent se prikaze tooltip `Natancnost napovedi mest ob oddaji`.
+
+Verjetnost napovedi se obarva glede na vrednost:
+
+- nad 80 %: zeleno;
+- od 50 % do 79 %: rumeno;
+- od 25 % do 49 %: oranzno;
+- pod 25 %: rdece.
 
 Klik na shranjeno lokacijo na glavnem zemljevidu odpre potrditveni popup za brisanje lokacije.
 
@@ -268,6 +280,13 @@ Vsak `RouteLeg` vsebuje:
 - `duration`;
 - `distance`;
 - podatke za bus ali bike, kot so `departure`, `freeBikes`, `freeStands`;
+- opcijski `busDelayPrediction` pri `BUS` legih:
+  - `predictedBoardingDelaySeconds`;
+- opcijski `bikePrediction` pri `BIKE` legih:
+  - `pickupBikeAvailableProbability`;
+  - `predictedBikesAtPickup`;
+  - `predictedStandsAtReturn`;
+  - `returnStandAvailableProbability`;
 - `polyline`;
 - opcijske `steps`.
 

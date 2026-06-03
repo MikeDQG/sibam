@@ -1,5 +1,6 @@
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { X } from "lucide-react";
+import type { ReactNode } from "react";
 import type { MapPoint, RouteLeg } from "./RoutePolyline";
 
 export type RoutePopupSelection = {
@@ -54,6 +55,61 @@ const formatTime = (timestamp?: string) => {
   });
 };
 
+const formatCount = (count?: number) => {
+  if (typeof count !== "number" || !Number.isFinite(count)) return null;
+
+  return Math.round(count).toString();
+};
+
+const formatProbability = (probability?: number) => {
+  if (typeof probability !== "number" || !Number.isFinite(probability)) {
+    return null;
+  }
+
+  return `${Math.round(probability * 100)} %`;
+};
+
+const getProbabilityColorClass = (probability?: number) => {
+  if (typeof probability !== "number" || !Number.isFinite(probability)) {
+    return "";
+  }
+
+  const percentage = probability * 100;
+  if (percentage > 80) return "text-emerald-600 dark:text-emerald-400";
+  if (percentage >= 50) return "text-yellow-600 dark:text-yellow-300";
+  if (percentage >= 25) return "text-orange-600 dark:text-orange-400";
+
+  return "text-red-600 dark:text-red-400";
+};
+
+const formatPredictionValue = (
+  count?: number,
+  probability?: number,
+  probabilityLabel = "Natančnost napovedi",
+) => {
+  const formattedCount = formatCount(count);
+  if (!formattedCount) return null;
+
+  const formattedProbability = formatProbability(probability);
+
+  return (
+    <span className='inline-flex items-baseline gap-2'>
+      <span>{formattedCount}</span>
+      {formattedProbability && (
+        <span
+          className={`group/probability relative cursor-help text-xs font-semibold ${getProbabilityColorClass(probability)}`}
+          aria-label={probabilityLabel}
+          title={probabilityLabel}>
+          {formattedProbability}
+          <span className='pointer-events-none absolute bottom-full right-0 z-10 mb-1 hidden w-max max-w-52 rounded-md bg-neutral-900 px-2 py-1 text-xs font-medium text-white shadow-lg group-hover/probability:block dark:bg-white dark:text-neutral-900'>
+            {probabilityLabel}
+          </span>
+        </span>
+      )}
+    </span>
+  );
+};
+
 export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
   const showPathDetails = selectedLeg.source === "path";
   const showBusIconDetails = selectedLeg.source === "busIcon";
@@ -65,6 +121,10 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
   // pokazemo ce je izbran bus ikona in je prejsna pot kolesarska --> bus po vrnitvi kolesa
   const showBusAfterBikeReturnPlaces =
     showBusIconDetails && selectedLeg.previousLeg?.mode === "BIKE";
+  const bikeReturnLeg =
+    showBusAfterBikeReturnPlaces || showBikeReturnIconPlaces
+      ? (selectedLeg.previousLeg ?? selectedLeg.leg)
+      : null;
 
   return (
     <AdvancedMarker
@@ -97,17 +157,60 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
             }
           />
           <RoutePopupRow
+            label='Pričakovana zamuda (min)'
+            value={
+              showBusIconDetails &&
+              selectedLeg.leg.mode === "BUS" &&
+              typeof selectedLeg.leg.busDelayPrediction
+                ?.predictedBoardingDelaySeconds === "number" &&
+              Number.isFinite(
+                selectedLeg.leg.busDelayPrediction
+                  .predictedBoardingDelaySeconds,
+              )
+                ? Math.round(
+                    selectedLeg.leg.busDelayPrediction
+                      .predictedBoardingDelaySeconds / 60,
+                  ).toString()
+                : null
+            }
+          />
+          <RoutePopupRow
             label='Mesta za oddajo kolesa'
             value={
-              showBusAfterBikeReturnPlaces || showBikeReturnIconPlaces
-                ? (selectedLeg.previousLeg?.freeStands ??
-                  selectedLeg.leg.freeStands)
+              bikeReturnLeg
+                ? (bikeReturnLeg.freeStands ?? selectedLeg.leg.freeStands)
+                : null
+            }
+          />
+          <RoutePopupRow
+            label='Mesta za oddajo ob tovjem prihodu'
+            value={
+              bikeReturnLeg
+                ? formatPredictionValue(
+                    bikeReturnLeg.bikePrediction?.predictedStandsAtReturn,
+                    bikeReturnLeg.bikePrediction
+                      ?.returnStandAvailableProbability,
+                    "Natančnost napovedi mest ob oddaji",
+                  )
                 : null
             }
           />
           <RoutePopupRow
             label='Prosta kolesa'
             value={showBikePickupPlaces ? selectedLeg.leg.freeBikes : null}
+          />
+          <RoutePopupRow
+            label='Prosta kolesa ob tvojem prihodu'
+            value={
+              showBikePickupPlaces
+                ? formatPredictionValue(
+                    selectedLeg.leg.bikePrediction?.predictedBikesAtPickup,
+                    selectedLeg.leg.bikePrediction
+                      ?.pickupBikeAvailableProbability,
+                    "Natančnost napovedi koles ob prihodu",
+                  )
+                : null
+            }
           />
           <RoutePopupRow
             label='Trajanje'
@@ -131,7 +234,7 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
 
 type RoutePopupRowProps = {
   label: string;
-  value?: string | null;
+  value?: ReactNode | null;
 };
 
 const RoutePopupRow = ({ label, value }: RoutePopupRowProps) => {
@@ -139,7 +242,9 @@ const RoutePopupRow = ({ label, value }: RoutePopupRowProps) => {
 
   return (
     <div className='flex justify-between gap-5'>
-      <span className='text-muted-foreground dark:text-neutral-300'>{label}</span>
+      <span className='text-muted-foreground dark:text-neutral-300'>
+        {label}
+      </span>
       <span className='font-medium'>{value}</span>
     </div>
   );

@@ -65,6 +65,15 @@ export type RouteLeg = {
   mode: string;
   duration?: string;
   distance?: string;
+  busDelayPrediction?: {
+    predictedBoardingDelaySeconds?: number;
+  };
+  bikePrediction?: {
+    pickupBikeAvailableProbability?: number;
+    predictedBikesAtPickup?: number;
+    predictedStandsAtReturn?: number;
+    returnStandAvailableProbability?: number;
+  };
   code?: string | null;
   headsignName?: string | null;
   freeStands?: string | null;

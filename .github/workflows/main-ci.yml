@@ -61,7 +61,7 @@ jobs:
 
       - name: Build and analyze
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
         run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=MikeDQG_sibam -Dspring.profiles.active=ci
 
   frontend:
@@ -117,5 +117,5 @@ jobs:
           projectBaseDir: frontend
           scannerVersion: 7.1.0.4889
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           SONAR_HOST_URL: https://sonarcloud.io

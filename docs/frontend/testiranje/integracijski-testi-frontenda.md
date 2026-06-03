@@ -1,12 +1,12 @@
 # Integracijski testi frontenda
 
-Ta dokument opisuje, katere integracijske teste je smiselno dodati poleg obstoječih testov iz `testni-nacrt-frontenda.md`.
+Ta dokument opisuje, kako so integracijski testi frontenda organizirani, katere zunanje meje sistema se mockajo in katere scenarije morajo novi testi pokrivati v prihodnje.
 
 Integracijski testi morajo preverjati predvsem dejanske povezave med več komponentami, stanjem aplikacije, routerjem, Firebase sejo, geolokacijo in backend API klici.
 
 ## Namen
 
-Integracijski testi naj odgovorijo na vprašanje, ali glavne uporabniške poti delujejo skupaj:
+Integracijski testi preverjajo, ali glavne uporabniške poti delujejo skupaj:
 
 - uporabnik izbere izhodišče in cilj, izračuna pot in dobi route,
 - uporabnik shrani ali izbriše lokacijo oziroma pot,
@@ -16,7 +16,7 @@ Integracijski testi naj odgovorijo na vprašanje, ali glavne uporabniške poti d
 
 ## Testni pristop
 
-Integracijski test naj rendera čim bolj realno komponento, mocka pa samo zunanje meje sistema.
+Integracijski test renderja čim bolj realno komponento in mocka samo zunanje meje sistema.
 
 Mockati je treba:
 
@@ -27,17 +27,17 @@ Mockati je treba:
 - router navigacijo z `MemoryRouter`,
 - toast sporočila iz `sonner`.
 
-Ne mockamo poslovne logike, ki jo želimo preveriti. Če test preverja `MainAppControlOverlay`, naj dejansko klikne gumbe in inpute te komponente. Če test preverja `AccountPage`, naj dejansko naloži podatke prek mockanega `fetch` in preveri DOM.
+Ne mockamo poslovne logike, ki jo test preverja. Če test preverja `MainAppControlOverlay`, dejansko klika gumbe in inpute te komponente. Če test preverja `AccountPage`, dejansko naloži podatke prek mockanega `fetch` in preveri DOM.
 
 ## Skupni testni harness
 
-Priporočljivo je dodati skupen helper, na primer:
+Skupni helper za integracijske teste je:
 
 ```txt
 frontend/src/test/renderIntegrationTest.tsx
 ```
 
-Helper naj omogoča render komponent z:
+Helper omogoča render komponent z:
 
 - `MemoryRouter`,
 - `ThemeProvider`,
@@ -59,9 +59,9 @@ renderIntegration(
 
 ## Popravek testnega mocka za zemljevid
 
-V trenutnem testnem izpisu se pojavi opozorilo, da je `button` gnezden znotraj drugega `button`. Razlog je testni mock za `AdvancedMarker`, ki marker renderja kot `button`, medtem ko nekatere komponente znotraj markerja že vsebujejo gumbe.
+Testni mock za `AdvancedMarker` je `div`, ne `button`. To prepreči umetna HTML opozorila, ker nekatere komponente znotraj markerja že vsebujejo gumbe.
 
-Mock naj bo raje `div`:
+Vzorec mocka:
 
 ```tsx
 AdvancedMarker: ({ children, position, onClick }) => (
@@ -82,9 +82,9 @@ S tem testni DOM bolje posnema realen marker in ne ustvarja umetnih HTML opozori
 
 ### 1. `UserSessionProvider`
 
-Komponenta skrbi za sejo uporabnika in komunikacijo z backendom. Ker je centralna za prijavo, profil, shranjevanje in brisanje, jo je smiselno testirati posebej.
+Komponenta skrbi za sejo uporabnika in komunikacijo z backendom. Ker je centralna za prijavo, profil, shranjevanje in brisanje, se testira kot samostojen integracijski sklop.
 
-Priporočeni testi:
+Testi za ta sklop pokrivajo:
 
 - `getAuthToken` vrne `null`, ko Firebase uporabnik ne obstaja,
 - `getAuthToken` vrne token, ko Firebase uporabnik obstaja,
@@ -100,7 +100,7 @@ Priporočeni testi:
 
 `AccountPage` trenutno vsebuje veliko API in auth logike: preusmeritev neprijavljenega uporabnika, nalaganje shranjenih podatkov in brisanje.
 
-Priporočeni testi:
+Testi za ta sklop pokrivajo:
 
 - neprijavljen uporabnik je preusmerjen na `/login`,
 - prijavljen uporabnik vidi email in ime,
@@ -118,9 +118,9 @@ Priporočeni testi:
 
 ### 3. `MainAppControlOverlay`
 
-Ta komponenta povezuje autocomplete, route controls, shranjene lokacije, shranjene poti in izračun poti. Testi naj uporabljajo realne interakcije, ne samo ročno sestavljenih query parametrov.
+Ta komponenta povezuje autocomplete, route controls, shranjene lokacije, shranjene poti in izračun poti. Testi uporabljajo realne interakcije, ne samo ročno sestavljenih query parametrov.
 
-Priporočeni testi:
+Testi za ta sklop pokrivajo:
 
 - klik na `Navodila za pot` preklopi enojni search v dva inputa,
 - izbira Google Places predloga za izhodišče nastavi labelo in koordinate,
@@ -141,9 +141,9 @@ Priporočeni testi:
 
 ### 4. `MainAppHome`
 
-`MainAppHome` je orkestrator glavne aplikacije. Tu je smiselno testirati tokove, ki povezujejo mapo, overlay, route sheet, geolokacijo in API shranjevanja.
+`MainAppHome` je orkestrator glavne aplikacije. Testi pokrivajo tokove, ki povezujejo mapo, overlay, route sheet, geolokacijo in API shranjevanja.
 
-Priporočeni testi:
+Testi za ta sklop pokrivajo:
 
 - začetni `getCurrentPosition` nastavi center in uporabnikovo lokacijo,
 - lokacija izven Maribora nastavi fallback center in pokaže toast,
@@ -163,13 +163,13 @@ Priporočeni testi:
 - poskus shranjevanja poti brez prijave prikaže toast,
 - poskus shranjevanja poti brez izračunane poti prikaže toast.
 
-Za stabilnost je pri teh testih smiselno mockati `MainMap` kot testno komponento, ki izpostavi gumbe za klic callbackov, na primer `onMapContextSelect`, `onLegClick`, `onBusIconClick` in `onBikeIconClick`.
+Za stabilnost ti testi mockajo `MainMap` kot testno komponento, ki izpostavi gumbe za klic callbackov, na primer `onMapContextSelect`, `onLegClick`, `onBusIconClick` in `onBikeIconClick`.
 
 ### 5. `Login` in `Register`
 
-Trenutni testi lahko preverjajo auth logiko bolj realistično z renderjem obrazcev.
+Auth testi renderjajo obrazce in preverjajo Firebase klice, session sync ter navigacijo.
 
-Priporočeni testi za `Login`:
+Testi za `Login` pokrivajo:
 
 - uporabnik vnese email in geslo,
 - klik `Prijavi se` pokliče `signInWithEmailAndPassword`,
@@ -180,7 +180,7 @@ Priporočeni testi za `Login`:
 - Google prijava pokliče `signInWithPopup`,
 - neuspešna Google prijava prikaže napako.
 
-Priporočeni testi za `Register`:
+Testi za `Register` pokrivajo:
 
 - validacija prikaže zahteve gesla,
 - prekratko geslo blokira registracijo,
@@ -193,15 +193,41 @@ Priporočeni testi za `Register`:
 - Google registracija pokliče `signInWithPopup`,
 - Firebase napake se prikažejo v slovenščini.
 
-## Predlagan vrstni red implementacije
+## Stanje implementacije
 
-1. Popraviti `AdvancedMarker` mock, da ne renderja gnezdenih gumbov.
-2. Dodati skupen `renderIntegration` helper.
-3. Dodati integracijske teste za `UserSessionProvider`.
-4. Dodati integracijske teste za `AccountPage`.
-5. Dodati integracijske teste za `MainAppControlOverlay`, posebej za `/compute`.
-6. Dodati integracijske teste za `MainAppHome`, posebej za geolokacijo, shranjevanje in brisanje.
-7. Nadgraditi auth teste za `Login` in `Register`, da renderjajo dejanske obrazce.
+Trenutno stanje integracijskih testov:
+
+- `AdvancedMarker` mock je urejen v skupnem testnem setupu in ne renderja gnezdenih gumbov.
+- Skupni `renderIntegration` helper obstaja v `frontend/src/test/renderIntegrationTest.tsx`.
+- `UserSessionProvider` ima integracijske teste za token, nalaganje seje, sinhronizacijo in odjavljeno stanje.
+- `AccountPage` ima integracijske teste za zascito strani, nalaganje profila, shranjenih lokacij in shranjenih poti.
+- `MainAppControlOverlay` ima integracijske teste za Places autocomplete, izbiro lokacij, `/compute`, loading, napake in preklop stanja poti.
+- `MainAppHome` ima integracijske teste za geolokacijo, callbacke zemljevida, izracunano pot, napako poti, shranjevanje in brisanje lokacij, shranjevanje poti, izbiro shranjene poti ter aktivno sledenje.
+- `Login` in `Register` imata teste za osnovne auth tokove in validacijo obrazcev.
+
+## Pravila za nove integracijske teste
+
+Novi integracijski testi se dodajajo po teh pravilih:
+
+- Test renderja realno komponento ali realen sestav komponent, razen kadar je zunanja meja sistema predraga ali nestabilna za testno okolje.
+- Mockajo se samo zunanje meje: Firebase, `fetch`, Google Maps, geolokacija, router navigacija in toast sistem.
+- Uporabniske akcije se sprozijo prek DOM-a z `fireEvent` oziroma Testing Library poizvedbami.
+- Test preveri vidno stanje DOM-a, API klic ali callback, ki predstavlja dejanski uporabniski rezultat.
+- Fixture podatki ostanejo majhni, vendar morajo vsebovati realno strukturo backend response-a.
+- Testni mock ne sme podvajati poslovne logike, ki jo test zeli dokazati.
+- Vsak nov vecji uporabniski tok dobi vsaj en uspesen in en neuspesen scenarij.
+
+## Izvedeni coverage testi
+
+Poleg prioritetnih integracijskih scenarijev so dodani tudi ciljni unit testi za datoteke, ki jih SonarQube lahko oznaci kot slabo pokrite:
+
+- `frontend/src/test/unit-testi/landing-page.test.tsx` renderja `App` in landing page sklope ter preveri navigacijo hero gumba.
+- `frontend/src/test/unit-testi/header.test.tsx` renderja `Header` in preveri navigacijo, stanje prijave, odjavo, scroll stil ter theme toggle.
+- `frontend/src/test/unit-testi/sonner.test.tsx` preveri props, ki jih lokalni `Toaster` poda knjiznici `sonner`.
+- `frontend/src/test/unit-testi/use-places-autocomplete.test.tsx` preveri debounce, Places API request, normalizacijo predlogov in fallback ob napaki.
+- `frontend/src/test/integracijski-testi/main-app-home.test.tsx` z mockanimi `MainMap`, `MainAppControlOverlay` in `RouteOptions` preveri stanje `MainAppHome` brez odvisnosti od realnega Google zemljevida.
+
+Za pravila izkljucitve testnih helperjev in entrypoint datotek glej `pokritost-sonarqube.md`.
 
 ## Kdaj uporabiti unit in kdaj integracijski test
 
@@ -232,4 +258,4 @@ Integracijski test je uporaben, če bi padel ob realni regresiji. Primeri regres
 - geolokacija izven Maribora premakne zemljevid izven območja pokritosti,
 - route loading overlay ostane prikazan po napaki.
 
-Testi, ki samo kličejo `vi.fn()` ali preverjajo ročno sestavljen fixture, imajo manjšo vrednost. Take teste je smiselno postopno zamenjati z realnimi renderji komponent.
+Testi, ki samo kličejo `vi.fn()` ali preverjajo ročno sestavljen fixture, ne izpolnjujejo standarda za integracijski test. Take teste zamenjamo z realnimi renderji komponent in preverjanjem uporabnisko vidnega rezultata.

@@ -8,7 +8,7 @@ describe("napake-in-loading", () => {
     const onDismiss = vi.fn();
     render(<RouteLoadingOverlay onDismiss={onDismiss} />);
 
-    fireEvent.click(screen.getByText("Iščem pot..."));
+    fireEvent.click(screen.getByRole("button", { name: "Prekliči iskanje poti" }));
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 

@@ -1,5 +1,9 @@
 package com.sibam.engine;
 
+import com.sibam.cache.ArtifactCacheService;
+import com.sibam.cache.ArtifactSource;
+import com.sibam.cache.ScheduleCacheManifest;
+import com.sibam.cache.Sha256;
 import com.sibam.engine.vao.BusStopVao;
 import com.sibam.engine.vao.DailyScheduleCacheVao;
 import com.sibam.engine.vao.RouteVao;
@@ -9,6 +13,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -22,7 +28,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -38,6 +46,7 @@ public class VaoSerializer {
     private static final Logger log = LoggerFactory.getLogger(VaoSerializer.class);
 
     private final MarpromDtoToVaoMapper marpromDtoToVaoMapper;
+    private final ArtifactCacheService artifactCacheService;
     private final Clock clock;
 
     private Map<Integer, BusStopVao> busStopsMap = new HashMap<>();
@@ -48,12 +57,14 @@ public class VaoSerializer {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Cache location (relative to working directory): data/cache/vao
+    private final Path cacheRoot;
     private final Path cacheDir;
     private final Path busStopsFile;
     private final Path routesFile;
     private final Path schedulesFile;
     private final Path scheduleDatesDir;
     private final Path scheduleVariantsDir;
+    private final Path scheduleManifestFile;
     private int lastFetchedScheduleDateCount = 0;
     private int lastDeletedScheduleFileCount = 0;
     private List<LocalDate> lastMissingScheduleDates = List.of();
@@ -62,26 +73,44 @@ public class VaoSerializer {
     @Value("${schedules.refresh.enabled:false}")
     private boolean scheduledRefreshEnabled;
 
-    @Value("${schedules.refresh.days-ahead:6}")
+    @Value("${schedules.cache.days-ahead:${schedules.refresh.days-ahead:6}}")
     private int refreshDaysAhead;
 
     @Autowired
-    public VaoSerializer(MarpromDtoToVaoMapper marpromDtoToVaoMapper, Clock clock) {
-        this(marpromDtoToVaoMapper, clock, Path.of("data", "cache", "vao"));
+    public VaoSerializer(
+            MarpromDtoToVaoMapper marpromDtoToVaoMapper,
+            ArtifactCacheService artifactCacheService,
+            Clock clock,
+            @Value("${cache.local-root:data/cache}") String cacheLocalRoot
+    ) {
+        this(marpromDtoToVaoMapper, artifactCacheService, clock, Path.of(cacheLocalRoot));
     }
 
-    VaoSerializer(MarpromDtoToVaoMapper marpromDtoToVaoMapper, Clock clock, Path cacheDir) {
+    VaoSerializer(MarpromDtoToVaoMapper marpromDtoToVaoMapper, Clock clock, Path cacheRoot) {
+        this(marpromDtoToVaoMapper, null, clock, cacheRoot);
+    }
+
+    VaoSerializer(
+            MarpromDtoToVaoMapper marpromDtoToVaoMapper,
+            ArtifactCacheService artifactCacheService,
+            Clock clock,
+            Path cacheRoot
+    ) {
         this.marpromDtoToVaoMapper = marpromDtoToVaoMapper;
+        this.artifactCacheService = artifactCacheService;
         this.clock = clock;
-        this.cacheDir = cacheDir;
+        this.cacheRoot = cacheRoot;
+        this.cacheDir = cacheRoot.resolve("marprom").resolve("vao");
         this.busStopsFile = cacheDir.resolve("busStops.json");
         this.routesFile = cacheDir.resolve("routes.json");
         this.schedulesFile = cacheDir.resolve("schedules.json");
-        this.scheduleDatesDir = cacheDir.resolve("schedules");
-        this.scheduleVariantsDir = scheduleDatesDir.resolve("variants");
+        this.scheduleDatesDir = cacheRoot.resolve("marprom").resolve("schedules").resolve("days");
+        this.scheduleVariantsDir = cacheRoot.resolve("marprom").resolve("schedules").resolve("variants");
+        this.scheduleManifestFile = cacheRoot.resolve("marprom").resolve("schedules").resolve("manifest.json");
     }
 
     @EventListener(ApplicationReadyEvent.class)
+    @Order(100)
     public void fetchData() {
         if (staticCacheExists() && loadStaticFromDisk()) {
             System.out.println("Static VAO cache loaded from disk.");
@@ -257,8 +286,10 @@ public class VaoSerializer {
         Map<String, List<Integer>> activeRouteIdsByDate = new LinkedHashMap<>();
         List<LocalDate> missingDates = new java.util.ArrayList<>();
         List<LocalDate> fetchedDates = new java.util.ArrayList<>();
+        List<LocalDate> downloadedDates = new java.util.ArrayList<>();
         Map<LocalDate, DailyScheduleCacheVao> validDailySchedules = new LinkedHashMap<>();
         Map<String, Map<Integer, StopScheduleVao>> loadedScheduleVariants = new LinkedHashMap<>();
+        Map<LocalDate, ArtifactSource> sourcesByDate = new LinkedHashMap<>();
 
         try {
             Files.createDirectories(scheduleDatesDir);
@@ -270,7 +301,19 @@ public class VaoSerializer {
                 if (cachedSchedule != null) {
                     validDailySchedules.put(date, cachedSchedule.daily());
                     loadedScheduleVariants.putIfAbsent(cachedSchedule.daily().scheduleKey(), cachedSchedule.schedule());
+                    sourcesByDate.put(date, ArtifactSource.LOCAL);
                     continue;
+                }
+
+                if (restoreScheduleDateFromSupabase(date)) {
+                    cachedSchedule = loadValidCachedSchedule(date);
+                    if (cachedSchedule != null) {
+                        validDailySchedules.put(date, cachedSchedule.daily());
+                        loadedScheduleVariants.putIfAbsent(cachedSchedule.daily().scheduleKey(), cachedSchedule.schedule());
+                        downloadedDates.add(date);
+                        sourcesByDate.put(date, ArtifactSource.SUPABASE);
+                        continue;
+                    }
                 }
 
                 missingDates.add(date);
@@ -283,9 +326,11 @@ public class VaoSerializer {
                 DailyScheduleCacheVao daily = new DailyScheduleCacheVao(date.toString(), scheduleKey, safeList(activeRouteIds));
                 saveScheduleVariant(scheduleKey, schedule);
                 saveDailySchedule(daily);
+                uploadScheduleDateToSupabase(date, daily, scheduleKey, schedule);
                 validDailySchedules.put(date, daily);
                 loadedScheduleVariants.putIfAbsent(scheduleKey, schedule);
                 fetchedDates.add(date);
+                sourcesByDate.put(date, ArtifactSource.MARPROM_API);
                 lastFetchedScheduleDateCount++;
             }
 
@@ -310,10 +355,99 @@ public class VaoSerializer {
             );
             lastMissingScheduleDates = List.copyOf(missingDates);
             lastFetchedScheduleDates = List.copyOf(fetchedDates);
-            logWeeklyScheduleCache(mode);
+            writeScheduleManifest(dates, sourcesByDate);
+            logWeeklyScheduleCache(mode, downloadedDates);
         } catch (IOException e) {
             log.error("Failed to refresh dated Marprom schedule cache; keeping previous valid cache: {}", e.getMessage(), e);
         }
+    }
+
+    private boolean restoreScheduleDateFromSupabase(LocalDate date) throws IOException {
+        if (artifactCacheService == null) {
+            return false;
+        }
+
+        String dayPath = dayArtifactPath(date);
+        if (!artifactCacheService.restoreFromSupabase(dayPath)) {
+            return false;
+        }
+
+        DailyScheduleCacheVao daily = loadDailySchedule(date);
+        if (!isValidDailySchedule(date, daily)) {
+            return false;
+        }
+
+        return artifactCacheService.restoreFromSupabase(variantArtifactPath(daily.scheduleKey()));
+    }
+
+    private void uploadScheduleDateToSupabase(
+            LocalDate date,
+            DailyScheduleCacheVao daily,
+            String scheduleKey,
+            Map<Integer, StopScheduleVao> schedule
+    ) throws IOException {
+        if (artifactCacheService == null) {
+            return;
+        }
+
+        artifactCacheService.upload(
+                dayArtifactPath(date),
+                objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(daily),
+                MediaType.APPLICATION_JSON
+        );
+        artifactCacheService.upload(
+                variantArtifactPath(scheduleKey),
+                objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(schedule),
+                MediaType.APPLICATION_JSON
+        );
+    }
+
+    private void writeScheduleManifest(List<LocalDate> dates, Map<LocalDate, ArtifactSource> sourcesByDate) throws IOException {
+        List<ScheduleCacheManifest.Day> days = new ArrayList<>();
+        for (LocalDate date : dates) {
+            Path file = dailyScheduleFile(date);
+            days.add(new ScheduleCacheManifest.Day(
+                    date.toString(),
+                    dayArtifactPath(date),
+                    Sha256.hex(Files.readAllBytes(file)),
+                    sourcesByDate.getOrDefault(date, ArtifactSource.LOCAL)
+            ));
+        }
+
+        ScheduleCacheManifest manifest = new ScheduleCacheManifest(
+                1,
+                OffsetDateTime.now(clock.withZone(ZoneId.of("Europe/Ljubljana"))).toString(),
+                dates.getFirst().toString(),
+                dates.getLast().toString(),
+                days
+        );
+        writeJsonAtomically(scheduleManifestFile, manifest);
+        if (artifactCacheService != null) {
+            artifactCacheService.upload(
+                    "marprom/schedules/manifest.json",
+                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(manifest),
+                    MediaType.APPLICATION_JSON
+            );
+        }
+    }
+
+    private void writeJsonAtomically(Path target, Object value) throws IOException {
+        Files.createDirectories(target.getParent());
+        Path tmp = Files.createTempFile(target.getParent(), target.getFileName().toString(), ".tmp");
+        objectMapper.writerWithDefaultPrettyPrinter().writeValue(tmp.toFile(), value);
+        try {
+            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException e) {
+            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private String dayArtifactPath(LocalDate date) {
+        return "marprom/schedules/days/" + date + ".json";
+    }
+
+    private String variantArtifactPath(String scheduleKey) {
+        return "marprom/schedules/variants/" + scheduleKey + ".json";
     }
 
     private CachedSchedule loadValidCachedSchedule(LocalDate date) {
@@ -450,7 +584,7 @@ public class VaoSerializer {
         return new WeeklyScheduleCacheVao(List.of(), Map.of(), Map.of(), Map.of());
     }
 
-    private void logWeeklyScheduleCache(String mode) {
+    private void logWeeklyScheduleCache(String mode, List<LocalDate> downloadedDates) {
         List<String> expectedDates = currentSevenDayWindow().stream().map(LocalDate::toString).toList();
         List<String> foundDates = weeklyScheduleCache == null || weeklyScheduleCache.dates() == null
                 ? List.of()
@@ -461,10 +595,14 @@ public class VaoSerializer {
                 : (int) routesMap.values().stream().map(RouteVao::LineId).distinct().count();
 
         log.info(
-                "Weekly Marprom schedule cache {}: expectedDates={}, foundDates={}, missingDates={}, fetchedDates={}, deletedFiles={}, lines={}, uniqueScheduleVariants={}, file={}",
+                "Weekly Marprom schedule cache {}: localRoot={}, supabaseEnabled={}, supabaseBucket={}, expectedDates={}, foundDates={}, downloadedFromSupabase={}, missingDates={}, generatedFromMarprom={}, deletedFiles={}, lines={}, uniqueScheduleVariants={}, file={}",
                 mode,
+                cacheRoot.toAbsolutePath(),
+                artifactCacheService != null && artifactCacheService.supabaseStorage().enabled(),
+                artifactCacheService == null ? null : artifactCacheService.supabaseStorage().bucket(),
                 expectedDates,
                 foundDates,
+                downloadedDates,
                 lastMissingScheduleDates,
                 lastFetchedScheduleDates,
                 lastDeletedScheduleFileCount,

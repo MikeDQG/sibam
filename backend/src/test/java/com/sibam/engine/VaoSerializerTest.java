@@ -105,7 +105,7 @@ class VaoSerializerTest {
 
         serializer.refreshWeeklyScheduleCache();
 
-        try (var files = Files.list(tempDir.resolve("schedules").resolve("variants"))) {
+        try (var files = Files.list(tempDir.resolve("marprom").resolve("schedules").resolve("variants"))) {
             assertThat(files.filter(Files::isRegularFile).toList()).hasSize(1);
         }
         assertThat(serializer.getWeeklyScheduleCache().uniqueScheduleCount()).isEqualTo(1);
@@ -125,14 +125,15 @@ class VaoSerializerTest {
             Map<Integer, StopScheduleVao> schedule,
             List<Integer> activeRouteIds
     ) throws Exception {
-        Files.createDirectories(cacheDir.resolve("schedules").resolve("variants"));
+        Files.createDirectories(cacheDir.resolve("marprom").resolve("schedules").resolve("days"));
+        Files.createDirectories(cacheDir.resolve("marprom").resolve("schedules").resolve("variants"));
         OBJECT_MAPPER.writeValue(scheduleFile(cacheDir, date).toFile(),
                 new DailyScheduleCacheVao(date.toString(), scheduleKey, activeRouteIds));
-        OBJECT_MAPPER.writeValue(cacheDir.resolve("schedules").resolve("variants").resolve(scheduleKey + ".json").toFile(), schedule);
+        OBJECT_MAPPER.writeValue(cacheDir.resolve("marprom").resolve("schedules").resolve("variants").resolve(scheduleKey + ".json").toFile(), schedule);
     }
 
     private static Path scheduleFile(Path cacheDir, LocalDate date) {
-        return cacheDir.resolve("schedules").resolve(date + ".json");
+        return cacheDir.resolve("marprom").resolve("schedules").resolve("days").resolve(date + ".json");
     }
 
     private Map<Integer, StopScheduleVao> schedule(int stopId) {

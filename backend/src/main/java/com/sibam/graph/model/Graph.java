@@ -1,9 +1,10 @@
 package com.sibam.graph.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public class Graph {
+public class Graph implements Serializable {
     private final Map<Integer, Node> nodes;
     private final Map<Integer, List<Edge>> adjacencyList;
 

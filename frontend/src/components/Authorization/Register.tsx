@@ -15,6 +15,25 @@ import {
 } from "firebase/auth";
 import { useUserSession } from "./UserSessionProvider";
 
+function isValidEmailAddress(value: string) {
+  const email = value;
+  const atIndex = email.indexOf("@");
+  const lastAtIndex = email.lastIndexOf("@");
+
+  if (atIndex <= 0 || atIndex !== lastAtIndex) return false;
+
+  const domain = email.slice(atIndex + 1);
+  const dotIndex = domain.indexOf(".");
+
+  if (dotIndex <= 0 || dotIndex === domain.length - 1) return false;
+
+  for (const character of email) {
+    if (character.trim() === "") return false;
+  }
+
+  return true;
+}
+
 export const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatedPassword, setShowRepeatedPassword] = useState(false);
@@ -46,8 +65,7 @@ export const Register = () => {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!isValidEmailAddress(email)) {
       setError("Vnesite veljaven email naslov.");
       return;
     }

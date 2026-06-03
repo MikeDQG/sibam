@@ -151,6 +151,33 @@ public class AStarRouter {
             boolean allowBike,
             boolean allowBus
     ) {
+        RouteCandidate candidate = findJourneyCandidate(
+                originLat,
+                originLon,
+                destinationLat,
+                destinationLon,
+                originAddress,
+                destinationAddress,
+                startTime,
+                allowBike,
+                allowBus,
+                SearchOptions.normal()
+        );
+        return candidate == null ? null : candidate.journey();
+    }
+
+    public RouteCandidate findJourneyCandidate(
+            double originLat,
+            double originLon,
+            double destinationLat,
+            double destinationLon,
+            String originAddress,
+            String destinationAddress,
+            LocalTime startTime,
+            boolean allowBike,
+            boolean allowBus,
+            SearchOptions searchOptions
+    ) {
         Graph graph = requireGraph();
         List<Node> originStops = spatialSearchService.findNearest(graph, originLat, originLon, NEAREST_STOP_LIMIT);
         List<Node> destinationStops = spatialSearchService.findNearest(graph, destinationLat, destinationLon, NEAREST_STOP_LIMIT);
@@ -183,11 +210,13 @@ public class AStarRouter {
                 allowBike,
                 allowBus,
                 startMillis,
-                weatherContext
+                weatherContext,
+                searchOptions == null ? SearchOptions.normal() : searchOptions
         );
         if (pathResult == null) {
             return null;
         }
+        PathResult realPathResult = repricePathResult(routingGraph, pathResult, startMillis, weatherContext);
 
         log.info(
                 "Path created with heuristics: \ntransferPenaltySeconds={} \nbikeDistanceThresholdMeters={} \nbikeLongDistanceMultiplier={} \nbikeShortDistanceMultiplier={} \nwalkLongDistanceMultiplier={}",
@@ -198,9 +227,9 @@ public class AStarRouter {
                 routingConfig.getWalkLongDistanceMultiplier()
                 );
 
-        return toJourney(
+        Journey journey = toJourney(
                 routingGraph,
-                pathResult,
+                realPathResult,
                 new GeoPoint(originLat, originLon),
                 originAddress,
                 new GeoPoint(destinationLat, destinationLon),
@@ -208,6 +237,7 @@ public class AStarRouter {
                 startTime,
                 weatherContext
         );
+        return new RouteCandidate(journey, realPathResult);
     }
 
     public PathResult findPath(int startNodeId, int goalNodeId) {
@@ -218,7 +248,8 @@ public class AStarRouter {
                 true,
                 true,
                 toEpochMillis(LocalTime.now()),
-                currentWeatherContext()
+                currentWeatherContext(),
+                SearchOptions.normal()
         );
     }
 
@@ -229,7 +260,8 @@ public class AStarRouter {
             boolean allowBike,
             boolean allowBus,
             long startMillis,
-            WeatherRoutingContext weatherContext
+            WeatherRoutingContext weatherContext,
+            SearchOptions searchOptions
     ) {
         PriorityQueue<NodeRecord> openSet =
                 new PriorityQueue<>(Comparator.comparingDouble(NodeRecord::fScore));
@@ -270,7 +302,8 @@ public class AStarRouter {
                         cameFromEdge.get(current.state()),
                         current.state().lastBusRoute(),
                         startMillis + secondsToMillis(currentCostSeconds),
-                        weatherContext
+                        weatherContext,
+                        searchOptions
                 );
                 if (relaxation == null) {
                     continue;
@@ -302,10 +335,12 @@ public class AStarRouter {
             Edge previousEdge,
             RouteInfo lastBusRoute,
             long currentMillis,
-            WeatherRoutingContext weatherContext
+            WeatherRoutingContext weatherContext,
+            SearchOptions searchOptions
     ) {
         if (edge.getEdgeType() != EdgeType.BUS) {
             int costSeconds = edgeCostSeconds(edge, weatherContext);
+            costSeconds = searchAdjustedCostSeconds(edge, costSeconds, searchOptions);
             long arrivalMillis = currentMillis + secondsToMillis(costSeconds);
             return new EdgeRelaxation(costSeconds, currentMillis, arrivalMillis);
         }
@@ -313,8 +348,9 @@ public class AStarRouter {
         if (previousEdge != null
                 && previousEdge.getEdgeType() == EdgeType.BUS
                 && Objects.equals(previousEdge.getRouteInfo(), edge.getRouteInfo())) {
-            long arrivalMillis = currentMillis + secondsToMillis(edge.getCostSeconds());
-            return new EdgeRelaxation(edge.getCostSeconds(), currentMillis, arrivalMillis);
+            int costSeconds = searchAdjustedCostSeconds(edge, edge.getCostSeconds(), searchOptions);
+            long arrivalMillis = currentMillis + secondsToMillis(costSeconds);
+            return new EdgeRelaxation(costSeconds, currentMillis, arrivalMillis);
         }
 
         long departureMillis = nextBusDepartureMillis(edge, currentMillis);
@@ -324,7 +360,63 @@ public class AStarRouter {
         long arrivalMillis = departureMillis + secondsToMillis(edge.getCostSeconds());
         int costSeconds = (int) Math.max(1, Math.round((arrivalMillis - currentMillis) / 1000.0));
         costSeconds += transferPenaltySeconds(lastBusRoute, edge, weatherContext);
+        costSeconds = searchAdjustedCostSeconds(edge, costSeconds, searchOptions);
         return new EdgeRelaxation(costSeconds, departureMillis, arrivalMillis);
+    }
+
+    private int searchAdjustedCostSeconds(Edge edge, int costSeconds, SearchOptions searchOptions) {
+        if (searchOptions == null) {
+            return costSeconds;
+        }
+
+        double multiplier = switch (edge.getEdgeType()) {
+            case BIKE -> searchOptions.bikeMultiplier();
+            case BUS -> searchOptions.busMultiplier();
+            default -> 1.0;
+        };
+        int adjusted = (int) Math.max(1, Math.round(costSeconds * multiplier));
+        if (searchOptions.penalizedNodeIds().contains(edge.getFromNodeId())
+                || searchOptions.penalizedNodeIds().contains(edge.getToNodeId())) {
+            adjusted += searchOptions.nodePenaltySeconds();
+        }
+        return adjusted;
+    }
+
+    private PathResult repricePathResult(
+            Graph graph,
+            PathResult pathResult,
+            long startMillis,
+            WeatherRoutingContext weatherContext
+    ) {
+        List<PathStepTiming> timings = new ArrayList<>();
+        long currentMillis = startMillis;
+        int totalCostSeconds = 0;
+        Edge previousEdge = null;
+        RouteInfo lastBusRoute = null;
+
+        for (Edge edge : pathResult.getEdges()) {
+            EdgeRelaxation relaxation = relaxEdge(
+                    edge,
+                    previousEdge,
+                    lastBusRoute,
+                    currentMillis,
+                    weatherContext,
+                    SearchOptions.normal()
+            );
+            if (relaxation == null) {
+                return pathResult;
+            }
+
+            timings.add(new PathStepTiming(relaxation.departureMillis(), relaxation.arrivalMillis()));
+            totalCostSeconds += relaxation.costSeconds();
+            currentMillis = relaxation.arrivalMillis();
+            previousEdge = edge;
+            if (edge.getEdgeType() == EdgeType.BUS) {
+                lastBusRoute = edge.getRouteInfo();
+            }
+        }
+
+        return new PathResult(pathResult.getNodeIds(), pathResult.getEdges(), timings, totalCostSeconds);
     }
 
     private SearchState nextState(SearchState currentState, Edge edge) {
@@ -1047,6 +1139,23 @@ public class AStarRouter {
             List<GeoPoint> polyline,
             Boolean navigationAvailable,
             List<NavigationStep> steps
+    ) {
+    }
+
+    public record SearchOptions(
+            double bikeMultiplier,
+            double busMultiplier,
+            java.util.Set<Integer> penalizedNodeIds,
+            int nodePenaltySeconds
+    ) {
+        public static SearchOptions normal() {
+            return new SearchOptions(1.0, 1.0, java.util.Set.of(), 0);
+        }
+    }
+
+    public record RouteCandidate(
+            Journey journey,
+            PathResult pathResult
     ) {
     }
 }

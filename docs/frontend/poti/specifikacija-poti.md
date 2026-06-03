@@ -62,13 +62,15 @@ Klik na MBajk ikono za prevzem prikaze:
 
 - naslov `Kolo`;
 - stevilo prostih koles, ce je podano v `leg.freeBikes`.
-- napoved stevila prostih koles, ce je podana v `leg.bikePrediction.predictedBikesAtPickup`. Ce je podana tudi `leg.bikePrediction.pickupBikeAvailableProbability`, se verjetnost prikaze desno od napovedane stevilke v isti vrstici. Ob hoverju na procent se prikaze tooltip `Natancnost napovedi koles ob prihodu`.
+- napoved stevila prostih koles, ce je podana v `leg.bikePrediction.predictedBikesAtPickup`;
+- verjetnost, da bo za uporabnika ostalo prosto kolo, ce je podana v `leg.bikePrediction.pickupBikeAvailableProbability`.
 
 Klik na MBajk ikono za oddajo prikaze:
 
 - naslov `Kolo`;
 - stevilo prostih stojal, ce je podano v `leg.freeStands`.
-- napoved stevila prostih stojal, ce je podana v `leg.bikePrediction.predictedStandsAtReturn`. Ce je podana tudi `leg.bikePrediction.returnStandAvailableProbability`, se verjetnost prikaze desno od napovedane stevilke v isti vrstici. Ob hoverju na procent se prikaze tooltip `Natancnost napovedi mest ob oddaji`.
+- napoved stevila prostih stojal, ce je podana v `leg.bikePrediction.predictedStandsAtReturn`;
+- verjetnost, da bo za uporabnika prosto mesto za oddajo, ce je podana v `leg.bikePrediction.returnStandAvailableProbability`.
 
 Verjetnost napovedi se obarva glede na vrednost:
 

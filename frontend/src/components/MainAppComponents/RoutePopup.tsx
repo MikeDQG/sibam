@@ -82,30 +82,13 @@ const getProbabilityColorClass = (probability?: number) => {
   return "text-red-600 dark:text-red-400";
 };
 
-const formatPredictionValue = (
-  count?: number,
-  probability?: number,
-  probabilityLabel = "Natančnost napovedi",
-) => {
-  const formattedCount = formatCount(count);
-  if (!formattedCount) return null;
-
+const formatColoredProbability = (probability?: number) => {
   const formattedProbability = formatProbability(probability);
+  if (!formattedProbability) return null;
 
   return (
-    <span className='inline-flex items-baseline gap-2'>
-      <span>{formattedCount}</span>
-      {formattedProbability && (
-        <span
-          className={`group/probability relative cursor-help text-xs font-semibold ${getProbabilityColorClass(probability)}`}
-          aria-label={probabilityLabel}
-          title={probabilityLabel}>
-          {formattedProbability}
-          <span className='pointer-events-none absolute bottom-full right-0 z-10 mb-1 hidden w-max max-w-52 rounded-md bg-neutral-900 px-2 py-1 text-xs font-medium text-white shadow-lg group-hover/probability:block dark:bg-white dark:text-neutral-900'>
-            {probabilityLabel}
-          </span>
-        </span>
-      )}
+    <span className={`font-semibold ${getProbabilityColorClass(probability)}`}>
+      {formattedProbability}
     </span>
   );
 };
@@ -183,14 +166,22 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
             }
           />
           <RoutePopupRow
-            label='Mesta za oddajo ob tovjem prihodu'
+            label='Predvideno št. prostih mest za oddajo kolesa'
             value={
               bikeReturnLeg
-                ? formatPredictionValue(
+                ? formatCount(
                     bikeReturnLeg.bikePrediction?.predictedStandsAtReturn,
+                  )
+                : null
+            }
+          />
+          <RoutePopupRow
+            label='Verjetnost za prosto mesto zate'
+            value={
+              bikeReturnLeg
+                ? formatColoredProbability(
                     bikeReturnLeg.bikePrediction
                       ?.returnStandAvailableProbability,
-                    "Natančnost napovedi mest ob oddaji",
                   )
                 : null
             }
@@ -200,14 +191,22 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
             value={showBikePickupPlaces ? selectedLeg.leg.freeBikes : null}
           />
           <RoutePopupRow
-            label='Prosta kolesa ob tvojem prihodu'
+            label='Predvideno št. prostih koles ob tvojem prihodu'
             value={
               showBikePickupPlaces
-                ? formatPredictionValue(
+                ? formatCount(
                     selectedLeg.leg.bikePrediction?.predictedBikesAtPickup,
+                  )
+                : null
+            }
+          />
+          <RoutePopupRow
+            label='Verjetnost, da bo zate ostalo prosto kolo'
+            value={
+              showBikePickupPlaces
+                ? formatColoredProbability(
                     selectedLeg.leg.bikePrediction
                       ?.pickupBikeAvailableProbability,
-                    "Natančnost napovedi koles ob prihodu",
                   )
                 : null
             }

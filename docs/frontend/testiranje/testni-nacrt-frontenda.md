@@ -280,6 +280,20 @@ export const testnaPodrocja = [
 
 ## Podrobnejsi testni scenariji za splosne sklope
 
+## Pokritost in SonarQube
+
+Pokritost frontenda se meri z Vitest ukazom `npm test`, ki ustvari `coverage/lcov.info`. SonarQube bere isti LCOV report, zato morajo biti Vitest in Sonar izkljucitve usklajene.
+
+Iz coverage se izkljucijo `src/test/**`, `src/main.tsx` in `src/vite-env.d.ts`, ker gre za testne helperje, testni setup oziroma entrypoint brez poslovne logike. Podrobnosti so opisane v `pokritost-sonarqube.md`.
+
+Za datoteke, ki so bile prej prikazane kot 0% pokrite, obstajajo naslednji namenski testi:
+
+- `header.test.tsx` testira dejanski `Header` z router in Firebase mocki.
+- `landing-page.test.tsx` testira `App`, `LandingPage`, `FeaturesSection`, `Footer` in hero navigacijo.
+- `sonner.test.tsx` testira konfiguracijo `Toaster`.
+- `use-places-autocomplete.test.tsx` testira hook za Google Places autocomplete.
+- `main-app-home.test.tsx` testira orkestracijo `MainAppHome` prek mockanih mej sistema.
+
 ### Zemljevid
 
 Testirati moramo, da se zemljevid pravilno inicializira, da sprejme center, zoom in markerje ter da ne odpove, ko podatki manjkajo. Posebej pomembno je preveriti route polyline, ker se pot rise po vec odsekih z razlicnimi stili. Za vsak nacin poti mora biti potrjeno, da se uporabi pravilen stil linije in da se prestopne ikone prikazejo samo tam, kjer jih pricakujemo.

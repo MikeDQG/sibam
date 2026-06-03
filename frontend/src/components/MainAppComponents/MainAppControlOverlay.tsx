@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { ThemeToggle } from "../ThemeToggle";
 import {
   usePlacesAutocomplete,
@@ -85,6 +86,21 @@ function isInsideMaribor({ lat, lng }: Coordinates) {
   );
 }
 
+function toDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function getWeekDates(): Array<{value: string; label: string}> {
+  return Array.from({length: 7}, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return {
+      value: toDateString(d),
+      label: d.toLocaleDateString("sl-SI", {weekday: "short", day: "numeric", month: "numeric"}),
+    };
+  });
+}
+
 export const MainAppControlOverlay = ({
   onZoomIn,
   onZoomOut,
@@ -125,6 +141,11 @@ export const MainAppControlOverlay = ({
     now.setMinutes(now.getMinutes() + 1);
     return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   });
+  const [selectedDate, setSelectedDate] = useState(() => toDateString(new Date()));
+  const [isDateOpen, setIsDateOpen] = useState(false);
+  const [dateDropdownPos, setDateDropdownPos] = useState<{top: number; left: number} | null>(null);
+  const dateBtnRef = useRef<HTMLButtonElement>(null);
+  const dateMenuRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const origin = usePlacesAutocomplete(placesApiKey);
@@ -535,6 +556,35 @@ export const MainAppControlOverlay = ({
     );
   }
 
+  function handleDateButtonClick() {
+    if (!isDateOpen && dateBtnRef.current) {
+      const rect = dateBtnRef.current.getBoundingClientRect();
+      setDateDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setIsDateOpen((v) => !v);
+  }
+
+  function renderDateDropdown() {
+    if (!isDateOpen || !dateDropdownPos) return null;
+    return createPortal(
+      <div
+        ref={dateMenuRef}
+        style={{ position: "fixed", top: dateDropdownPos.top, left: dateDropdownPos.left }}
+        className='z-[9999] overflow-hidden rounded-lg bg-white shadow-lg dark:bg-neutral-700'>
+        {getWeekDates().map(({ value, label }) => (
+          <button
+            key={value}
+            type='button'
+            onClick={() => { setSelectedDate(value); setIsDateOpen(false); }}
+            className={`block w-full whitespace-nowrap px-4 py-2 text-left text-sm transition-colors ${selectedDate === value ? "bg-red-700 text-white" : "text-neutral-900 hover:bg-muted dark:text-white dark:hover:bg-neutral-600"}`}>
+            {label}
+          </button>
+        ))}
+      </div>,
+      document.body
+    );
+  }
+
   async function handleRouteRequest() {
     if (isRouteActive) {
       onEndRoute?.();
@@ -561,6 +611,8 @@ export const MainAppControlOverlay = ({
         bike: String(useBike),
         bus: String(useBus),
       });
+
+      params.set("date", selectedDate);
 
       if (timeMode === "depart") {
         params.set("leaveAt", selectedTime);
@@ -628,6 +680,20 @@ export const MainAppControlOverlay = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [setDestinationIsOpen, setOriginIsOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        !dateBtnRef.current?.contains(target) &&
+        !dateMenuRef.current?.contains(target)
+      ) {
+        setIsDateOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <>
@@ -758,7 +824,21 @@ export const MainAppControlOverlay = ({
                       onChange={(e) => setSelectedTime(e.target.value)}
                       className='w-[5.5rem] bg-transparent px-2 py-1.5 text-sm focus:outline-none max-[615px]:w-[4.7rem] max-[615px]:px-1.5 dark:text-white'
                     />
+                    <div className='w-px bg-border dark:bg-neutral-600' />
+                    <button
+                      ref={dateBtnRef}
+                      type='button'
+                      onClick={handleDateButtonClick}
+                      className='whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted max-[615px]:px-2 dark:text-white dark:hover:bg-neutral-600'>
+                      <span className='max-[430px]:hidden'>
+                        {new Date(selectedDate + 'T00:00:00').toLocaleDateString("sl-SI", {weekday: "short", day: "numeric", month: "numeric"})}
+                      </span>
+                      <span className='hidden max-[430px]:inline'>
+                        {new Date(selectedDate + 'T00:00:00').toLocaleDateString("sl-SI", {day: "numeric", month: "numeric"})}
+                      </span>
+                    </button>
                   </div>
+                  {renderDateDropdown()}
                   <button
                     type='button'
                     onClick={handleRouteRequest}

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class ComputePathController {
             @RequestParam boolean leaveNow,
             @RequestParam(required = false) String leaveAt,
             @RequestParam(required = false) String arriveBy,
+            @RequestParam(required = false) String date,
             @RequestParam boolean bike,
             @RequestParam boolean bus,
             @RequestParam(required = false) String userId
@@ -58,6 +60,7 @@ public class ComputePathController {
             graphBootstrap.ensureInitialized();
         }
 
+        LocalDate startDate = resolveStartDate(date);
         LocalTime startTime = resolveStartTime(leaveNow, leaveAt);
         String resolvedOriginAddress = resolveAddress(originAddress, originAddressSnake);
         String resolvedDestinationAddress = resolveAddress(destinationAddress, destinationAddressSnake);
@@ -71,6 +74,7 @@ public class ComputePathController {
                     resolvedOriginAddress,
                     resolvedDestinationAddress,
                     startTime,
+                    startDate,
                     bike,
                     bus
             );
@@ -104,6 +108,13 @@ public class ComputePathController {
         return ResponseEntity.ok(journey);
     }
 
+
+    private LocalDate resolveStartDate(String date) {
+        if (date == null || date.isBlank()) {
+            return LocalDate.now();
+        }
+        return LocalDate.parse(date);
+    }
 
     private LocalTime resolveStartTime(boolean leaveNow, String leaveAt) {
         if (leaveNow || leaveAt == null || leaveAt.isBlank()) {

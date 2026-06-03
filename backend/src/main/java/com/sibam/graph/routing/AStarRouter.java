@@ -105,7 +105,7 @@ public class AStarRouter {
             double destinationLat,
             double destinationLon
     ) {
-        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, LocalTime.now(), true, true);
+        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, LocalTime.now(), LocalDate.now(), true, true);
     }
 
     public Journey findJourney(
@@ -115,7 +115,7 @@ public class AStarRouter {
             double destinationLon,
             LocalTime startTime
     ) {
-        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, startTime, true, true);
+        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, startTime, LocalDate.now(), true, true);
     }
 
     public Journey findJourney(
@@ -135,6 +135,7 @@ public class AStarRouter {
                 originAddress,
                 destinationAddress,
                 startTime,
+                LocalDate.now(),
                 true,
                 true
         );
@@ -148,6 +149,7 @@ public class AStarRouter {
             String originAddress,
             String destinationAddress,
             LocalTime startTime,
+            LocalDate startDate,
             boolean allowBike,
             boolean allowBus
     ) {
@@ -175,7 +177,7 @@ public class AStarRouter {
         );
 
         WeatherRoutingContext weatherContext = currentWeatherContext();
-        long startMillis = toEpochMillis(startTime);
+        long startMillis = toEpochMillis(startTime, startDate);
         PathResult pathResult = findPath(
                 routingGraph,
                 ORIGIN_NODE_ID,
@@ -217,7 +219,7 @@ public class AStarRouter {
                 goalNodeId,
                 true,
                 true,
-                toEpochMillis(LocalTime.now()),
+                toEpochMillis(LocalTime.now(), LocalDate.now()),
                 currentWeatherContext()
         );
     }
@@ -1016,8 +1018,8 @@ public class AStarRouter {
         return costFunction.calculateCost(edge, weatherContext);
     }
 
-    private long toEpochMillis(LocalTime time) {
-        LocalDateTime dateTime = LocalDate.now().atTime(time);
+    private long toEpochMillis(LocalTime time, LocalDate date) {
+        LocalDateTime dateTime = date.atTime(time);
         return dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 

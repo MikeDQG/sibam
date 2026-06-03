@@ -105,6 +105,51 @@ Poti se ne risejo z React komponento iz `@vis.gl/react-google-maps`, ampak v `Ro
 - `mapId` se prebere iz `VITE_GOOGLE_MAPS_MAP_ID`, fallback je `DEMO_MAP_ID`.
 - `reuseMaps` omogoca ponovno uporabo map instance.
 
+## Zunanje kontrole zemljevida
+
+Privzete Google Maps kontrole so izklopljene z `disableDefaultUI` in `zoomControl={false}`. Namesto njih aplikacija uporablja custom kontrole v komponenti `MainAppControlOverlay`.
+
+Te kontrole niso renderirane znotraj Google Maps UI-ja, ampak kot navaden React overlay nad zemljevidom. Wrapper overlaya uporablja `pointer-events-none`, posamezni gumbi pa `pointer-events-auto`, da so gumbi klikabilni, preostali del overlaya pa ne blokira interakcije z zemljevidom.
+
+Za neposredno upravljanje zemljevida so pomembni trije gumbi:
+
+- `Povečaj` z ikono `Plus`, ki poklice `onZoomIn`.
+- `Pomanjšaj` z ikono `Minus`, ki poklice `onZoomOut`.
+- `Moja lokacija` z ikono `LocateFixed`, ki poklice `onLocate`.
+
+`MainAppControlOverlay` teh akcij ne izvaja sam. Gumbi samo poklicejo callbacke, ki jih prejme od `MainAppHome`:
+
+```tsx
+<MainAppControlOverlay
+  onZoomIn={handleZoomIn}
+  onZoomOut={handleZoomOut}
+  onLocate={handleLocate}
+  ...
+/>
+```
+
+Dejansko spreminjanje stanja zemljevida je v `MainAppHome`:
+
+```ts
+function handleZoomIn() {
+  setZoom((currentZoom) => Math.min(currentZoom + 1, 20));
+}
+
+function handleZoomOut() {
+  setZoom((currentZoom) => Math.max(currentZoom - 1, 3));
+}
+
+function handleLocate() {
+  locateUser({ zoomToUser: true, showOutOfCoverageToast: true });
+}
+```
+
+`handleZoomIn` in `handleZoomOut` spremenita `zoom` state, ki se nato posreduje v `MainMap` in naprej v `Map`. Zoom je omejen med `3` in `20`.
+
+`handleLocate` poklice `locateUser`, ki prek Geolocation API-ja pridobi trenutno lokacijo uporabnika. Ce je uporabnik znotraj podprtega obmocja, se `center` nastavi na uporabnikovo lokacijo in zoom se pri rocni lokaciji nastavi na `16`. Ce je uporabnik izven obmocja, aplikacija prikaze Maribor in po potrebi toast sporocilo.
+
+V istem desnem overlay panelu sta tudi `ThemeToggle` in profil oziroma prijava/odjava. `ThemeToggle` ne premika zemljevida, vpliva pa na `theme`, ki ga `MainMap` prebere prek `useTheme` in pretvori v `colorScheme='DARK'` ali `colorScheme='LIGHT'` za komponento `Map`.
+
 ## Risanje elementov na zemljevid
 
 Na zemljevidu se prikazujejo:

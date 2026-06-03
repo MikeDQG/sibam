@@ -9,12 +9,12 @@ import {
 } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../firebase";
+import { buildApiUrl, parseUuid, type UuidString } from "../../lib/api";
 
-const apiUrl = import.meta.env.VITE_API_URL;
 const authRoutes = new Set(["/login", "/register"]);
 
 export type UserSession = {
-  id: string;
+  id: UuidString;
   name: string | null;
   email: string;
 };
@@ -38,7 +38,7 @@ const UserSessionContext = createContext<UserSessionContextValue | null>(null);
 
 function normalizeUser(user: BackendUser): UserSession {
   return {
-    id: user.id,
+    id: parseUuid(user.id, "user.id"),
     name: user.fullName ?? null,
     email: user.email ?? "",
   };
@@ -74,7 +74,7 @@ export function UserSessionProvider({ children }: UserSessionProviderProps) {
   const fetchUserSession = useCallback(
     async (token: string) => {
       try {
-        const response = await fetch(`${apiUrl}/api/users/me`, {
+        const response = await fetch(buildApiUrl("api", "users", "me"), {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -106,7 +106,7 @@ export function UserSessionProvider({ children }: UserSessionProviderProps) {
         headers["X-Full-Name"] = fullName.trim();
       }
 
-      const response = await fetch(`${apiUrl}/api/users/me`, {
+      const response = await fetch(buildApiUrl("api", "users", "me"), {
         method: "POST",
         headers,
       });

@@ -6,8 +6,13 @@ import com.sibam.engine.vao.RouteVao;
 import com.sibam.engine.vao.StopScheduleVao;
 import com.sibam.engine.vao.WeeklyScheduleCacheVao;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,19 +20,25 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Service
 public class VaoSerializer {
 
+    private static final Logger log = LoggerFactory.getLogger(VaoSerializer.class);
+
     private final MarpromDtoToVaoMapper marpromDtoToVaoMapper;
+    private final Clock clock;
 
     private Map<Integer, BusStopVao> busStopsMap = new HashMap<>();
     private Map<Integer, RouteVao> routesMap = new HashMap<>();
@@ -37,16 +48,37 @@ public class VaoSerializer {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Cache location (relative to working directory): data/cache/vao
-    private final Path cacheDir = Path.of("data", "cache", "vao");
-    private final Path busStopsFile = cacheDir.resolve("busStops.json");
-    private final Path routesFile = cacheDir.resolve("routes.json");
-    private final Path schedulesFile = cacheDir.resolve("schedules.json");
-    private final Path scheduleDatesDir = cacheDir.resolve("schedules");
-    private final Path scheduleVariantsDir = scheduleDatesDir.resolve("variants");
+    private final Path cacheDir;
+    private final Path busStopsFile;
+    private final Path routesFile;
+    private final Path schedulesFile;
+    private final Path scheduleDatesDir;
+    private final Path scheduleVariantsDir;
     private int lastFetchedScheduleDateCount = 0;
+    private int lastDeletedScheduleFileCount = 0;
+    private List<LocalDate> lastMissingScheduleDates = List.of();
+    private List<LocalDate> lastFetchedScheduleDates = List.of();
 
-    public VaoSerializer(MarpromDtoToVaoMapper marpromDtoToVaoMapper) {
+    @Value("${schedules.refresh.enabled:false}")
+    private boolean scheduledRefreshEnabled;
+
+    @Value("${schedules.refresh.days-ahead:6}")
+    private int refreshDaysAhead;
+
+    @Autowired
+    public VaoSerializer(MarpromDtoToVaoMapper marpromDtoToVaoMapper, Clock clock) {
+        this(marpromDtoToVaoMapper, clock, Path.of("data", "cache", "vao"));
+    }
+
+    VaoSerializer(MarpromDtoToVaoMapper marpromDtoToVaoMapper, Clock clock, Path cacheDir) {
         this.marpromDtoToVaoMapper = marpromDtoToVaoMapper;
+        this.clock = clock;
+        this.cacheDir = cacheDir;
+        this.busStopsFile = cacheDir.resolve("busStops.json");
+        this.routesFile = cacheDir.resolve("routes.json");
+        this.schedulesFile = cacheDir.resolve("schedules.json");
+        this.scheduleDatesDir = cacheDir.resolve("schedules");
+        this.scheduleVariantsDir = scheduleDatesDir.resolve("variants");
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -59,10 +91,20 @@ public class VaoSerializer {
             saveStaticToDisk();
         }
 
-        refreshWeeklyScheduleCache();
-        schedulesMap = getSchedulesMap(LocalDate.now());
+        refreshWeeklyScheduleCache("startup");
+        schedulesMap = getSchedulesMap(today());
         saveTodayScheduleSnapshot();
-        logWeeklyScheduleCache(lastFetchedScheduleDateCount == 0 ? "loaded" : "refreshed");
+    }
+
+    @Scheduled(cron = "${schedules.refresh.cron:0 0 3 * * *}", zone = "${schedules.refresh.zone:Europe/Ljubljana}")
+    public void refreshWeeklyScheduleCacheNightly() {
+        if (!scheduledRefreshEnabled) {
+            return;
+        }
+
+        refreshWeeklyScheduleCache("nightly");
+        schedulesMap = getSchedulesMap(today());
+        saveTodayScheduleSnapshot();
     }
 
 
@@ -162,8 +204,8 @@ public class VaoSerializer {
         if (!staticLoaded) {
             return false;
         }
-        refreshWeeklyScheduleCache();
-        schedulesMap = getSchedulesMap(LocalDate.now());
+        refreshWeeklyScheduleCache("loadFromDisk");
+        schedulesMap = getSchedulesMap(today());
         return true;
     }
 
@@ -200,12 +242,23 @@ public class VaoSerializer {
         return dates.stream().allMatch(date -> Files.exists(dailyScheduleFile(date)));
     }
 
-    private void refreshWeeklyScheduleCache() {
+    public synchronized void refreshWeeklyScheduleCache() {
+        refreshWeeklyScheduleCache("manual");
+    }
+
+    private synchronized void refreshWeeklyScheduleCache(String mode) {
         lastFetchedScheduleDateCount = 0;
+        lastDeletedScheduleFileCount = 0;
+        lastMissingScheduleDates = List.of();
+        lastFetchedScheduleDates = List.of();
         List<LocalDate> dates = currentSevenDayWindow();
         Map<String, String> dateToScheduleKey = new LinkedHashMap<>();
         Map<String, Map<Integer, StopScheduleVao>> uniqueSchedules = new LinkedHashMap<>();
         Map<String, List<Integer>> activeRouteIdsByDate = new LinkedHashMap<>();
+        List<LocalDate> missingDates = new java.util.ArrayList<>();
+        List<LocalDate> fetchedDates = new java.util.ArrayList<>();
+        Map<LocalDate, DailyScheduleCacheVao> validDailySchedules = new LinkedHashMap<>();
+        Map<String, Map<Integer, StopScheduleVao>> loadedScheduleVariants = new LinkedHashMap<>();
 
         try {
             Files.createDirectories(scheduleDatesDir);
@@ -213,17 +266,34 @@ public class VaoSerializer {
             deleteScheduleFilesOutsideWindow(dates);
 
             for (LocalDate date : dates) {
-                DailyScheduleCacheVao daily = loadDailySchedule(date);
-                Map<Integer, StopScheduleVao> schedule = daily == null ? null : loadScheduleVariant(daily.scheduleKey());
+                CachedSchedule cachedSchedule = loadValidCachedSchedule(date);
+                if (cachedSchedule != null) {
+                    validDailySchedules.put(date, cachedSchedule.daily());
+                    loadedScheduleVariants.putIfAbsent(cachedSchedule.daily().scheduleKey(), cachedSchedule.schedule());
+                    continue;
+                }
 
-                if (daily == null || schedule == null) {
-                    schedule = marpromDtoToVaoMapper.mapSchedules(date);
-                    String scheduleKey = marpromDtoToVaoMapper.hashSchedule(schedule);
-                    List<Integer> activeRouteIds = marpromDtoToVaoMapper.mapActiveRouteIds(date);
-                    daily = new DailyScheduleCacheVao(date.toString(), scheduleKey, activeRouteIds);
-                    saveScheduleVariant(scheduleKey, schedule);
-                    saveDailySchedule(daily);
-                    lastFetchedScheduleDateCount++;
+                missingDates.add(date);
+            }
+
+            for (LocalDate date : missingDates) {
+                Map<Integer, StopScheduleVao> schedule = marpromDtoToVaoMapper.mapSchedules(date);
+                String scheduleKey = marpromDtoToVaoMapper.hashSchedule(schedule);
+                List<Integer> activeRouteIds = marpromDtoToVaoMapper.mapActiveRouteIds(date);
+                DailyScheduleCacheVao daily = new DailyScheduleCacheVao(date.toString(), scheduleKey, safeList(activeRouteIds));
+                saveScheduleVariant(scheduleKey, schedule);
+                saveDailySchedule(daily);
+                validDailySchedules.put(date, daily);
+                loadedScheduleVariants.putIfAbsent(scheduleKey, schedule);
+                fetchedDates.add(date);
+                lastFetchedScheduleDateCount++;
+            }
+
+            for (LocalDate date : dates) {
+                DailyScheduleCacheVao daily = validDailySchedules.get(date);
+                Map<Integer, StopScheduleVao> schedule = loadedScheduleVariants.get(daily.scheduleKey());
+                if (schedule == null) {
+                    schedule = loadScheduleVariant(daily.scheduleKey());
                 }
 
                 dateToScheduleKey.put(daily.date(), daily.scheduleKey());
@@ -238,10 +308,45 @@ public class VaoSerializer {
                     uniqueSchedules,
                     activeRouteIdsByDate
             );
+            lastMissingScheduleDates = List.copyOf(missingDates);
+            lastFetchedScheduleDates = List.copyOf(fetchedDates);
+            logWeeklyScheduleCache(mode);
         } catch (IOException e) {
-            System.err.println("Failed to refresh dated Marprom schedule cache: " + e.getMessage());
-            weeklyScheduleCache = emptyWeeklyScheduleCache();
+            log.error("Failed to refresh dated Marprom schedule cache; keeping previous valid cache: {}", e.getMessage(), e);
         }
+    }
+
+    private CachedSchedule loadValidCachedSchedule(LocalDate date) {
+        try {
+            DailyScheduleCacheVao daily = loadDailySchedule(date);
+            if (!isValidDailySchedule(date, daily)) {
+                return null;
+            }
+
+            Map<Integer, StopScheduleVao> schedule = loadScheduleVariant(daily.scheduleKey());
+            if (schedule == null) {
+                return null;
+            }
+
+            return new CachedSchedule(daily, schedule);
+        } catch (IOException | RuntimeException e) {
+            log.warn("Marprom schedule cache for {} is invalid and will be regenerated: {}", date, e.getMessage());
+            return null;
+        }
+    }
+
+    private boolean isValidDailySchedule(LocalDate date, DailyScheduleCacheVao daily) {
+        if (daily == null) {
+            return false;
+        }
+
+        if (!date.toString().equals(daily.date())) {
+            return false;
+        }
+
+        return daily.scheduleKey() != null
+                && !daily.scheduleKey().isBlank()
+                && daily.activeRouteIds() != null;
     }
 
     private DailyScheduleCacheVao loadDailySchedule(LocalDate date) throws IOException {
@@ -307,9 +412,11 @@ public class VaoSerializer {
 
     private void deleteQuietly(Path path) {
         try {
-            Files.deleteIfExists(path);
+            if (Files.deleteIfExists(path)) {
+                lastDeletedScheduleFileCount++;
+            }
         } catch (IOException e) {
-            System.err.println("Failed to delete stale schedule cache file " + path.toAbsolutePath() + ": " + e.getMessage());
+            log.warn("Failed to delete stale schedule cache file {}: {}", path.toAbsolutePath(), e.getMessage());
         }
     }
 
@@ -321,11 +428,22 @@ public class VaoSerializer {
         return scheduleVariantsDir.resolve(scheduleKey + ".json");
     }
 
-    private List<LocalDate> currentSevenDayWindow() {
-        LocalDate today = LocalDate.now();
-        return java.util.stream.IntStream.range(0, 7)
+    List<LocalDate> currentSevenDayWindow() {
+        return dateWindow(today(), refreshDaysAhead);
+    }
+
+    static List<LocalDate> dateWindow(LocalDate today, int daysAhead) {
+        if (daysAhead < 0) {
+            throw new IllegalArgumentException("daysAhead must be greater than or equal to 0");
+        }
+
+        return IntStream.rangeClosed(0, daysAhead)
                 .mapToObj(today::plusDays)
                 .toList();
+    }
+
+    private LocalDate today() {
+        return LocalDate.now(clock.withZone(ZoneId.of("Europe/Ljubljana")));
     }
 
     private WeeklyScheduleCacheVao emptyWeeklyScheduleCache() {
@@ -333,22 +451,40 @@ public class VaoSerializer {
     }
 
     private void logWeeklyScheduleCache(String mode) {
-        int fetchedDates = weeklyScheduleCache == null || weeklyScheduleCache.dates() == null
-                ? 0
-                : weeklyScheduleCache.dates().size();
+        List<String> expectedDates = currentSevenDayWindow().stream().map(LocalDate::toString).toList();
+        List<String> foundDates = weeklyScheduleCache == null || weeklyScheduleCache.dates() == null
+                ? List.of()
+                : weeklyScheduleCache.dates();
         int uniqueVariants = weeklyScheduleCache == null ? 0 : weeklyScheduleCache.uniqueScheduleCount();
         int linesProcessed = routesMap == null
                 ? 0
                 : (int) routesMap.values().stream().map(RouteVao::LineId).distinct().count();
 
-        System.out.printf(
-                "Weekly Marprom schedule cache %s: dates=%s, lines=%s, uniqueScheduleVariants=%s, file=%s%n",
+        log.info(
+                "Weekly Marprom schedule cache {}: expectedDates={}, foundDates={}, missingDates={}, fetchedDates={}, deletedFiles={}, lines={}, uniqueScheduleVariants={}, file={}",
                 mode,
-                fetchedDates,
+                expectedDates,
+                foundDates,
+                lastMissingScheduleDates,
+                lastFetchedScheduleDates,
+                lastDeletedScheduleFileCount,
                 linesProcessed,
                 uniqueVariants,
                 scheduleDatesDir.toAbsolutePath()
         );
-        System.out.printf("Weekly Marprom schedule cache fetchedDates=%s%n", lastFetchedScheduleDateCount);
+        log.info("Weekly Marprom schedule cache finalActiveDateRange={}..{} fetchedDateCount={}",
+                foundDates.isEmpty() ? null : foundDates.getFirst(),
+                foundDates.isEmpty() ? null : foundDates.getLast(),
+                lastFetchedScheduleDateCount);
+    }
+
+    private <T> List<T> safeList(List<T> values) {
+        return values == null ? List.of() : values;
+    }
+
+    private record CachedSchedule(
+            DailyScheduleCacheVao daily,
+            Map<Integer, StopScheduleVao> schedule
+    ) {
     }
 }

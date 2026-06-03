@@ -1,6 +1,5 @@
 package com.sibam.service;
 
-import com.google.api.Http;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.persistence.SavedPath;
 import com.sibam.persistence.User;

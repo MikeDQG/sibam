@@ -103,7 +103,7 @@ class GTFSRTMapperTest {
         Trip trip = mapper.gtfsRTToTrip(vehicle, tripUpdate);
 
         assertThat(trip.getStopUpdates()).hasSize(1);
-        assertThat(trip.getStopUpdates().get(0).getDelay()).isEqualTo(0);
+        assertThat(trip.getStopUpdates().get(0).getDelay()).isZero();
     }
 
     @Test

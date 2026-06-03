@@ -11,11 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 
 @Service
 public class SchedulerService {
     private static final Logger log = LoggerFactory.getLogger(SchedulerService.class);
+    private static final String FAILED_INGESTION_MESSAGE = "Failed to fetch ingestion data";
 
     private final MBajkDataService mbajkDataService;
     private final WeatherDataService weatherDataService;
@@ -66,7 +66,7 @@ public class SchedulerService {
             mbajkDataService.ingestBikesData(fetchedAt);
             log.info("MBajk ingestion completed");
         } catch (Exception e) {
-            log.error("Failed to fetch ingestion data", e);
+            log.error(FAILED_INGESTION_MESSAGE, e);
         }
     }
 
@@ -88,7 +88,7 @@ public class SchedulerService {
             weatherDataService.ingestWeatherData(fetchedAt);
             log.info("Weather ingestion completed");
         } catch (Exception e) {
-            log.error("Failed to fetch ingestion data", e);
+            log.error(FAILED_INGESTION_MESSAGE, e);
         }
     }
 
@@ -111,7 +111,7 @@ public class SchedulerService {
             gtfsRTDataService.ingestRealtimeTrips(fetchedAt);
             log.info("Bus trips ingestion completed");
         } catch (Exception e) {
-            log.error("Failed to fetch ingestion data", e);
+            log.error(FAILED_INGESTION_MESSAGE, e);
         }
     }
 }

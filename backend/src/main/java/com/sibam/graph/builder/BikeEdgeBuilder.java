@@ -2,7 +2,6 @@ package com.sibam.graph.builder;
 
 import com.sibam.graph.model.Edge;
 import com.sibam.graph.model.EdgeType;
-import com.sibam.graph.model.GeoPoint;
 
 import java.util.List;
 

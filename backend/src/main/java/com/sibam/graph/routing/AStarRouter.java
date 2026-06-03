@@ -21,7 +21,6 @@ import com.sibam.engine.vao.LineScheduleVao;
 import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.StopScheduleVao;
 import com.sibam.dto.prediction.BikePredictionRequest;
-import com.sibam.dto.prediction.BusDelayPredictionRequest;
 import com.sibam.engine.vao.BusLegDelayVao;
 import com.sibam.engine.vao.BusStopVao;
 import com.sibam.engine.vao.RouteVao;

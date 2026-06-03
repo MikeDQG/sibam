@@ -50,3 +50,5 @@ docker-compose.yml
 
 # Playwright auth state
 e2e/.auth/
+
+/backend/data/cache/

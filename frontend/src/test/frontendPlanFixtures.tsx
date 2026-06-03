@@ -3,6 +3,7 @@ import type { ComponentType, ReactElement } from "react";
 import { ThemeProvider } from "../components/ThemeProvider";
 import type { RouteLeg, RoutePath } from "../components/MainAppComponents/RoutePolyline";
 import type { PlacesAutocomplete } from "../components/MainAppComponents/MainAppControlOverlayComponents/types";
+import { getInstructionText } from "../lib/text";
 import { vi } from "vitest";
 
 export { fireEvent, render, screen, waitFor };
@@ -117,7 +118,7 @@ export function visibleRouteSteps(legs: RouteLeg[]) {
     (leg.steps ?? [])
       .map((step) => ({
         mode: leg.mode,
-        instruction: (step.instruction ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(),
+        instruction: getInstructionText(step.instruction),
         startPolylineIndex: step.startPolylineIndex,
         endPolylineIndex: step.endPolylineIndex,
       }))

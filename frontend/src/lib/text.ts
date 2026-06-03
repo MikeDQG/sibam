@@ -25,23 +25,26 @@ export function normalizeWhitespace(value: string) {
 
 function stripHtmlTags(value: string) {
   let text = "";
+  let index = 0;
 
-  for (let index = 0; index < value.length; index += 1) {
+  while (index < value.length) {
     const character = value[index];
 
     if (character !== "<") {
       text += character;
+      index += 1;
       continue;
     }
 
     const tagEndIndex = value.indexOf(">", index + 1);
     if (tagEndIndex === -1) {
       text += character;
+      index += 1;
       continue;
     }
 
     text += " ";
-    index = tagEndIndex;
+    index = tagEndIndex + 1;
   }
 
   return text;

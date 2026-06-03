@@ -52,6 +52,15 @@ export type MapPoint = {
   lng: number;
 };
 
+export type RouteStep = {
+  instruction?: string | null;
+  maneuver?: string | null;
+  distanceMeters?: number;
+  durationSeconds?: number;
+  startPolylineIndex?: number;
+  endPolylineIndex?: number;
+};
+
 export type RouteLeg = {
   mode: string;
   duration?: string;
@@ -66,9 +75,7 @@ export type RouteLeg = {
     lat: number;
     lon: number;
   }[];
-  steps?: {
-    instruction?: string | null;
-  }[];
+  steps?: RouteStep[];
 };
 
 export type RoutePath = {

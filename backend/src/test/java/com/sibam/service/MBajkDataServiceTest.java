@@ -1,5 +1,9 @@
 package com.sibam.service;
 
+import com.sibam.dto.mbajk.AvailabilitiesDto;
+import com.sibam.dto.mbajk.BikeStopDto;
+import com.sibam.dto.mbajk.PositionDto;
+import com.sibam.dto.mbajk.TotalStandsDto;
 import com.sibam.engine.vao.BikeStationVao;
 import com.sibam.integration.mbajk.MBajkClient;
 import com.sibam.persistence.BikeStation;
@@ -8,23 +12,27 @@ import com.sibam.repository.BikeStationRepository;
 import com.sibam.repository.BikeStationSnapshotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 class MBajkDataServiceTest {
+    private MBajkClient mbajkClient;
     private BikeStationRepository bikeStationRepository;
     private BikeStationSnapshotRepository bikeStationSnapshotRepository;
     private MBajkDataService service;
 
     @BeforeEach
     void setUp() {
-        MBajkClient mbajkClient = mock(MBajkClient.class);
+        mbajkClient = mock(MBajkClient.class);
         bikeStationRepository = mock(BikeStationRepository.class);
         bikeStationSnapshotRepository = mock(BikeStationSnapshotRepository.class);
         service = new MBajkDataService(mbajkClient, bikeStationRepository, bikeStationSnapshotRepository);
@@ -97,4 +105,51 @@ class MBajkDataServiceTest {
         assertThat(result).isEmpty();
     }
 
+    // --- ingestBikesData ---
+
+    private BikeStopDto bikeStopDto(int number) {
+        return new BikeStopDto(
+                number, "Station " + number, "Street " + number,
+                new PositionDto(46.55, 15.64),
+                "OPEN", null,
+                new TotalStandsDto(new AvailabilitiesDto(5, 7, 3, 2), 12)
+        );
+    }
+
+    @Test
+    void ingestBikesDataCreatesNewStationAndSnapshot() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        BikeStation saved = new BikeStation();
+        saved.setNumber(15);
+
+        when(bikeStationRepository.findByNumber(15)).thenReturn(Optional.empty());
+        when(bikeStationRepository.save(any(BikeStation.class))).thenReturn(saved);
+        when(bikeStationSnapshotRepository.save(any(BikeStationSnapshot.class)))
+                .thenAnswer(inv -> { latch.countDown(); return inv.getArgument(0); });
+        when(mbajkClient.getAllBikes()).thenReturn(Mono.just(List.of(bikeStopDto(15))));
+
+        service.ingestBikesData(OffsetDateTime.now());
+        assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue();
+
+        verify(bikeStationRepository).save(any(BikeStation.class));
+        verify(bikeStationSnapshotRepository).save(any(BikeStationSnapshot.class));
+    }
+
+    @Test
+    void ingestBikesDataReusesExistingStation() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        BikeStation existing = new BikeStation();
+        existing.setNumber(15);
+
+        when(bikeStationRepository.findByNumber(15)).thenReturn(Optional.of(existing));
+        when(bikeStationSnapshotRepository.save(any(BikeStationSnapshot.class)))
+                .thenAnswer(inv -> { latch.countDown(); return inv.getArgument(0); });
+        when(mbajkClient.getAllBikes()).thenReturn(Mono.just(List.of(bikeStopDto(15))));
+
+        service.ingestBikesData(OffsetDateTime.now());
+        assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue();
+
+        verify(bikeStationRepository, never()).save(any(BikeStation.class));
+        verify(bikeStationSnapshotRepository).save(any(BikeStationSnapshot.class));
+    }
 }

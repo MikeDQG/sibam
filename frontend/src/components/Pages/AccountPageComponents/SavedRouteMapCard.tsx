@@ -66,6 +66,19 @@ function formatRouteDistance(value?: string | number | null) {
   return `${kilometers} km ${remainingMeters} m`;
 }
 
+function formatRouteMode(mode: string) {
+  switch (mode) {
+    case "WALK":
+      return "PEŠ";
+    case "BIKE":
+      return "KOLO";
+    case "BUS":
+      return "AVTOBUS";
+    default:
+      return mode;
+  }
+}
+
 function getRouteCenter(journey: RoutePath) {
   const firstPoint = journey.legs
     .flatMap((leg) => leg.polyline)
@@ -232,7 +245,12 @@ export function SavedRouteMapCard({
         )}
         {(route.modes.length > 0 || createdAt) && (
           <p className='mt-1 text-[11px] font-medium text-red-700 dark:text-red-300'>
-            {[route.modes.join(" + "), createdAt].filter(Boolean).join(" • ")}
+            {[
+              route.modes.map(formatRouteMode).join(" + "),
+              createdAt,
+            ]
+              .filter(Boolean)
+              .join(" • ")}
           </p>
         )}
       </div>

@@ -234,15 +234,24 @@ Za shranjeno pot prav tako ni smiselno ponovno shranjevanje iste poti prek route
 
 `MainAppControlOverlay` skrbi za:
 
-- iskalna inputa;
 - Places autocomplete;
 - izbiro trenutne lokacije;
 - izbiro shranjene lokacije;
 - izbiro shranjene poti;
-- toggle `Bus` in `Kolo`;
-- izbiro `Odhod ob` ali `Prihod do`;
 - klic `/compute`;
-- gumbe `Najdi pot`, `Zacni` in `Koncaj`.
+- hranjenje `originCoords`, `destinationCoords`, mode toggle stanja in time mode stanja;
+- povezovanje overlay podkomponent s callbacki iz `MainAppHome`.
+
+Vizualni deli overlaya so razdeljeni v `MainAppControlOverlayComponents`:
+
+- `DestinationSearch` prikaze enovrsticni cilj pred odpiranjem navodil za pot.
+- `DirectionsInputs` prikaze inputa za izhodisce in cilj ter gumb za zamenjavo smeri.
+- `SearchInputRow` je skupna vrstica za Places autocomplete input.
+- `RouteControls` prikaze toggle `Bus`/`Kolo`, izbiro `Odhod ob` ali `Prihod do`, casovni input, gumb `Najdi pot`/`Zacni`/`Koncaj` in gumb za shranjene poti.
+- `MapControls`, `MapZoomLocateButtons` in `ProfileButton` pokrivajo desni panel z map kontrolami, temo in profilom oziroma prijavo/odjavo.
+- `types.ts` hrani skupne tipe za overlay podkomponente.
+
+Podkomponente ne izvajajo `/compute` in ne spreminjajo globalnega route state-a neposredno. To ostane v `MainAppControlOverlay` in `MainAppHome`; podkomponente samo sprozijo handlerje, ki jih dobijo prek propsov.
 
 `MainMap` skrbi za:
 

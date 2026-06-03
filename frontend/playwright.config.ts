@@ -3,10 +3,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const authFile = path.join(__dirname, 'e2e/.auth/user.json');
+export const authFile = path.join(__dirname, 'src/test/e2e/.auth/user.json');
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './src/test/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

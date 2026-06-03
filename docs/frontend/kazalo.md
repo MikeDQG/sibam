@@ -10,3 +10,4 @@ Ta dokument pove, v kateri frontend dokumentaciji lahko najdemo posamezne vsebin
 - `uporabniski-profil/funkcionalnosti.md` opisuje funkcionalnosti uporabniskega profila, prikaz prijavljenega racuna, shranjene lokacije, shranjene poti, flow brisanja kartic in odjavo.
 - `mockanje-lokacije-uporabnika/mock-lokacija.md` opisuje, kako lahko za lokalno testiranje rocno mockamo trenutno lokacijo uporabnika v `MainAppHome.applyUserLocation`.
 - `testiranje/testni-nacrt-frontenda.md` vsebuje array frontend elementov za testiranje in opisuje, kaj je treba potestirati pri splosnih funkcionalnih sklopih.
+- `testiranje/integracijski-testi-frontenda.md` opisuje strategijo za dodatne integracijske teste, prioritetne komponente, potrebne mocke in konkretne scenarije.

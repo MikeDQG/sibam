@@ -47,6 +47,47 @@ describe("overlay", () => {
     expect(onShowDirectionsClick).toHaveBeenCalledTimes(1);
   });
 
+  it("Escape v enojnem search baru zapre dropdown", () => {
+    const destination = createAutocomplete("Tabor", { setIsOpen: vi.fn() });
+    render(
+      <DestinationSearch
+        destination={destination}
+        selectedPlace='Tabor'
+        onDestinationFocus={vi.fn()}
+        onDestinationClear={vi.fn()}
+        onSavedRoutesToggle={vi.fn()}
+        onShowDirectionsClick={vi.fn()}
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "Kam šibaš?" }), {
+      key: "Escape",
+    });
+
+    expect(destination.setIsOpen).toHaveBeenCalledWith(false);
+  });
+
+  it("gumba za ciscenje cilja in shranjene poti sprozita callbacke", () => {
+    const onDestinationClear = vi.fn();
+    const onSavedRoutesToggle = vi.fn();
+    render(
+      <DestinationSearch
+        destination={createAutocomplete("Tabor")}
+        selectedPlace=''
+        onDestinationFocus={vi.fn()}
+        onDestinationClear={onDestinationClear}
+        onSavedRoutesToggle={onSavedRoutesToggle}
+        onShowDirectionsClick={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Počisti" }));
+    fireEvent.click(screen.getByRole("button", { name: "Shranjene poti" }));
+
+    expect(onDestinationClear).toHaveBeenCalledTimes(1);
+    expect(onSavedRoutesToggle).toHaveBeenCalledTimes(1);
+  });
+
   it("vnos izhodisca in cilja", () => {
     const origin = createAutocomplete("Glavni trg");
     const destination = createAutocomplete("Tabor");

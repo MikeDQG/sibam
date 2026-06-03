@@ -50,8 +50,17 @@ function SessionProbe() {
       <button type='button' onClick={() => void fetchUserSession("id-token")}>
         Fetch session
       </button>
+      <button type='button' onClick={() => void fetchUserSession("id-token").catch((error) => window.localStorage.setItem("fetch-error", error.message))}>
+        Fetch session with error
+      </button>
       <button type='button' onClick={() => void syncUserSession("id-token", " Test User ")}>
         Sync session
+      </button>
+      <button type='button' onClick={() => void syncUserSession("id-token").then(() => window.localStorage.setItem("synced-without-name", "yes"))}>
+        Sync session without name
+      </button>
+      <button type='button' onClick={() => void syncUserSession("id-token").catch((error) => window.localStorage.setItem("sync-error", error.message))}>
+        Sync session with error
       </button>
       <button type='button' onClick={clearUserSession}>
         Clear session
@@ -139,6 +148,62 @@ describe("integracijski UserSessionProvider", () => {
     );
   });
 
+  it("syncUserSession brez imena ne poslje X-Full-Name headerja", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ id: userId, email: "test@example.com" }),
+      }),
+    );
+    renderProvider();
+
+    screen.getByRole("button", { name: "Sync session without name" }).click();
+
+    await waitFor(() => expect(window.localStorage.getItem("synced-without-name")).toBe("yes"));
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.test/api/users/me",
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          Authorization: "Bearer id-token",
+        },
+      }),
+    );
+  });
+
+  it("fetchUserSession ob neuspehu pocisti sejo in odjavi uporabnika", async () => {
+    window.history.pushState({}, "", "/login");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+      }),
+    );
+    renderProvider();
+
+    screen.getByRole("button", { name: "Fetch session with error" }).click();
+
+    await waitFor(() => expect(window.localStorage.getItem("fetch-error")).toContain("401"));
+    expect(authState.signOut).toHaveBeenCalled();
+  });
+
+  it("syncUserSession ob neuspehu vrze napako", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      }),
+    );
+    renderProvider();
+
+    screen.getByRole("button", { name: "Sync session with error" }).click();
+
+    await waitFor(() => expect(window.localStorage.getItem("sync-error")).toContain("500"));
+  });
+
   it("onAuthStateChanged ob prijavljenem uporabniku naloži sejo", async () => {
     vi.stubGlobal(
       "fetch",
@@ -154,6 +219,16 @@ describe("integracijski UserSessionProvider", () => {
     });
 
     await waitFor(() => expect(window.localStorage.getItem("session-email")).toBe("test@example.com"));
+  });
+
+  it("onAuthStateChanged ob odjavljenem uporabniku pocisti sejo", async () => {
+    renderProvider(<AuthStateProbe />);
+
+    await act(async () => {
+      await authState.callback?.(null);
+    });
+
+    await waitFor(() => expect(window.localStorage.getItem("session-email")).toBe("none"));
   });
 
   it("clearUserSession počisti trenutno sejo", async () => {
@@ -172,6 +247,17 @@ describe("integracijski UserSessionProvider", () => {
 
     await waitFor(() =>
       expect(screen.getByTestId("session-email")).toHaveTextContent("none"),
+    );
+  });
+
+  it("useUserSession zunaj providerja vrze napako", () => {
+    function InvalidConsumer() {
+      useUserSession();
+      return null;
+    }
+
+    expect(() => render(<InvalidConsumer />)).toThrow(
+      "useUserSession must be used within UserSessionProvider",
     );
   });
 });

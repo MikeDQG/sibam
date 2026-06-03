@@ -1,0 +1,127 @@
+package com.sibam.graph.routing;
+
+import com.sibam.graph.model.GeoPoint;
+import com.sibam.graph.model.output.Journey;
+import com.sibam.graph.model.output.Leg;
+import com.sibam.graph.model.output.RouteAlternativesResponse;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class RouteAlternativeServiceTest {
+
+    @Test
+    void busOnlyRequestDoesNotReturnBikeLegs() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = service(router);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                .thenReturn(candidate(journey(1000, "BIKE"), 1, 2, 3))
+                .thenReturn(candidate(journey(1100, "WALK", "BUS"), 1, 4, 5))
+                .thenReturn(null);
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, false, true);
+
+        assertThat(response.routes()).hasSize(1);
+        assertThat(response.routes().getFirst().modes()).doesNotContain("BIKE");
+    }
+
+    @Test
+    void bikeOnlyRequestDoesNotReturnBusLegs() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = service(router);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                .thenReturn(candidate(journey(1000, "BUS"), 1, 2, 3))
+                .thenReturn(candidate(journey(1100, "WALK", "BIKE"), 1, 4, 5))
+                .thenReturn(null);
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, false);
+
+        assertThat(response.routes()).hasSize(1);
+        assertThat(response.routes().getFirst().modes()).doesNotContain("BUS");
+    }
+
+    @Test
+    void busAndBikeRequestMayReturnMixedAlternativesSortedByRealDuration() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = service(router);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                .thenReturn(candidate(journey(1500, "WALK", "BIKE"), 1, 2, 3))
+                .thenReturn(candidate(journey(1000, "WALK", "BUS"), 1, 4, 5))
+                .thenReturn(candidate(journey(1200, "WALK", "BUS", "BIKE"), 1, 6, 7));
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
+
+        assertThat(response.routes()).hasSize(3);
+        assertThat(response.routes()).extracting("totalDurationSeconds")
+                .containsExactly(1000L, 1200L, 1500L);
+        assertThat(response.routes().stream().flatMap(route -> route.modes().stream()).toList())
+                .contains("BUS", "BIKE");
+    }
+
+    @Test
+    void duplicateRoutesAreFilteredOut() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = service(router);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                .thenReturn(candidate(journey(1000, "BUS"), 1, 2, 3, 4))
+                .thenReturn(candidate(journey(1010, "BUS"), 1, 2, 3, 4))
+                .thenReturn(candidate(journey(1200, "BIKE"), 1, 5, 6, 7));
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
+
+        assertThat(response.routes()).hasSize(2);
+    }
+
+    private RouteAlternativeService service(AStarRouter router) {
+        return new RouteAlternativeService(router, 3, 0.8, 2.0, 180);
+    }
+
+    private AStarRouter.RouteCandidate candidate(Journey journey, Integer... nodeIds) {
+        return new AStarRouter.RouteCandidate(
+                journey,
+                new PathResult(List.of(nodeIds), List.of(), (int) (Long.parseLong(journey.duration()) / 1000))
+        );
+    }
+
+    private Journey journey(long durationSeconds, String... modes) {
+        List<Leg> legs = java.util.Arrays.stream(modes)
+                .map(mode -> new Leg(
+                        mode,
+                        new GeoPoint(1, 1),
+                        new GeoPoint(2, 2),
+                        String.valueOf(durationSeconds * 1000),
+                        "1000",
+                        List.of(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        "0",
+                        String.valueOf(durationSeconds * 1000)
+                ))
+                .toList();
+        return new Journey(
+                "success",
+                new GeoPoint(1, 1),
+                null,
+                new GeoPoint(2, 2),
+                null,
+                String.valueOf(durationSeconds * 1000),
+                "1000",
+                legs
+        );
+    }
+}

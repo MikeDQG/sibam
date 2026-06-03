@@ -578,7 +578,7 @@ export const MainAppControlOverlay = ({
         return;
       }
 
-      const journey = (await res.json()) as RoutePath;
+      const journey = normalizeRouteResponse(await res.json());
 
       console.log("Received route path: ", journey);
       onPathReceive?.(journey);
@@ -593,6 +593,31 @@ export const MainAppControlOverlay = ({
     } finally {
       setIsLoadingRoute(false);
     }
+  }
+
+  function normalizeRouteResponse(data: unknown): RoutePath {
+    const response = data as RoutePath & {
+      routes?: RoutePath[];
+      bestRoute?: RoutePath;
+      route?: RoutePath;
+    };
+
+    if (Array.isArray(response.legs)) {
+      return response;
+    }
+
+    const bestRoute = response.bestRoute ?? response.route ?? response.routes?.[0];
+    if (bestRoute && Array.isArray(bestRoute.legs)) {
+      return {
+        ...bestRoute,
+        routes: response.routes,
+      };
+    }
+
+    return {
+      ...response,
+      legs: [],
+    };
   }
 
   async function readComputePathError(

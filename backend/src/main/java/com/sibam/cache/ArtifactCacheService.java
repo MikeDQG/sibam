@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.Arrays;
+import java.util.Objects;
 
 @Service
 public class ArtifactCacheService {
@@ -71,9 +73,35 @@ public class ArtifactCacheService {
     }
 
     public record ArtifactResult(
-            String path,
-            byte[] bytes,
-            ArtifactSource source
+        String path,
+        byte[] bytes,
+        ArtifactSource source
     ) {
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ArtifactResult that = (ArtifactResult) o;
+            return source == that.source &&
+                    Objects.equals(path, that.path) &&
+                    Arrays.equals(bytes, that.bytes);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hash(path, source);
+            result = 31 * result + Arrays.hashCode(bytes);
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "ArtifactResult{" +
+                    "path='" + path + '\'' +
+                    ", bytes=" + Arrays.toString(bytes) +
+                    ", source=" + source +
+                    '}';
+        }
     }
+
 }

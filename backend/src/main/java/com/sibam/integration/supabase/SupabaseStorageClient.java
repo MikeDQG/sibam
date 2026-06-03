@@ -40,7 +40,10 @@ public class SupabaseStorageClient {
                         "Failed to download " + bucket + "/" + path + " — HTTP " + response.statusCode());
             }
             return response.body();
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
+            throw new IllegalStateException("Error downloading from Supabase storage: " + path, e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IllegalStateException("Error downloading from Supabase storage: " + path, e);
         }
     }

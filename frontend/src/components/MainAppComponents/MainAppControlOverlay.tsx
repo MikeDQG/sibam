@@ -10,6 +10,7 @@ import {
   X,
   LogOut,
   ArrowUpDown,
+  Bookmark,
 } from "lucide-react";
 import { WeatherWidget } from "./WeatherWidget";
 import { RouteLoadingOverlay } from "./RouteLoadingOverlay";
@@ -27,7 +28,9 @@ import {
   type PlaceSuggestion,
 } from "../../hooks/usePlacesAutocomplete";
 import { LocationIconGlyph, type LocationIcon } from "./MapLocationPopup";
+import type { SavedAccountRoute } from "../Pages/AccountPageComponents/SavedRouteMapCard";
 
+const apiUrl = import.meta.env.VITE_API_URL;
 const placesApiKey = import.meta.env.VITE_PLACES_API_KEY as string;
 
 type MainAppControlOverlayProps = {
@@ -39,7 +42,13 @@ type MainAppControlOverlayProps = {
   onDestinationSelect?: (place: { lat: number; lng: number } | null) => void;
   onPathReceive?: (path: RoutePath) => void;
   onPathError?: (error: RouteComputeError) => void;
+  hasRoute?: boolean;
+  isRouteActive?: boolean;
+  onStartRoute?: () => void;
+  onEndRoute?: () => void;
   savedLocations?: SavedSearchLocation[];
+  savedRoutes?: SavedAccountRoute[];
+  onSavedRouteSelect?: (route: SavedAccountRoute) => void;
 };
 
 export type RouteComputeError = {
@@ -85,7 +94,13 @@ export const MainAppControlOverlay = ({
   onDestinationSelect,
   onPathReceive,
   onPathError,
+  hasRoute = false,
+  isRouteActive = false,
+  onStartRoute,
+  onEndRoute,
   savedLocations = [],
+  savedRoutes = [],
+  onSavedRouteSelect,
 }: MainAppControlOverlayProps) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -103,6 +118,7 @@ export const MainAppControlOverlay = ({
   const [useBus, setUseBus] = useState(true);
   const [useBike, setUseBike] = useState(true);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [isSavedRoutesOpen, setIsSavedRoutesOpen] = useState(false);
   const [timeMode, setTimeMode] = useState<"depart" | "arrive">("depart");
   const [selectedTime, setSelectedTime] = useState(() => {
     const now = new Date();
@@ -120,6 +136,7 @@ export const MainAppControlOverlay = ({
     currentLocation !== undefined &&
     isInsideMaribor(currentLocation);
   const hasSavedLocations = savedLocations.length > 0;
+  const hasSavedRoutes = savedRoutes.length > 0;
 
   function getCurrentLocationCoords() {
     if (!currentLocation || !canUseCurrentLocation) return null;
@@ -127,6 +144,69 @@ export const MainAppControlOverlay = ({
     return {
       lat: currentLocation.lat,
       lng: currentLocation.lng,
+    };
+  }
+
+  function formatSavedRouteDuration(value?: string | number | null) {
+    const duration = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(duration)) return null;
+
+    return `${Math.round(duration / 60000)} min`;
+  }
+
+  function formatSavedRouteDistance(value?: string | number | null) {
+    const distance = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(distance)) return null;
+
+    const meters = Math.round(distance);
+    const kilometers = Math.floor(meters / 1000);
+    const remainingMeters = meters % 1000;
+
+    if (kilometers <= 0) return `${remainingMeters} m`;
+    if (remainingMeters === 0) return `${kilometers} km`;
+
+    return `${kilometers} km ${remainingMeters} m`;
+  }
+
+  function getJourneyPoint(
+    point:
+      | {
+          lat?: number;
+          lon?: number;
+          lng?: number;
+        }
+      | null
+      | undefined,
+  ) {
+    if (!point) return null;
+
+    const lat = point.lat;
+    const lng = point.lng ?? point.lon;
+    if (
+      typeof lat !== "number" ||
+      typeof lng !== "number" ||
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng)
+    ) {
+      return null;
+    }
+
+    return { lat, lng };
+  }
+
+  function getRouteEndpoints(route: SavedAccountRoute) {
+    const firstLeg = route.journey.legs[0];
+    const lastLeg = route.journey.legs.at(-1);
+
+    return {
+      origin:
+        getJourneyPoint(
+          route.journey.origin as Parameters<typeof getJourneyPoint>[0],
+        ) ?? getJourneyPoint(firstLeg?.polyline[0]),
+      destination:
+        getJourneyPoint(
+          route.journey.destination as Parameters<typeof getJourneyPoint>[0],
+        ) ?? getJourneyPoint(lastLeg?.polyline.at(-1)),
     };
   }
 
@@ -231,10 +311,80 @@ export const MainAppControlOverlay = ({
     onDestinationSelect?.(coords);
   }
 
+  function handleSavedRouteSelect(route: SavedAccountRoute) {
+    const endpoints = getRouteEndpoints(route);
+
+    setShowDirections(true);
+    setIsSavedRoutesOpen(false);
+    origin.closeDropdown();
+    destination.closeDropdown();
+    setLocationError(false);
+
+    origin.setValue(route.originLabel || "Začetek poti");
+    destination.setValue(route.destinationLabel || "Konec poti");
+    setOriginCoords(endpoints.origin);
+    setDestinationCoords(endpoints.destination);
+    setSelectedPlace(route.destinationLabel || route.name);
+    onSavedRouteSelect?.(route);
+  }
+
   function handleShowDirectionsClick() {
     destination.setIsOpen(false);
     origin.setIsOpen(canUseCurrentLocation || hasSavedLocations);
+    setIsSavedRoutesOpen(false);
     setShowDirections(true);
+  }
+
+  function renderSavedRoutesDropdown() {
+    if (!isSavedRoutesOpen) return null;
+
+    return (
+      <div className='max-h-72 overflow-y-auto rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
+        {hasSavedRoutes ? (
+          <ul>
+            <li className='border-b border-border px-3 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground dark:border-neutral-600'>
+              Shranjene poti
+            </li>
+            {savedRoutes.map((route) => {
+              const duration = formatSavedRouteDuration(route.duration);
+              const distance = formatSavedRouteDistance(route.distance);
+
+              return (
+                <li
+                  key={route.id}
+                  onMouseDown={() => handleSavedRouteSelect(route)}
+                  className='flex cursor-pointer items-start gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
+                  <span className='mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-700 text-white shadow-sm'>
+                    <Route size={15} />
+                  </span>
+                  <span className='min-w-0 text-left'>
+                    <span className='block truncate text-sm font-semibold leading-tight'>
+                      {route.name}
+                    </span>
+                    {(duration || distance) && (
+                      <span className='mt-0.5 block text-xs leading-tight text-muted-foreground dark:text-neutral-300'>
+                        {[duration, distance].filter(Boolean).join(" • ")}
+                      </span>
+                    )}
+                    {(route.originLabel || route.destinationLabel) && (
+                      <span className='mt-0.5 block truncate text-xs leading-tight text-muted-foreground dark:text-neutral-300'>
+                        {[route.originLabel, route.destinationLabel]
+                          .filter(Boolean)
+                          .join(" → ")}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className='px-3 py-2 text-sm text-muted-foreground dark:text-neutral-300'>
+            Ni še shranjenih poti.
+          </p>
+        )}
+      </div>
+    );
   }
 
   async function handleDestinationSelect(prediction: PlaceSuggestion) {
@@ -282,6 +432,7 @@ export const MainAppControlOverlay = ({
 
   function handleOriginFocus() {
     destination.setIsOpen(false);
+    setIsSavedRoutesOpen(false);
     if (
       canUseCurrentLocation ||
       hasSavedLocations ||
@@ -293,6 +444,7 @@ export const MainAppControlOverlay = ({
 
   function handleDestinationFocus() {
     origin.setIsOpen(false);
+    setIsSavedRoutesOpen(false);
     if (
       canUseCurrentLocation ||
       hasSavedLocations ||
@@ -384,6 +536,16 @@ export const MainAppControlOverlay = ({
   }
 
   async function handleRouteRequest() {
+    if (isRouteActive) {
+      onEndRoute?.();
+      return;
+    }
+
+    if (hasRoute) {
+      onStartRoute?.();
+      return;
+    }
+
     if (!originCoords || !destinationCoords) return;
 
     setIsLoadingRoute(true);
@@ -410,15 +572,15 @@ export const MainAppControlOverlay = ({
         params.set("userId", auth.currentUser.uid);
       }
 
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/compute?${params}`,
-      );
+      const res = await fetch(`${apiUrl}/compute?${params}`);
       if (!res.ok) {
         onPathError?.(await readComputePathError(res));
         return;
       }
 
       const journey = (await res.json()) as RoutePath;
+
+      console.log("Received route path: ", journey);
       onPathReceive?.(journey);
     } catch (error) {
       onPathError?.({
@@ -460,6 +622,7 @@ export const MainAppControlOverlay = ({
       ) {
         setOriginIsOpen(false);
         setDestinationIsOpen(false);
+        setIsSavedRoutesOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -484,7 +647,7 @@ export const MainAppControlOverlay = ({
           {/* searchbar */}
           <div
             ref={containerRef}
-            className='pointer-events-auto flex min-w-0 flex-1 flex-col gap-1 min-[700px]:w-110 min-[700px]:flex-none'>
+            className='pointer-events-auto flex min-w-0 flex-1 flex-col gap-1 min-[700px]:w-[38rem] min-[700px]:flex-none'>
             {showDirections ? (
               <>
                 <div className='relative'>
@@ -559,22 +722,25 @@ export const MainAppControlOverlay = ({
                 </div>
                 {renderLocationDropdown("origin")}
                 {renderLocationDropdown("destination")}
-                <div className='flex items-center gap-2'>
-                  <button
-                    type='button'
-                    onClick={() => setUseBus((v) => !v)}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBus ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
-                    <Bus size={14} />
-                    Bus
-                  </button>
-                  <button
-                    type='button'
-                    onClick={() => setUseBike((v) => !v)}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors ${useBike ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
-                    <Bike size={14} />
-                    Kolo
-                  </button>
-                  <div className='flex overflow-hidden rounded-lg bg-white text-neutral-900 shadow-md dark:bg-neutral-700 dark:text-white'>
+                {renderSavedRoutesDropdown()}
+                <div className='flex items-center gap-2 max-[615px]:grid max-[615px]:grid-cols-2 max-[615px]:items-stretch max-[430px]:!grid-cols-1'>
+                  <div className='flex items-center gap-2 max-[615px]:order-3 max-[615px]:col-start-1 max-[615px]:row-start-3 max-[615px]:grid max-[615px]:grid-cols-2 max-[430px]:!row-start-4'>
+                    <button
+                      type='button'
+                      onClick={() => setUseBus((v) => !v)}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[615px]:justify-center max-[615px]:px-2 ${useBus ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
+                      <Bus size={14} />
+                      Bus
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => setUseBike((v) => !v)}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[615px]:justify-center max-[615px]:px-2 ${useBike ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
+                      <Bike size={14} />
+                      Kolo
+                    </button>
+                  </div>
+                  <div className='flex min-w-[190px] overflow-hidden rounded-lg bg-white text-neutral-900 shadow-md max-[615px]:order-2 max-[615px]:col-start-1 max-[615px]:row-start-2 max-[615px]:w-full max-[430px]:!row-start-3 dark:bg-neutral-700 dark:text-white'>
                     <button
                       type='button'
                       onClick={() =>
@@ -582,7 +748,7 @@ export const MainAppControlOverlay = ({
                           m === "depart" ? "arrive" : "depart",
                         )
                       }
-                      className='whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted dark:text-white dark:hover:bg-neutral-600'>
+                      className='min-w-[5.6rem] flex-1 whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted max-[615px]:px-2 dark:text-white dark:hover:bg-neutral-600'>
                       {timeMode === "depart" ? "Odhod ob" : "Prihod do"}
                     </button>
                     <div className='w-px bg-border dark:bg-neutral-600' />
@@ -590,15 +756,37 @@ export const MainAppControlOverlay = ({
                       type='time'
                       value={selectedTime}
                       onChange={(e) => setSelectedTime(e.target.value)}
-                      className='bg-transparent px-2 py-1.5 text-sm focus:outline-none dark:text-white'
+                      className='w-[5.5rem] bg-transparent px-2 py-1.5 text-sm focus:outline-none max-[615px]:w-[4.7rem] max-[615px]:px-1.5 dark:text-white'
                     />
                   </div>
                   <button
                     type='button'
                     onClick={handleRouteRequest}
-                    disabled={!originCoords || !destinationCoords}
-                    className='ml-auto flex items-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-200 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-neutral-200 dark:hover:bg-neutral-50'>
-                    Najdi pot
+                    disabled={
+                      !hasRoute &&
+                      !isRouteActive &&
+                      (!originCoords || !destinationCoords)
+                    }
+                    className='ml-auto flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-50 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-200 max-[615px]:order-4 max-[615px]:col-start-2 max-[615px]:row-start-2 max-[615px]:ml-0 max-[615px]:rounded-lg max-[615px]:px-3 max-[430px]:!col-start-1 max-[430px]:!row-start-2 max-[430px]:w-full dark:bg-neutral-200 dark:hover:bg-neutral-50 dark:disabled:bg-neutral-200 dark:disabled:hover:bg-neutral-200'>
+                    {isRouteActive
+                      ? "Končaj"
+                      : hasRoute
+                        ? "Začni"
+                        : "Najdi pot"}
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      origin.setIsOpen(false);
+                      destination.setIsOpen(false);
+                      setIsSavedRoutesOpen((isOpen) => !isOpen);
+                    }}
+                    className='flex h-8 min-w-9 items-center justify-center whitespace-nowrap rounded-md bg-white/95 text-neutral-900 shadow-md transition-colors hover:text-red-700 max-[615px]:order-1 max-[615px]:col-span-2 max-[615px]:h-auto max-[615px]:w-full max-[615px]:gap-1.5 max-[615px]:px-3 max-[615px]:py-1.5 max-[615px]:text-sm max-[615px]:font-semibold max-[430px]:!col-span-1 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+                    aria-label='Shranjene poti'>
+                    <Bookmark size={16} />
+                    <span className='hidden max-[615px]:inline'>
+                      Shranjene poti
+                    </span>
                   </button>
                 </div>
               </>
@@ -635,6 +823,17 @@ export const MainAppControlOverlay = ({
                       <X size={13} />
                     </button>
                   )}
+                  <button
+                    type='button'
+                    onClick={() => {
+                      origin.setIsOpen(false);
+                      destination.setIsOpen(false);
+                      setIsSavedRoutesOpen((isOpen) => !isOpen);
+                    }}
+                    className='mr-2 flex h-6 w-6 cursor-pointer shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-red-700 dark:hover:text-red-200'
+                    aria-label='Shranjene poti'>
+                    <Bookmark size={16} />
+                  </button>
                   {selectedPlace && !showDirections && (
                     <button
                       type='button'
@@ -646,6 +845,7 @@ export const MainAppControlOverlay = ({
                   )}
                 </div>
                 {renderLocationDropdown("destination")}
+                {renderSavedRoutesDropdown()}
               </>
             )}
             {locationError && (
@@ -656,13 +856,15 @@ export const MainAppControlOverlay = ({
           </div>
 
           {/* vreme */}
-          <WeatherWidget />
+          <div className='shrink-0'>
+            <WeatherWidget />
+          </div>
         </div>
 
         {/* Desni panel */}
         {isLoggedIn ? (
           <div
-            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-row gap-2 min-[700px]:top-3 ${showDirections ? "max-[700px]:top-24" : "max-[700px]:top-14"}`}>
+            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-row gap-2 min-[700px]:top-3 max-[450px]:!fixed max-[450px]:!bottom-12 max-[450px]:!left-4 max-[450px]:!right-auto max-[450px]:!top-auto max-[450px]:flex-col ${showDirections ? "max-[700px]:top-24" : "max-[700px]:top-14"}`}>
             <Button
               type='button'
               onClick={() => navigate("/account")}
@@ -699,7 +901,13 @@ export const MainAppControlOverlay = ({
               <Button
                 type='button'
                 onClick={onLocate}
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+                disabled={isRouteActive}
+                title={
+                  isRouteActive
+                    ? "Med sledenjem poti se zemljevid centrira samodejno."
+                    : undefined
+                }
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
                 aria-label='Moja lokacija'>
                 <LocateFixed size={20} />
               </Button>
@@ -707,7 +915,7 @@ export const MainAppControlOverlay = ({
           </div>
         ) : (
           <div
-            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-col gap-2 min-[700px]:top-2 ${showDirections ? "max-[699px]:top-24" : "max-[699px]:top-14"}`}>
+            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-col gap-2 min-[700px]:top-2 max-[450px]:!fixed max-[450px]:!bottom-12 max-[450px]:!left-4 max-[450px]:!right-auto max-[450px]:!top-auto ${showDirections ? "max-[699px]:top-24" : "max-[699px]:top-14"}`}>
             <Button
               type='button'
               onClick={() => navigate("/login")}
@@ -733,7 +941,13 @@ export const MainAppControlOverlay = ({
             <Button
               type='button'
               onClick={onLocate}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+              disabled={isRouteActive}
+              title={
+                isRouteActive
+                  ? "Med sledenjem poti se zemljevid centrira samodejno."
+                  : undefined
+              }
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
               aria-label='Moja lokacija'>
               <LocateFixed size={20} />
             </Button>

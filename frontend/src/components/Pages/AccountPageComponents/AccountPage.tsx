@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { auth } from "../../../firebase";
+import type { RoutePath } from "../../MainAppComponents/RoutePolyline";
 import {
   isLocationIcon,
   LocationIconGlyph,
@@ -15,6 +16,10 @@ import {
   SavedLocationMapCard,
   type SavedAccountLocation,
 } from "./SavedLocationMapCard";
+import {
+  SavedRouteMapCard,
+  type SavedAccountRoute,
+} from "./SavedRouteMapCard";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -29,6 +34,20 @@ type SavedLocationResponse = {
   longitude?: number | string | null;
   color?: string | null;
   icon?: string | null;
+};
+
+type SavedRouteResponse = {
+  id: string;
+  name?: string | null;
+  journey?: RoutePath & {
+    duration?: string | null;
+    distance?: string | null;
+    origin_address?: string | null;
+    originAddress?: string | null;
+    destination_address?: string | null;
+    destinationAddress?: string | null;
+  };
+  createdAt?: string | null;
 };
 
 function toCoordinate(value: SavedLocationResponse["latitude"]) {
@@ -53,6 +72,34 @@ function normalizeSavedLocation(
   };
 }
 
+function normalizeSavedRoute(
+  route: SavedRouteResponse,
+): SavedAccountRoute | null {
+  const journey = route.journey;
+  const hasDrawableRoute = journey?.legs?.some((leg) => leg.polyline.length);
+
+  if (!journey || !hasDrawableRoute) return null;
+
+  return {
+    id: route.id,
+    name: route.name?.trim() || "Shranjena pot",
+    journey,
+    duration: journey?.duration,
+    distance: journey?.distance,
+    originLabel: journey?.origin_address ?? journey?.originAddress,
+    destinationLabel:
+      journey?.destination_address ?? journey?.destinationAddress,
+    modes: Array.from(
+      new Set(
+        (journey?.legs ?? [])
+          .map((leg) => leg.mode?.trim())
+          .filter((mode): mode is string => Boolean(mode)),
+      ),
+    ),
+    createdAt: route.createdAt,
+  };
+}
+
 export const AccountPage = () => {
   const [email, setEmail] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -62,6 +109,11 @@ export const AccountPage = () => {
   );
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
   const [deletingLocationIds, setDeletingLocationIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [savedRoutes, setSavedRoutes] = useState<SavedAccountRoute[]>([]);
+  const [isLoadingRoutes, setIsLoadingRoutes] = useState(true);
+  const [deletingRouteIds, setDeletingRouteIds] = useState<Set<string>>(
     () => new Set(),
   );
   const { userSession, getAuthToken, fetchUserSession } = useUserSession();
@@ -119,7 +171,7 @@ export const AccountPage = () => {
               Boolean(location),
             ),
         );
-      } catch (error) {
+      } catch {
         if (!isActive) return;
         setSavedLocations([]);
         toast.error("Shranjene lokacije niso bile naložene.");
@@ -131,6 +183,62 @@ export const AccountPage = () => {
     }
 
     void fetchSavedLocations();
+
+    return () => {
+      isActive = false;
+    };
+  }, [fetchUserSession, getAuthToken, userSession]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchSavedRoutes() {
+      setIsLoadingRoutes(true);
+
+      try {
+        const token = await getAuthToken();
+
+        if (!token) {
+          if (isActive) {
+            setSavedRoutes([]);
+            setIsLoadingRoutes(false);
+          }
+          return;
+        }
+
+        const session = userSession ?? (await fetchUserSession(token));
+
+        const response = await fetch(`${apiUrl}/api/paths/${session.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Saved routes request failed: ${response.status}`);
+        }
+
+        const routes = (await response.json()) as SavedRouteResponse[];
+
+        if (!isActive) return;
+
+        setSavedRoutes(
+          routes
+            .map(normalizeSavedRoute)
+            .filter((route): route is SavedAccountRoute => Boolean(route)),
+        );
+      } catch {
+        if (!isActive) return;
+        setSavedRoutes([]);
+        toast.error("Shranjene poti niso bile naložene.");
+      } finally {
+        if (isActive) {
+          setIsLoadingRoutes(false);
+        }
+      }
+    }
+
+    void fetchSavedRoutes();
 
     return () => {
       isActive = false;
@@ -176,14 +284,47 @@ export const AccountPage = () => {
     }
   }
 
+  async function handleDeleteRoute(routeId: string) {
+    if (deletingRouteIds.has(routeId)) return;
+
+    setDeletingRouteIds((currentIds) => new Set(currentIds).add(routeId));
+
+    try {
+      const token = await getAuthToken();
+
+      if (!token) {
+        toast.error("Za brisanje poti moraš biti prijavljen.");
+        return;
+      }
+
+      const response = await fetch(`${apiUrl}/api/paths/${routeId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Delete route request failed: ${response.status}`);
+      }
+
+      setSavedRoutes((currentRoutes) =>
+        currentRoutes.filter((route) => route.id !== routeId),
+      );
+      toast.success("Pot je izbrisana.");
+    } catch {
+      toast.error("Poti ni bilo mogoče izbrisati.");
+    } finally {
+      setDeletingRouteIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(routeId);
+        return nextIds;
+      });
+    }
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col items-center bg-[url('/LandingPage/background.jpeg')] bg-cover bg-center px-6 pt-25">
-      <img
-        src='/logo.svg'
-        className='absolute left-9 top-6 h-15 w-auto cursor-pointer'
-        alt='Logo'
-        onClick={() => navigate("/")}
-      />
       <div className='flex w-full max-w-[80vw] flex-col gap-6 rounded-lg bg-card/95 p-10 text-card-foreground shadow-xl backdrop-blur-sm dark:bg-neutral-700/95'>
         <button
           type='button'
@@ -227,8 +368,8 @@ export const AccountPage = () => {
                 {savedLocations.map((location) => (
                   <div
                     key={location.id}
-                    className='group mb-11 overflow-hidden rounded-lg border border-border bg-muted text-center transition-[margin] duration-200 hover:mb-0 dark:border-neutral-600 dark:bg-neutral-800'>
-                    <div className='flex aspect-square flex-col items-center justify-center gap-2 p-4 transition-[border-radius] duration-200 group-hover:rounded-b-none'>
+                    className='group mb-0 overflow-hidden rounded-lg border border-border bg-muted text-center transition-[margin] duration-200 sm:mb-11 sm:hover:mb-0 dark:border-neutral-600 dark:bg-neutral-800'>
+                    <div className='flex aspect-square flex-col items-center justify-center gap-2 rounded-t-lg rounded-b-none p-4 transition-[border-radius] duration-200 sm:rounded-lg sm:group-hover:rounded-b-none'>
                       <div
                         className='flex h-11 w-11 items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
                         style={{ backgroundColor: location.color }}>
@@ -242,7 +383,7 @@ export const AccountPage = () => {
                       type='button'
                       disabled={deletingLocationIds.has(location.id)}
                       onClick={() => handleDeleteLocation(location.id)}
-                      className='flex h-11 max-h-0 w-full cursor-pointer items-center justify-center overflow-hidden rounded-b-lg bg-card/95 text-foreground transition-[max-height,color] duration-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 group-hover:max-h-11 dark:bg-neutral-800/95 dark:text-white dark:hover:text-red-600'
+                      className='flex h-11 max-h-11 w-full cursor-pointer items-center justify-center overflow-hidden rounded-b-lg bg-card/95 text-foreground transition-[max-height,color] duration-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 sm:max-h-0 sm:group-hover:max-h-11 dark:bg-neutral-800/95 dark:text-white dark:hover:text-red-600'
                       aria-label={`Izbriši lokacijo ${location.name}`}>
                       <Trash size={20} />
                     </button>
@@ -258,11 +399,34 @@ export const AccountPage = () => {
         </div>
 
         <div className='border-t border-border pt-4 dark:border-neutral-600'>
-          <h2 className='mb-4 text-xl font-semibold'>Zadnje poti</h2>
-          <div className='flex flex-col gap-3'>
-            <div className='rounded-md bg-muted p-4 text-center text-sm text-muted-foreground dark:bg-neutral-600 dark:text-neutral-400'>
-              Ni še zadnjih poti.
-            </div>
+          <h2 className='mb-4 text-xl font-semibold'>Shranjene poti</h2>
+          <div>
+            {isLoadingRoutes ? (
+              <div className='rounded-md bg-muted p-4 text-center text-sm text-muted-foreground dark:bg-neutral-600 dark:text-neutral-400'>
+                Nalaganje shranjenih poti ...
+              </div>
+            ) : savedRoutes.length > 0 && hasApiKey ? (
+              <APIProvider apiKey={apiKey} region='SI' language='sl'>
+                <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+                  {savedRoutes.map((route) => (
+                    <SavedRouteMapCard
+                      key={route.id}
+                      route={route}
+                      isDeleting={deletingRouteIds.has(route.id)}
+                      onDelete={handleDeleteRoute}
+                    />
+                  ))}
+                </div>
+              </APIProvider>
+            ) : savedRoutes.length > 0 ? (
+              <div className='rounded-md bg-muted p-4 text-center text-sm text-muted-foreground dark:bg-neutral-600 dark:text-neutral-400'>
+                Za prikaz shranjenih poti manjka Google Maps API key.
+              </div>
+            ) : (
+              <div className='rounded-md bg-muted p-4 text-center text-sm text-muted-foreground dark:bg-neutral-600 dark:text-neutral-400'>
+                Ni še shranjenih poti.
+              </div>
+            )}
           </div>
         </div>
 

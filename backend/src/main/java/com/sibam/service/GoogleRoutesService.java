@@ -23,6 +23,7 @@ public class GoogleRoutesService {
 
     private static final Logger log = LoggerFactory.getLogger(GoogleRoutesService.class);
     private static final String ENDPOINT = "https://routes.googleapis.com/directions/v2:computeRoutes";
+    private static final double COORDINATE_MATCH_TOLERANCE = 0.00001;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -121,7 +122,7 @@ public class GoogleRoutesService {
         }
         JsonNode first = routes.get(0);
         List<GeoPoint> routePolyline = parsePolyline(first.path("polyline"), fallbackStart, fallbackEnd);
-        List<NavigationStep> steps = parseSteps(first.path("legs"));
+        List<NavigationStep> steps = parseSteps(first.path("legs"), routePolyline);
 
         return new RouteDetails(routePolyline, steps);
     }
@@ -154,12 +155,13 @@ public class GoogleRoutesService {
         }
     }
 
-    private List<NavigationStep> parseSteps(JsonNode legs) {
+    private List<NavigationStep> parseSteps(JsonNode legs, List<GeoPoint> routePolyline) {
         if (!legs.isArray() || legs.isEmpty()) {
             return List.of();
         }
 
         List<NavigationStep> steps = new ArrayList<>();
+        int previousEndIndex = 0;
         for (JsonNode leg : legs) {
             JsonNode routeSteps = leg.path("steps");
             if (!routeSteps.isArray()) {
@@ -168,12 +170,16 @@ public class GoogleRoutesService {
 
             for (JsonNode step : routeSteps) {
                 JsonNode instruction = step.path("navigationInstruction");
+                List<GeoPoint> stepPolyline = parseOptionalPolyline(step.path("polyline"));
+                PolylineRange range = matchStepPolylineRange(routePolyline, stepPolyline, previousEndIndex);
+                previousEndIndex = range.endPolylineIndex();
                 steps.add(new NavigationStep(
                         instruction.path("instructions").asText(null),
                         instruction.path("maneuver").asText(null),
                         step.path("distanceMeters").asInt(0),
                         durationSeconds(step),
-                        step.has("polyline") ? step.path("polyline").deepCopy() : null
+                        range.startPolylineIndex(),
+                        range.endPolylineIndex()
                 ));
             }
         }
@@ -181,7 +187,109 @@ public class GoogleRoutesService {
         return List.copyOf(steps);
     }
 
-    private long durationSeconds(JsonNode step) {
+    private PolylineRange matchStepPolylineRange(
+            List<GeoPoint> routePolyline,
+            List<GeoPoint> stepPolyline,
+            int previousEndIndex
+    ) {
+        if (routePolyline == null || routePolyline.isEmpty()) {
+            log.warn("Cannot match Google navigation step polyline because route polyline is empty.");
+            return new PolylineRange(0, 0);
+        }
+
+        int fallbackStart = Math.min(Math.max(previousEndIndex, 0), routePolyline.size() - 1);
+        int fallbackEnd = Math.min(fallbackStart + 1, routePolyline.size() - 1);
+        if (stepPolyline == null || stepPolyline.isEmpty()) {
+            log.warn("Google navigation step has no polyline; using fallback range {}-{}.", fallbackStart, fallbackEnd);
+            return new PolylineRange(fallbackStart, fallbackEnd);
+        }
+
+        GeoPoint stepStart = stepPolyline.getFirst();
+        GeoPoint stepEnd = stepPolyline.getLast();
+        int startIndex = findMatchingPointIndex(routePolyline, stepStart, fallbackStart);
+        int endIndex = findMatchingPointIndex(routePolyline, stepEnd, Math.max(startIndex, fallbackEnd));
+
+        if (endIndex < startIndex) {
+            int closestEnd = findClosestPointIndex(routePolyline, stepEnd, startIndex);
+            log.warn(
+                    "Google navigation step polyline matched out of order ({}-{}); using closest forward end index {}.",
+                    startIndex,
+                    endIndex,
+                    closestEnd
+            );
+            endIndex = closestEnd;
+        }
+
+        return new PolylineRange(startIndex, endIndex);
+    }
+
+    private int findMatchingPointIndex(List<GeoPoint> routePolyline, GeoPoint point, int fallbackIndex) {
+        for (int i = 0; i < routePolyline.size(); i++) {
+            if (matchesWithinTolerance(routePolyline.get(i), point)) {
+                return i;
+            }
+        }
+
+        int closestIndex = findClosestPointIndex(routePolyline, point, 0);
+        log.warn(
+                "Google navigation step polyline point could not be matched within tolerance; using closest route polyline index {}.",
+                closestIndex
+        );
+        return closestIndex >= 0 ? closestIndex : fallbackIndex;
+    }
+
+    private int findClosestPointIndex(List<GeoPoint> routePolyline, GeoPoint point, int minIndex) {
+        if (routePolyline == null || routePolyline.isEmpty()) {
+            return -1;
+        }
+
+        int start = Math.min(Math.max(minIndex, 0), routePolyline.size() - 1);
+        int closestIndex = start;
+        double closestDistance = Double.MAX_VALUE;
+        for (int i = start; i < routePolyline.size(); i++) {
+            GeoPoint candidate = routePolyline.get(i);
+            double distance = Math.pow(candidate.lat() - point.lat(), 2)
+                    + Math.pow(candidate.lon() - point.lon(), 2);
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+            }
+        }
+        return closestIndex;
+    }
+
+    private boolean matchesWithinTolerance(GeoPoint a, GeoPoint b) {
+        return Math.abs(a.lat() - b.lat()) < COORDINATE_MATCH_TOLERANCE
+                && Math.abs(a.lon() - b.lon()) < COORDINATE_MATCH_TOLERANCE;
+    }
+
+    private List<GeoPoint> parseOptionalPolyline(JsonNode polyline) {
+        if (polyline == null || polyline.isMissingNode() || polyline.isNull()) {
+            return List.of();
+        }
+
+        if ("GEO_JSON_LINESTRING".equalsIgnoreCase(polylineEncoding)) {
+            JsonNode coords = polyline.path("geoJsonLinestring").path("coordinates");
+            if (!coords.isArray() || coords.isEmpty()) {
+                return List.of();
+            }
+            List<GeoPoint> points = new ArrayList<>();
+            for (JsonNode c : coords) {
+                if (c.isArray() && c.size() >= 2) {
+                    points.add(new GeoPoint(c.get(1).asDouble(), c.get(0).asDouble()));
+                }
+            }
+            return List.copyOf(points);
+        }
+
+        String encoded = polyline.path("encodedPolyline").asText(null);
+        if (encoded == null || encoded.isBlank()) {
+            return List.of();
+        }
+        return decodeEncodedPolyline(encoded);
+    }
+
+    private int durationSeconds(JsonNode step) {
         String duration = step.path("duration").asText(null);
         if (duration == null || duration.isBlank()) {
             duration = step.path("staticDuration").asText(null);
@@ -195,7 +303,7 @@ public class GoogleRoutesService {
             String seconds = duration.endsWith("s")
                     ? duration.substring(0, duration.length() - 1)
                     : duration;
-            return Math.max(0, Math.round(Double.parseDouble(seconds)));
+            return (int) Math.max(0, Math.round(Double.parseDouble(seconds)));
         } catch (NumberFormatException ignored) {
             return 0;
         }
@@ -245,5 +353,8 @@ public class GoogleRoutesService {
             polyline = polyline == null ? List.of() : List.copyOf(polyline);
             steps = steps == null ? List.of() : List.copyOf(steps);
         }
+    }
+
+    private record PolylineRange(int startPolylineIndex, int endPolylineIndex) {
     }
 }

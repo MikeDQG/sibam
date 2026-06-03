@@ -7,17 +7,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests the flag-based skipping logic in SchedulerService.
- *
- * Note: isWithinOperatingHours() uses OffsetDateTime.now() directly and cannot be
- * unit-tested without refactoring to inject a Clock. These tests assume they run
- * between 05:00 and 23:00 Ljubljana time (standard CI conditions).
- */
 class SchedulerServiceTest {
+
+    private static final Clock MIDDAY = Clock.fixed(
+            Instant.parse("2026-06-02T10:00:00Z"), // 12:00 Ljubljana (UTC+2)
+            ZoneId.of("Europe/Ljubljana")
+    );
 
     private MBajkDataService mbajkDataService;
     private WeatherDataService weatherDataService;
@@ -29,7 +31,7 @@ class SchedulerServiceTest {
         mbajkDataService    = mock(MBajkDataService.class);
         weatherDataService  = mock(WeatherDataService.class);
         gtfsRTDataService   = mock(GTFSRTDataService.class);
-        scheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService);
+        scheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, MIDDAY);
     }
 
     // fetchBikeIngestion

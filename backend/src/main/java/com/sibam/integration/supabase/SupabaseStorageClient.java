@@ -21,7 +21,7 @@ public class SupabaseStorageClient {
     @Value("${supabase.url}")
     private String supabaseUrl;
 
-    @Value("${supabase.service-key}")
+    @Value("${supabase.service-role-key:${supabase.service-key:}}")
     private String serviceKey;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();

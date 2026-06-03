@@ -16,14 +16,23 @@ import com.sibam.graph.spatial.HelperService;
 import com.sibam.graph.spatial.SpatialSearchService;
 import com.sibam.graph.storage.GraphStore;
 import com.sibam.engine.VaoSerializer;
+import com.sibam.engine.vao.BikeLegPredictionVao;
 import com.sibam.engine.vao.LineScheduleVao;
 import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.StopScheduleVao;
+import com.sibam.dto.prediction.BikePredictionRequest;
+import com.sibam.dto.prediction.BusDelayPredictionRequest;
+import com.sibam.engine.vao.BusLegDelayVao;
+import com.sibam.engine.vao.BusStopVao;
+import com.sibam.engine.vao.RouteVao;
+import com.sibam.service.BikePredictionService;
+import com.sibam.service.BusDelayPredictionService;
 import com.sibam.service.GoogleRoutesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -60,6 +69,8 @@ public class AStarRouter {
     private final CostFunction costFunction;
     private final RoutingConfig routingConfig;
     private final WeatherRoutingAdjuster weatherRoutingAdjuster;
+    private final BikePredictionService bikePredictionService;
+    private final BusDelayPredictionService busDelayPredictionService;
 
     public AStarRouter(
             GraphStore graphStore,
@@ -70,7 +81,9 @@ public class AStarRouter {
             HeuristicService heuristicService,
             CostFunction costFunction,
             RoutingConfig routingConfig,
-            WeatherRoutingAdjuster weatherRoutingAdjuster
+            WeatherRoutingAdjuster weatherRoutingAdjuster,
+            BikePredictionService bikePredictionService,
+            BusDelayPredictionService busDelayPredictionService
     ) {
         this.graphStore = graphStore;
         this.spatialSearchService = spatialSearchService;
@@ -82,6 +95,8 @@ public class AStarRouter {
         this.costFunction = costFunction;
         this.routingConfig = routingConfig;
         this.weatherRoutingAdjuster = weatherRoutingAdjuster;
+        this.bikePredictionService = bikePredictionService;
+        this.busDelayPredictionService = busDelayPredictionService;
     }
 
     public Journey findJourney(
@@ -190,7 +205,8 @@ public class AStarRouter {
                 originAddress,
                 new GeoPoint(destinationLat, destinationLon),
                 destinationAddress,
-                startTime
+                startTime,
+                weatherContext
         );
     }
 
@@ -256,6 +272,9 @@ public class AStarRouter {
                         startMillis + secondsToMillis(currentCostSeconds),
                         weatherContext
                 );
+                if (relaxation == null) {
+                    continue;
+                }
                 int tentative = currentCostSeconds + relaxation.costSeconds();
                 SearchState nextState = nextState(current.state(), edge);
 
@@ -299,6 +318,9 @@ public class AStarRouter {
         }
 
         long departureMillis = nextBusDepartureMillis(edge, currentMillis);
+        if (departureMillis < 0) {
+            return null;
+        }
         long arrivalMillis = departureMillis + secondsToMillis(edge.getCostSeconds());
         int costSeconds = (int) Math.max(1, Math.round((arrivalMillis - currentMillis) / 1000.0));
         costSeconds += transferPenaltySeconds(lastBusRoute, edge, weatherContext);
@@ -348,19 +370,45 @@ public class AStarRouter {
         int scheduleStopPointId = edge.getScheduleStopPointId() == null
                 ? edge.getFromNodeId()
                 : edge.getScheduleStopPointId();
-        StopScheduleVao stopSchedule = vaoSerializer.getSchedulesMap().get(scheduleStopPointId);
-        if (stopSchedule == null || stopSchedule.scheduleForLine() == null) {
+        LocalDate currentDate = LocalDateTime.ofInstant(
+                java.time.Instant.ofEpochMilli(currentMillis),
+                ZoneId.systemDefault()
+        ).toLocalDate();
+
+        if (!vaoSerializer.isRouteActiveOnDate(routeInfo.routeId(), currentDate)) {
+            return -1;
+        }
+
+        Map<Integer, StopScheduleVao> schedulesForDate = vaoSerializer.getSchedulesMap(currentDate);
+        if (schedulesForDate == null || schedulesForDate.isEmpty()) {
             return currentMillis;
+        }
+
+        return departureCandidatesForDate(schedulesForDate, scheduleStopPointId, routeInfo, currentMillis, currentDate).stream()
+                .min(Long::compareTo)
+                .orElse(-1L);
+    }
+
+    private List<Long> departureCandidatesForDate(
+            Map<Integer, StopScheduleVao> schedulesForDate,
+            int scheduleStopPointId,
+            RouteInfo routeInfo,
+            long currentMillis,
+            LocalDate date
+    ) {
+        StopScheduleVao stopSchedule = schedulesForDate.get(scheduleStopPointId);
+        if (stopSchedule == null || stopSchedule.scheduleForLine() == null) {
+            return List.of();
         }
 
         return stopSchedule.scheduleForLine().stream()
                 .filter(lineSchedule -> lineSchedule.lineId() == routeInfo.lineId())
                 .flatMap(lineSchedule -> matchingRouteSchedules(lineSchedule, routeInfo).stream())
                 .flatMap(routeSchedule -> routeSchedule.departures().stream())
-                .map(departure -> departureMillis(departure, currentMillis))
+                .map(departure -> departureMillis(departure, date, currentMillis))
                 .filter(Objects::nonNull)
-                .min(Long::compareTo)
-                .orElse(currentMillis);
+                .filter(candidate -> candidate >= currentMillis)
+                .toList();
     }
 
     private List<RouteScheduleVao> matchingRouteSchedules(LineScheduleVao lineSchedule, RouteInfo routeInfo) {
@@ -398,27 +446,13 @@ public class AStarRouter {
         return false;
     }
 
-    private Long departureMillis(String departure, long currentMillis) {
+    private Long departureMillis(String departure, LocalDate date, long currentMillis) {
         try {
             LocalTime departureTime = LocalTime.parse(departure, DEPARTURE_TIME_FORMATTER);
-            LocalDate currentDate = LocalDateTime.ofInstant(
-                    java.time.Instant.ofEpochMilli(currentMillis),
-                    ZoneId.systemDefault()
-            ).toLocalDate();
-            long candidate = currentDate.atTime(departureTime)
+            return date.atTime(departureTime)
                     .atZone(ZoneId.systemDefault())
                     .toInstant()
                     .toEpochMilli();
-
-            if (candidate < currentMillis) {
-                candidate = currentDate.plusDays(1)
-                        .atTime(departureTime)
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant()
-                        .toEpochMilli();
-            }
-
-            return candidate;
         } catch (DateTimeParseException ignored) {
             return null;
         }
@@ -522,7 +556,8 @@ public class AStarRouter {
             String originAddress,
             GeoPoint destination,
             String destinationAddress,
-            LocalTime startTime
+            LocalTime startTime,
+            WeatherRoutingContext weatherContext
     ) {
         if (pathResult.getEdges().isEmpty()) {
             return new Journey("success", origin, originAddress, destination, destinationAddress, "0", "0", List.of());
@@ -553,7 +588,8 @@ public class AStarRouter {
                     durationSeconds(firstTiming, lastTiming),
                     legDistanceMeters,
                     firstTiming.departureMillis(),
-                    lastTiming.arrivalMillis()
+                    lastTiming.arrivalMillis(),
+                    weatherContext
             ));
             addSameStopTransferLegIfNeeded(
                     graph,
@@ -580,7 +616,8 @@ public class AStarRouter {
                 durationSeconds(firstTiming, lastTiming),
                 legDistanceMeters,
                 firstTiming.departureMillis(),
-                lastTiming.arrivalMillis()
+                lastTiming.arrivalMillis(),
+                weatherContext
         ));
 
         int totalDistanceMeters = pathResult.getEdges().stream()
@@ -678,7 +715,8 @@ public class AStarRouter {
             int durationSeconds,
             int distanceMeters,
             long departureMillis,
-            long arrivalMillis
+            long arrivalMillis,
+            WeatherRoutingContext weatherContext
     ) {
         RouteInfo routeInfo = firstEdge.getRouteInfo();
         LegNavigation navigation = legNavigation(graph, edges, firstEdge, lastEdge);
@@ -697,8 +735,120 @@ public class AStarRouter {
                 String.valueOf(departureMillis),
                 String.valueOf(arrivalMillis),
                 navigation.navigationAvailable(),
-                navigation.steps()
+                navigation.steps(),
+                computeBikePrediction(graph, firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext),
+                computeBusDelayPrediction(firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext)
         );
+    }
+
+    private BikeLegPredictionVao computeBikePrediction(
+            Graph graph,
+            Edge firstEdge,
+            Edge lastEdge,
+            long departureMillis,
+            long arrivalMillis,
+            WeatherRoutingContext weatherContext
+    ) {
+        if (firstEdge.getEdgeType() != EdgeType.BIKE) {
+            return null;
+        }
+
+        Node pickupNode = graph.getNodes().get(firstEdge.getFromNodeId());
+        Node returnNode = graph.getNodes().get(lastEdge.getToNodeId());
+        if (!(pickupNode instanceof BikeNode pickup) || !(returnNode instanceof BikeNode returnStation)) {
+            return null;
+        }
+
+        try {
+            LocalDateTime pickupTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ZoneId.systemDefault());
+            LocalDateTime returnTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(arrivalMillis), ZoneId.systemDefault());
+            float temperature = weatherContext.temperatureCelsius() != null ? weatherContext.temperatureCelsius().floatValue() : 15f;
+            float rain = weatherContext.rainMm() != null ? weatherContext.rainMm() : 0f;
+            float windSpeed = weatherContext.windSpeedMs() != null ? weatherContext.windSpeedMs() : 0f;
+
+            int pickupDow = pickupTime.getDayOfWeek().getValue();
+            var pickupResponse = bikePredictionService.predict(new BikePredictionRequest(
+                    pickup.getStationNumber(),
+                    pickupTime.getHour(), pickupDow, pickupDow >= 6 ? 1 : 0,
+                    temperature, rain, windSpeed
+            ));
+
+            int returnDow = returnTime.getDayOfWeek().getValue();
+            var returnResponse = bikePredictionService.predict(new BikePredictionRequest(
+                    returnStation.getStationNumber(),
+                    returnTime.getHour(), returnDow, returnDow >= 6 ? 1 : 0,
+                    temperature, rain, windSpeed
+            ));
+
+            return new BikeLegPredictionVao(
+                    pickupResponse.predictedBikes(),
+                    pickupResponse.bikeAvailableProbability(),
+                    returnResponse.predictedStands(),
+                    returnResponse.standAvailableProbability()
+            );
+        } catch (Exception e) {
+            log.warn("Bike prediction unavailable, skipping enrichment: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private BusLegDelayVao computeBusDelayPrediction(
+            Edge firstEdge,
+            Edge lastEdge,
+            long departureMillis,
+            long arrivalMillis,
+            WeatherRoutingContext weatherContext
+    ) {
+        if (firstEdge.getEdgeType() != EdgeType.BUS) {
+            return null;
+        }
+
+        RouteInfo routeInfo = firstEdge.getRouteInfo();
+        if (routeInfo == null) {
+            return null;
+        }
+
+        int lineId = routeInfo.lineId();
+
+        int boardStopId = firstEdge.getScheduleStopPointId() != null
+                ? firstEdge.getScheduleStopPointId()
+                : firstEdge.getFromNodeId();
+
+        float temperature = weatherContext.temperatureCelsius() != null ? weatherContext.temperatureCelsius().floatValue() : 15f;
+        float rain = weatherContext.rainMm() != null ? weatherContext.rainMm() : 0f;
+        float windSpeed = weatherContext.windSpeedMs() != null ? weatherContext.windSpeedMs() : 0f;
+
+        try {
+            LocalDateTime boardTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ZoneId.systemDefault());
+            int boardDow = boardTime.getDayOfWeek().getValue();
+            int boardSeq = lookupStopSequence(lineId, boardStopId);
+            int boardingDelay = busDelayPredictionService.predictDelay(
+                    lineId, boardSeq,
+                    boardTime.getHour(), boardDow, boardDow >= 6 ? 1 : 0,
+                    temperature, rain, windSpeed,
+                    boardStopId
+            );
+
+            return new BusLegDelayVao(boardingDelay);
+        } catch (Exception e) {
+            log.warn("Bus delay prediction unavailable, skipping enrichment: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private int lookupStopSequence(int lineId, int stopId) {
+        for (RouteVao route : vaoSerializer.getRoutesMap().values()) {
+            if (route.LineId() != lineId || route.busStops() == null) {
+                continue;
+            }
+            List<BusStopVao> stops = route.busStops();
+            for (int i = 0; i < stops.size(); i++) {
+                if (stops.get(i).id() == stopId) {
+                    return i + 1;
+                }
+            }
+        }
+        return 1;
     }
 
     private String toMode(EdgeType edgeType) {

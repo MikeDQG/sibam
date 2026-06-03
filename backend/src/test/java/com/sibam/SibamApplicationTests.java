@@ -7,9 +7,11 @@ import com.sibam.service.BikePredictionService;
 import com.sibam.service.BusDelayPredictionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
+@ActiveProfiles("ci")
 class SibamApplicationTests {
 
     @MockitoBean

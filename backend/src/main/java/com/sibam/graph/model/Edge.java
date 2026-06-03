@@ -1,8 +1,9 @@
 package com.sibam.graph.model;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Edge {
+public class Edge implements Serializable {
     private final int fromNodeId;
     private final int toNodeId;
     private final EdgeType edgeType;

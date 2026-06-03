@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Bike, Bus, Footprints } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,6 +19,7 @@ import type {
 } from "../MainAppComponents/RoutePolyline";
 import { useUserSession } from "../Authorization/UserSessionProvider";
 import { MARIBOR_BOUNDS } from "../../hooks/usePlacesAutocomplete";
+import type { SavedAccountRoute } from "./AccountPageComponents/SavedRouteMapCard";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -30,13 +31,13 @@ const routeOptions = [
       "border-red-200 bg-red-50 text-red-950 ring-4 dark:bg-[#941d38] dark:text-white",
     icons: [Bus, Footprints, Bike],
   },
-  {
-    title: "Najbolj zelena",
-    time: "24 min",
-    className:
-      "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-neutral-500 dark:bg-[#1d431b] dark:text-white",
-    icons: [Footprints, Bike],
-  },
+  // {
+  //   title: "Najbolj zelena",
+  //   time: "24 min",
+  //   className:
+  //     "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-neutral-500 dark:bg-[#1d431b] dark:text-white",
+  //   icons: [Footprints, Bike],
+  // },
   {
     title: "Brez kolesa",
     time: "22 min",
@@ -63,6 +64,19 @@ type MapLocationDraft = {
   icon: LocationIcon;
 };
 
+type ActiveRouteStep = {
+  instruction: string;
+  mode: string;
+  stepIndex: number;
+};
+
+type ClosestRoutePoint = {
+  leg: RouteLeg;
+  legIndex: number;
+  polylineIndex: number;
+  distance: number;
+};
+
 type SavedLocationResponse = {
   id: string;
   name: string;
@@ -70,6 +84,20 @@ type SavedLocationResponse = {
   longitude: number;
   color?: string | null;
   logo?: string | null;
+};
+
+type SavedRouteResponse = {
+  id: string;
+  name?: string | null;
+  journey?: RoutePath & {
+    duration?: string | null;
+    distance?: string | null;
+    origin_address?: string | null;
+    originAddress?: string | null;
+    destination_address?: string | null;
+    destinationAddress?: string | null;
+  };
+  createdAt?: string | null;
 };
 
 const defaultLocationColor = "#b91c1c";
@@ -82,6 +110,185 @@ function isInsideMaribor({ lat, lng }: MapCenter) {
     lng >= MARIBOR_BOUNDS.low.longitude &&
     lng <= MARIBOR_BOUNDS.high.longitude
   );
+}
+
+function normalizeSavedRoute(
+  route: SavedRouteResponse,
+): SavedAccountRoute | null {
+  const journey = route.journey;
+  const hasDrawableRoute = journey?.legs?.some((leg) => leg.polyline.length);
+
+  if (!journey || !hasDrawableRoute) return null;
+
+  return {
+    id: route.id,
+    name: route.name?.trim() || "Shranjena pot",
+    journey,
+    duration: journey.duration,
+    distance: journey.distance,
+    originLabel: journey.origin_address ?? journey.originAddress,
+    destinationLabel: journey.destination_address ?? journey.destinationAddress,
+    modes: Array.from(
+      new Set(
+        (journey.legs ?? [])
+          .map((leg) => leg.mode?.trim())
+          .filter((mode): mode is string => Boolean(mode)),
+      ),
+    ),
+    createdAt: route.createdAt,
+  };
+}
+
+function getJourneyPoint(
+  point:
+    | {
+        lat?: number;
+        lon?: number;
+        lng?: number;
+      }
+    | null
+    | undefined,
+): MapCenter | null {
+  if (!point) return null;
+
+  const lat = point.lat;
+  const lng = point.lng ?? point.lon;
+  if (
+    typeof lat !== "number" ||
+    typeof lng !== "number" ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng)
+  ) {
+    return null;
+  }
+
+  return { lat, lng };
+}
+
+function getRouteEndpoints(path: RoutePath) {
+  const firstLeg = path.legs[0];
+  const lastLeg = path.legs.at(-1);
+
+  return {
+    origin:
+      getJourneyPoint(path.origin as Parameters<typeof getJourneyPoint>[0]) ??
+      getJourneyPoint(firstLeg?.polyline[0]),
+    destination:
+      getJourneyPoint(
+        path.destination as Parameters<typeof getJourneyPoint>[0],
+      ) ?? getJourneyPoint(lastLeg?.polyline.at(-1)),
+  };
+}
+
+function getInstructionText(instruction?: string | null) {
+  if (!instruction) return "";
+
+  if (typeof DOMParser === "undefined") {
+    return instruction
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  const document = new DOMParser().parseFromString(instruction, "text/html");
+  return (document.body.textContent ?? "").replace(/\s+/g, " ").trim();
+}
+
+function getModeLabel(mode: string) {
+  switch (mode) {
+    case "WALK":
+      return "Peš";
+    case "BIKE":
+      return "Kolo";
+    case "BUS":
+      return "Bus";
+    default:
+      return mode;
+  }
+}
+
+function toFiniteNumber(value: unknown) {
+  const numberValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+function getSquaredDistance(firstPoint: MapCenter, secondPoint: MapCenter) {
+  const latDistance = firstPoint.lat - secondPoint.lat;
+  const lngDistance = firstPoint.lng - secondPoint.lng;
+
+  return latDistance * latDistance + lngDistance * lngDistance;
+}
+
+function getActiveRouteStep(
+  legs: RouteLeg[] | undefined,
+  currentLocation: MapCenter | null,
+): ActiveRouteStep | null {
+  if (!legs?.length || !currentLocation) return null;
+
+  let closestPoint: ClosestRoutePoint | null = null;
+
+  for (const [legIndex, leg] of legs.entries()) {
+    for (const [polylineIndex, point] of leg.polyline.entries()) {
+      const distance = getSquaredDistance(currentLocation, {
+        lat: point.lat,
+        lng: point.lon,
+      });
+
+      if (!closestPoint || distance < closestPoint.distance) {
+        closestPoint = {
+          leg,
+          legIndex,
+          polylineIndex,
+          distance,
+        };
+      }
+    }
+  }
+
+  if (!closestPoint) return null;
+
+  const activeStep = closestPoint.leg.steps?.find((step) => {
+    const startPolylineIndex = toFiniteNumber(step.startPolylineIndex);
+    const endPolylineIndex = toFiniteNumber(step.endPolylineIndex);
+
+    if (startPolylineIndex === null || endPolylineIndex === null) {
+      return false;
+    }
+
+    return (
+      closestPoint.polylineIndex >= startPolylineIndex &&
+      closestPoint.polylineIndex <= endPolylineIndex
+    );
+  });
+
+  if (!activeStep) return null;
+
+  const instruction = getInstructionText(activeStep.instruction);
+  if (!instruction) return null;
+
+  let stepIndex = 0;
+  for (const [legIndex, leg] of legs.entries()) {
+    for (const step of leg.steps ?? []) {
+      const stepInstruction = getInstructionText(step.instruction);
+      if (!stepInstruction) continue;
+
+      if (legIndex === closestPoint.legIndex && step === activeStep) {
+        return {
+          instruction,
+          mode: closestPoint.leg.mode,
+          stepIndex,
+        };
+      }
+
+      stepIndex += 1;
+    }
+  }
+
+  return {
+    instruction,
+    mode: closestPoint.leg.mode,
+    stepIndex: -1,
+  };
 }
 
 export const MainAppHome = () => {
@@ -99,6 +306,7 @@ export const MainAppHome = () => {
   const [destinationMarkerPosition, setDestinationMarkerPosition] =
     useState<MapCenter | null>(null);
   const [routePath, setRoutePath] = useState<RoutePath | null>(null);
+  const [isShowingSavedRoute, setIsShowingSavedRoute] = useState(false);
   const [isFollowingRoute, setIsFollowingRoute] = useState(false);
   const [routeFitBoundsTrigger, setRouteFitBoundsTrigger] = useState(0);
   const [routeComputeError, setRouteComputeError] =
@@ -106,12 +314,20 @@ export const MainAppHome = () => {
   const [mapLocationDraft, setMapLocationDraft] =
     useState<MapLocationDraft | null>(null);
   const [savedLocations, setSavedLocations] = useState<SavedMapLocation[]>([]);
+  const [savedRoutes, setSavedRoutes] = useState<SavedAccountRoute[]>([]);
   const [deletingSavedLocationId, setDeletingSavedLocationId] = useState<
     string | null
   >(null);
   const hasShownOutOfCoverageToast = useRef(false);
   const displayedUserLocationPositionRef = useRef<MapCenter | null>(null);
   const userLocationAnimationFrameRef = useRef<number | null>(null);
+  const activeRouteStep = useMemo(
+    () =>
+      isFollowingRoute
+        ? getActiveRouteStep(routePath?.legs, userLocationPosition)
+        : null,
+    [isFollowingRoute, routePath?.legs, userLocationPosition],
+  );
 
   function updateDisplayedUserLocationPosition(position: MapCenter | null) {
     displayedUserLocationPositionRef.current = position;
@@ -121,8 +337,8 @@ export const MainAppHome = () => {
   const applyUserLocation = useCallback(
     (position: GeolocationPosition, source: "watch" | "poll" = "watch") => {
       const userPosition = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
+        lat: position.coords.latitude, //46.5545008
+        lng: position.coords.longitude, //15.64980425
       };
 
       if (import.meta.env.DEV) {
@@ -365,6 +581,52 @@ export const MainAppHome = () => {
     };
   }, [fetchUserSession, getAuthToken, userSession]);
 
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchSavedRoutes() {
+      const token = await getAuthToken();
+
+      if (!token) {
+        setSavedRoutes([]);
+        return;
+      }
+
+      try {
+        const session = userSession ?? (await fetchUserSession(token));
+
+        const response = await fetch(`${apiUrl}/api/paths/${session.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Saved routes request failed: ${response.status}`);
+        }
+
+        const routes = (await response.json()) as SavedRouteResponse[];
+
+        if (!isActive) return;
+
+        setSavedRoutes(
+          routes
+            .map(normalizeSavedRoute)
+            .filter((route): route is SavedAccountRoute => Boolean(route)),
+        );
+      } catch {
+        if (!isActive) return;
+        toast.error("Shranjene poti niso bile naložene.");
+      }
+    }
+
+    void fetchSavedRoutes();
+
+    return () => {
+      isActive = false;
+    };
+  }, [fetchUserSession, getAuthToken, userSession]);
+
   // handlanje overlay kontrol
   function handleZoomIn() {
     setZoom((currentZoom) => Math.min(currentZoom + 1, 20));
@@ -375,6 +637,8 @@ export const MainAppHome = () => {
   }
 
   function handleLocate() {
+    if (isFollowingRoute) return;
+
     locateUser({ zoomToUser: true, showOutOfCoverageToast: true });
   }
 
@@ -408,6 +672,7 @@ export const MainAppHome = () => {
 
   function handlePlaceSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
     setSelectedLeg(null);
@@ -425,6 +690,7 @@ export const MainAppHome = () => {
 
   function handleDestinationSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
     setSelectedLeg(null);
@@ -434,10 +700,25 @@ export const MainAppHome = () => {
 
   function handlePathReceive(path: RoutePath) {
     setRoutePath(path);
+    setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
     setSelectedLeg(null);
     setMapLocationDraft(null);
+  }
+
+  function handleSavedRouteSelect(route: SavedAccountRoute) {
+    const endpoints = getRouteEndpoints(route.journey);
+
+    setRoutePath(route.journey);
+    setIsShowingSavedRoute(true);
+    setIsFollowingRoute(false);
+    setRouteComputeError(null);
+    setSelectedLeg(null);
+    setMapLocationDraft(null);
+    setMarkerPosition(endpoints.origin);
+    setDestinationMarkerPosition(endpoints.destination);
+    setRouteFitBoundsTrigger((currentTrigger) => currentTrigger + 1);
   }
 
   function handleStartRouteFollowing() {
@@ -451,6 +732,7 @@ export const MainAppHome = () => {
 
   function handlePathError(error: RouteComputeError) {
     setRoutePath(null);
+    setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(error);
     setSelectedLeg(null);
@@ -618,6 +900,13 @@ export const MainAppHome = () => {
         throw new Error(`Save route request failed: ${response.status}`);
       }
 
+      const savedRoute = normalizeSavedRoute(
+        (await response.json()) as SavedRouteResponse,
+      );
+      if (savedRoute) {
+        setSavedRoutes((currentRoutes) => [...currentRoutes, savedRoute]);
+      }
+
       toast.success("Pot je shranjena.");
     } catch {
       toast.error("Poti ni bilo mogoče shraniti. Poskusite znova.");
@@ -667,7 +956,27 @@ export const MainAppHome = () => {
         onStartRoute={handleStartRouteFollowing}
         onEndRoute={handleEndRouteFollowing}
         savedLocations={savedLocations}
+        savedRoutes={savedRoutes}
+        onSavedRouteSelect={handleSavedRouteSelect}
       />
+
+      {activeRouteStep && (
+        <div className='pointer-events-none fixed inset-x-4 bottom-16 z-[25] flex justify-center'>
+          <div className='pointer-events-auto w-full max-w-md rounded-lg border border-border bg-card/95 px-4 py-3 text-card-foreground shadow-2xl backdrop-blur-sm dark:border-neutral-600 dark:bg-neutral-800/95 dark:text-white'>
+            <div className='flex items-center gap-2'>
+              <span className='rounded-full bg-red-700 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white'>
+                {getModeLabel(activeRouteStep.mode)}
+              </span>
+              <span className='text-xs font-medium text-muted-foreground dark:text-neutral-300'>
+                Aktualni korak
+              </span>
+            </div>
+            <p className='mt-2 text-sm font-semibold leading-snug'>
+              {activeRouteStep.instruction}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* route options */}
       <RouteOptions
@@ -676,6 +985,8 @@ export const MainAppHome = () => {
         computeError={routeComputeError}
         canSaveRoute={Boolean(routePath)}
         hasFetchedRoute={Boolean(routePath)}
+        isSavedRoute={isShowingSavedRoute}
+        activeStepIndex={activeRouteStep?.stepIndex ?? null}
         onSaveRoute={handleRouteSave}
       />
     </main>

@@ -20,6 +20,8 @@ type RouteOptionProps = {
   } | null;
   canSaveRoute?: boolean;
   hasFetchedRoute?: boolean;
+  isSavedRoute?: boolean;
+  activeStepIndex?: number | null;
   onSaveRoute?: (name: string) => Promise<void>;
 };
 
@@ -29,6 +31,8 @@ export const RouteOptions = ({
   computeError,
   canSaveRoute = true,
   hasFetchedRoute = true,
+  isSavedRoute = false,
+  activeStepIndex = null,
   onSaveRoute,
 }: RouteOptionProps) => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -172,96 +176,133 @@ export const RouteOptions = ({
           </div>
         ) : (
           <div className='flex flex-col gap-8'>
-            <div className='flex flex-col gap-7 lg:flex-row lg:gap-9'>
-              {routes.map((option) => {
-                const isSelected = option.className.includes("ring-4");
-                const buttonClassName = getButtonClassName(option.className);
+            {isSavedRoute ? (
+              <div className='flex min-h-40 items-center justify-center rounded-[18px] border border-border bg-muted px-8 text-center text-lg font-medium text-muted-foreground shadow-md dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'>
+                Različni načini za shranjeno pot niso na voljo.
+              </div>
+            ) : (
+              <div className='flex flex-col gap-7 lg:flex-row lg:gap-9'>
+                {routes.map((option) => {
+                  const isSelected = option.className.includes("ring-4");
+                  const buttonClassName = getButtonClassName(option.className);
 
-                return (
-                  <div
-                    key={option.title}
-                    className='flex w-full flex-col gap-3 lg:min-w-0 lg:flex-1'>
-                    <article
-                      className={`min-h-40 rounded-[18px] border px-8 py-7 text-left shadow-lg lg:px-12 ${option.className} ${
-                        isSelected
-                          ? "border-white/80 shadow-white/20 dark:border-white/70 dark:shadow-white/10"
-                          : ""
-                      }`}>
-                      <span className='block wrap-break-words text-[25px] font-normal leading-tight text-current/70 dark:text-[#b2ada4]'>
-                        {option.title}
-                      </span>
-                      <strong className='mt-2 block text-[32px] font-bold leading-none'>
-                        {option.time}
-                      </strong>
-                      <div className='mt-4 flex items-center gap-3 text-current/60 dark:text-[#aaa69d]'>
-                        {option.icons.map((Icon, iconIndex) => (
-                          <Icon key={iconIndex} />
-                        ))}
-                      </div>
-                    </article>
+                  return (
+                    <div
+                      key={option.title}
+                      className='flex w-full flex-col gap-3 lg:min-w-0 lg:flex-1'>
+                      <article
+                        className={`min-h-40 rounded-[18px] border px-8 py-7 text-left shadow-lg lg:px-12 ${option.className} ${
+                          isSelected
+                            ? "border-white/80 shadow-white/20 dark:border-white/70 dark:shadow-white/10"
+                            : ""
+                        }`}>
+                        <span className='block wrap-break-words text-[25px] font-normal leading-tight text-current/70 dark:text-[#b2ada4]'>
+                          {option.title}
+                        </span>
+                        <strong className='mt-2 block text-[32px] font-bold leading-none'>
+                          {option.time}
+                        </strong>
+                        <div className='mt-4 flex items-center gap-3 text-current/60 dark:text-[#aaa69d]'>
+                          {option.icons.map((Icon, iconIndex) => (
+                            <Icon key={iconIndex} />
+                          ))}
+                        </div>
+                      </article>
 
-                    <div className='w-full'>
-                      {editingRouteTitle === option.title ? (
-                        <div className='flex flex-col gap-3'>
-                          <Input
-                            value={routeName}
-                            onChange={(event) =>
-                              setRouteName(event.target.value)
-                            }
-                            placeholder='Ime poti'
-                            aria-label='Ime poti'
-                            className='h-11 rounded-[18px] bg-card text-card-foreground shadow-md dark:bg-[#292927]'
-                          />
+                      <div className='w-full'>
+                        {editingRouteTitle === option.title ? (
+                          <div className='flex flex-col gap-3'>
+                            <Input
+                              value={routeName}
+                              onChange={(event) =>
+                                setRouteName(event.target.value)
+                              }
+                              placeholder='Ime poti'
+                              aria-label='Ime poti'
+                              className='h-11 rounded-[18px] bg-card text-card-foreground shadow-md dark:bg-[#292927]'
+                            />
+                            <Button
+                              type='button'
+                              onClick={() =>
+                                void submitRouteSave(option.title)
+                              }
+                              disabled={
+                                !routeName.trim() || savingRouteTitle !== null
+                              }
+                              className={`h-11 w-full rounded-[18px] border shadow-md hover:brightness-95 ${buttonClassName}`}>
+                              {savingRouteTitle === option.title
+                                ? "Shranjevanje ..."
+                                : "Shrani"}
+                            </Button>
+                          </div>
+                        ) : (
                           <Button
                             type='button'
-                            onClick={() => void submitRouteSave(option.title)}
-                            disabled={
-                              !routeName.trim() || savingRouteTitle !== null
-                            }
+                            variant='secondary'
+                            onClick={() => startRouteSave(option.title)}
+                            disabled={!canSaveRoute}
                             className={`h-11 w-full rounded-[18px] border shadow-md hover:brightness-95 ${buttonClassName}`}>
-                            {savingRouteTitle === option.title
-                              ? "Shranjevanje ..."
-                              : "Shrani"}
+                            Shrani pot
                           </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          type='button'
-                          variant='secondary'
-                          onClick={() => startRouteSave(option.title)}
-                          disabled={!canSaveRoute}
-                          className={`h-11 w-full rounded-[18px] border shadow-md hover:brightness-95 ${buttonClassName}`}>
-                          Shrani pot
-                        </Button>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
 
-            {routeSteps.length > 0 && (
+            {(routeSteps.length > 0 || isSavedRoute) && (
               <section className='rounded-[18px] border border-border bg-background/70 px-6 py-5 shadow-md dark:border-neutral-600 dark:bg-neutral-800/70'>
                 <h2 className='text-xl font-semibold'>Navodila za pot</h2>
-                <ol className='mt-4 space-y-3'>
-                  {routeSteps.map((step, index) => (
-                    <li
-                      key={`${step.legIndex}-${index}-${step.instruction}`}
-                      className='grid grid-cols-[2rem_1fr] gap-3 text-sm leading-snug'>
-                      <span className='flex h-8 w-8 items-center justify-center rounded-full bg-red-700 text-xs font-semibold text-white'>
-                        {index + 1}
-                      </span>
-                      <div className='min-w-0 rounded-lg bg-card px-3 py-2 shadow-sm dark:bg-[#292927]'>
-                        <span className='mb-1 inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground dark:bg-neutral-700 dark:text-neutral-300'>
-                          {getModeLabel(step.mode)}
-                        </span>
-                        <p className='wrap-break-words text-card-foreground'>
-                          {step.instruction}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
+                {routeSteps.length > 0 ? (
+                  <ol className='mt-4 space-y-3'>
+                    {routeSteps.map((step, index) => {
+                      const hasActiveStep =
+                        typeof activeStepIndex === "number" &&
+                        activeStepIndex >= 0;
+                      const isPastStep = hasActiveStep && index < activeStepIndex;
+                      const isCurrentStep =
+                        hasActiveStep && index === activeStepIndex;
+
+                      return (
+                        <li
+                          key={`${step.legIndex}-${index}-${step.instruction}`}
+                          className={`grid grid-cols-[2rem_1fr] gap-3 text-sm leading-snug transition-transform duration-200 ${
+                            isCurrentStep ? "scale-[1.02]" : ""
+                          }`}>
+                          <span
+                            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white transition-all duration-200 ${
+                              isCurrentStep
+                                ? "scale-110 bg-red-700 shadow-lg shadow-red-700/30 ring-2 ring-red-200 dark:ring-red-500/40"
+                                : isPastStep
+                                  ? "bg-neutral-400 dark:bg-neutral-600"
+                                  : "bg-red-700"
+                            }`}>
+                            {index + 1}
+                          </span>
+                          <div
+                            className={`min-w-0 rounded-lg bg-card px-3 py-2 shadow-sm transition-all duration-200 dark:bg-[#292927] ${
+                              isCurrentStep
+                                ? "shadow-lg ring-2 ring-red-200 dark:ring-red-500/40"
+                                : ""
+                            }`}>
+                            <span className='mb-1 inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground dark:bg-neutral-700 dark:text-neutral-300'>
+                              {getModeLabel(step.mode)}
+                            </span>
+                            <p className='wrap-break-words text-card-foreground'>
+                              {step.instruction}
+                            </p>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                ) : (
+                  <p className='mt-4 rounded-lg bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm dark:bg-[#292927] dark:text-neutral-300'>
+                    Navodila za to shranjeno pot niso na voljo.
+                  </p>
+                )}
               </section>
             )}
           </div>

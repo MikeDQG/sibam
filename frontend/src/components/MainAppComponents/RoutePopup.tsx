@@ -1,5 +1,6 @@
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { X } from "lucide-react";
+import type { ReactNode } from "react";
 import type { MapPoint, RouteLeg } from "./RoutePolyline";
 
 export type RoutePopupSelection = {
@@ -54,6 +55,44 @@ const formatTime = (timestamp?: string) => {
   });
 };
 
+const formatCount = (count?: number) => {
+  if (typeof count !== "number" || !Number.isFinite(count)) return null;
+
+  return Math.round(count).toString();
+};
+
+const formatProbability = (probability?: number) => {
+  if (typeof probability !== "number" || !Number.isFinite(probability)) {
+    return null;
+  }
+
+  return `${Math.round(probability * 100)} %`;
+};
+
+const getProbabilityColorClass = (probability?: number) => {
+  if (typeof probability !== "number" || !Number.isFinite(probability)) {
+    return "";
+  }
+
+  const percentage = probability * 100;
+  if (percentage > 80) return "text-emerald-600 dark:text-emerald-400";
+  if (percentage >= 50) return "text-yellow-600 dark:text-yellow-300";
+  if (percentage >= 25) return "text-orange-600 dark:text-orange-400";
+
+  return "text-red-600 dark:text-red-400";
+};
+
+const formatColoredProbability = (probability?: number) => {
+  const formattedProbability = formatProbability(probability);
+  if (!formattedProbability) return null;
+
+  return (
+    <span className={`font-semibold ${getProbabilityColorClass(probability)}`}>
+      {formattedProbability}
+    </span>
+  );
+};
+
 export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
   const showPathDetails = selectedLeg.source === "path";
   const showBusIconDetails = selectedLeg.source === "busIcon";
@@ -65,6 +104,10 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
   // pokazemo ce je izbran bus ikona in je prejsna pot kolesarska --> bus po vrnitvi kolesa
   const showBusAfterBikeReturnPlaces =
     showBusIconDetails && selectedLeg.previousLeg?.mode === "BIKE";
+  const bikeReturnLeg =
+    showBusAfterBikeReturnPlaces || showBikeReturnIconPlaces
+      ? (selectedLeg.previousLeg ?? selectedLeg.leg)
+      : null;
 
   return (
     <AdvancedMarker
@@ -97,17 +140,76 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
             }
           />
           <RoutePopupRow
+            label='Pričakovana zamuda (min)'
+            value={
+              showBusIconDetails &&
+              selectedLeg.leg.mode === "BUS" &&
+              typeof selectedLeg.leg.busDelayPrediction
+                ?.predictedBoardingDelaySeconds === "number" &&
+              Number.isFinite(
+                selectedLeg.leg.busDelayPrediction
+                  .predictedBoardingDelaySeconds,
+              )
+                ? Math.round(
+                    selectedLeg.leg.busDelayPrediction
+                      .predictedBoardingDelaySeconds / 60,
+                  ).toString()
+                : null
+            }
+          />
+          <RoutePopupRow
             label='Mesta za oddajo kolesa'
             value={
-              showBusAfterBikeReturnPlaces || showBikeReturnIconPlaces
-                ? (selectedLeg.previousLeg?.freeStands ??
-                  selectedLeg.leg.freeStands)
+              bikeReturnLeg
+                ? (bikeReturnLeg.freeStands ?? selectedLeg.leg.freeStands)
+                : null
+            }
+          />
+          <RoutePopupRow
+            label='Predvideno št. prostih mest za oddajo kolesa'
+            value={
+              bikeReturnLeg
+                ? formatCount(
+                    bikeReturnLeg.bikePrediction?.predictedStandsAtReturn,
+                  )
+                : null
+            }
+          />
+          <RoutePopupRow
+            label='Verjetnost za prosto mesto zate'
+            value={
+              bikeReturnLeg
+                ? formatColoredProbability(
+                    bikeReturnLeg.bikePrediction
+                      ?.returnStandAvailableProbability,
+                  )
                 : null
             }
           />
           <RoutePopupRow
             label='Prosta kolesa'
             value={showBikePickupPlaces ? selectedLeg.leg.freeBikes : null}
+          />
+          <RoutePopupRow
+            label='Predvideno št. prostih koles ob tvojem prihodu'
+            value={
+              showBikePickupPlaces
+                ? formatCount(
+                    selectedLeg.leg.bikePrediction?.predictedBikesAtPickup,
+                  )
+                : null
+            }
+          />
+          <RoutePopupRow
+            label='Verjetnost, da bo zate ostalo prosto kolo'
+            value={
+              showBikePickupPlaces
+                ? formatColoredProbability(
+                    selectedLeg.leg.bikePrediction
+                      ?.pickupBikeAvailableProbability,
+                  )
+                : null
+            }
           />
           <RoutePopupRow
             label='Trajanje'
@@ -131,7 +233,7 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
 
 type RoutePopupRowProps = {
   label: string;
-  value?: string | null;
+  value?: ReactNode | null;
 };
 
 const RoutePopupRow = ({ label, value }: RoutePopupRowProps) => {
@@ -139,7 +241,9 @@ const RoutePopupRow = ({ label, value }: RoutePopupRowProps) => {
 
   return (
     <div className='flex justify-between gap-5'>
-      <span className='text-muted-foreground dark:text-neutral-300'>{label}</span>
+      <span className='text-muted-foreground dark:text-neutral-300'>
+        {label}
+      </span>
       <span className='font-medium'>{value}</span>
     </div>
   );

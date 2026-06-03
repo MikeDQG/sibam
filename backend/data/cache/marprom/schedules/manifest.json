@@ -1,0 +1,42 @@
+{
+  "schemaVersion" : 1,
+  "generatedAt" : "2026-06-03T14:01:56.230370300+02:00",
+  "windowStart" : "2026-06-03",
+  "windowEnd" : "2026-06-09",
+  "days" : [ {
+    "date" : "2026-06-03",
+    "path" : "marprom/schedules/days/2026-06-03.json",
+    "sha256" : "c1c0fc15376d93cf20e34598a992fc0ee3ba817c8eaacdf7a4c7e8030568e1a6",
+    "source" : "LOCAL"
+  }, {
+    "date" : "2026-06-04",
+    "path" : "marprom/schedules/days/2026-06-04.json",
+    "sha256" : "e7e81cecb13b34133b9d343ded57502d5f3335c29804d503671b7074079a0fbd",
+    "source" : "LOCAL"
+  }, {
+    "date" : "2026-06-05",
+    "path" : "marprom/schedules/days/2026-06-05.json",
+    "sha256" : "6a21a4beba716fd790110c642205ea71526f9eb2547bca4ef0dfefc1033d9a06",
+    "source" : "LOCAL"
+  }, {
+    "date" : "2026-06-06",
+    "path" : "marprom/schedules/days/2026-06-06.json",
+    "sha256" : "7faf03a6f2d5d6f50e8e115a2a746b958d3fea722777ec863d4e88b22324e7a1",
+    "source" : "LOCAL"
+  }, {
+    "date" : "2026-06-07",
+    "path" : "marprom/schedules/days/2026-06-07.json",
+    "sha256" : "2de0afd56aa2051809f8c787b6f66586e473c1b0f95d240245c13aa76918ff5c",
+    "source" : "LOCAL"
+  }, {
+    "date" : "2026-06-08",
+    "path" : "marprom/schedules/days/2026-06-08.json",
+    "sha256" : "4589adaf0632a452cd83d4ff63d821aa7a99ff19b0e7e63bdd51c5f87b82920c",
+    "source" : "LOCAL"
+  }, {
+    "date" : "2026-06-09",
+    "path" : "marprom/schedules/days/2026-06-09.json",
+    "sha256" : "22d09735e03ff2d5031d4760297d0a282d44837129f9a190974214610b60f04d",
+    "source" : "LOCAL"
+  } ]
+}

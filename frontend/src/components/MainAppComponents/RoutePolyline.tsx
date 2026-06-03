@@ -10,6 +10,7 @@ declare const google: {
       strokeOpacity?: number;
       strokeWeight: number;
       geodesic: boolean;
+      clickable?: boolean;
       icons?: {
         icon: {
           path: string;
@@ -51,10 +52,28 @@ export type MapPoint = {
   lng: number;
 };
 
+export type RouteStep = {
+  instruction?: string | null;
+  maneuver?: string | null;
+  distanceMeters?: number;
+  durationSeconds?: number;
+  startPolylineIndex?: number;
+  endPolylineIndex?: number;
+};
+
 export type RouteLeg = {
   mode: string;
   duration?: string;
   distance?: string;
+  busDelayPrediction?: {
+    predictedBoardingDelaySeconds?: number;
+  };
+  bikePrediction?: {
+    pickupBikeAvailableProbability?: number;
+    predictedBikesAtPickup?: number;
+    predictedStandsAtReturn?: number;
+    returnStandAvailableProbability?: number;
+  };
   code?: string | null;
   headsignName?: string | null;
   freeStands?: string | null;
@@ -65,9 +84,7 @@ export type RouteLeg = {
     lat: number;
     lon: number;
   }[];
-  steps?: {
-    instruction?: string | null;
-  }[];
+  steps?: RouteStep[];
 };
 
 export type RoutePath = {
@@ -78,6 +95,7 @@ export type RoutePath = {
 type RoutePolylineProps = {
   legs: RouteLeg[];
   fitBoundsTrigger?: number;
+  interactive?: boolean;
   onLegClick?: (leg: RouteLeg, position: MapPoint) => void;
 };
 
@@ -90,6 +108,7 @@ const legColors: Record<string, string> = {
 export const RoutePolyline = ({
   legs,
   fitBoundsTrigger = 0,
+  interactive = true,
   onLegClick,
 }: RoutePolylineProps) => {
   const map = useMap();
@@ -160,24 +179,27 @@ export const RoutePolyline = ({
         strokeColor: color,
         strokeWeight: 5,
         geodesic: true,
+        clickable: interactive,
         ...getLineOptions(leg.mode, color),
       });
 
-      const clickListener = polyline.addListener("click", (event) => {
-        const clickedPosition = event.latLng?.toJSON();
-        if (clickedPosition) {
-          onLegClickRef.current?.(leg, clickedPosition);
-          return;
-        }
+      const clickListener = interactive
+        ? polyline.addListener("click", (event) => {
+            const clickedPosition = event.latLng?.toJSON();
+            if (clickedPosition) {
+              onLegClickRef.current?.(leg, clickedPosition);
+              return;
+            }
 
-        const fallbackPoint = leg.polyline[0];
-        if (!fallbackPoint) return;
+            const fallbackPoint = leg.polyline[0];
+            if (!fallbackPoint) return;
 
-        onLegClickRef.current?.(leg, {
-          lat: fallbackPoint.lat,
-          lng: fallbackPoint.lon,
-        });
-      });
+            onLegClickRef.current?.(leg, {
+              lat: fallbackPoint.lat,
+              lng: fallbackPoint.lon,
+            });
+          })
+        : null;
 
       return { polyline, clickListener };
     });
@@ -199,11 +221,11 @@ export const RoutePolyline = ({
 
     return () => {
       polylines.forEach(({ polyline, clickListener }) => {
-        clickListener.remove();
+        clickListener?.remove();
         polyline.setMap(null);
       });
     };
-  }, [fitBoundsTrigger, map, legs]);
+  }, [fitBoundsTrigger, interactive, map, legs]);
 
   return null;
 };

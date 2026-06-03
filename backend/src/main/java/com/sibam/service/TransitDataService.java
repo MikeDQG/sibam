@@ -15,6 +15,8 @@ import com.sibam.dto.marprom.trips.MarpromTripsResponseDto;
 import org.springframework.stereotype.Service;
 import com.sibam.integration.marprom.MarpromClient;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,7 +52,11 @@ public class TransitDataService {
     }
 
     public List<MarpromLineDto> getLines() {
-        MarpromLinesResponse response = marpromClient.getLines().block();
+        return getLines(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+    }
+
+    public List<MarpromLineDto> getLines(String date) {
+        MarpromLinesResponse response = marpromClient.getLines(date).block();
         if (response == null) {
             System.out.println("Ni najdenih linij.");
             return null;
@@ -74,16 +80,35 @@ public class TransitDataService {
 
     public List<MarpromRouteDto> getAllRoutes() {
         List<MarpromLineDto> lines = getLines();
+        return getAllRoutes(lines, LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+    }
+
+    public List<MarpromRouteDto> getAllRoutes(String date) {
+        List<MarpromLineDto> lines = getLines(date);
+        return getAllRoutes(lines, date);
+    }
+
+    private List<MarpromRouteDto> getAllRoutes(List<MarpromLineDto> lines, String date) {
         List<MarpromRouteDto> routes = new ArrayList<>();
+        if (lines == null) {
+            return routes;
+        }
         lines.forEach(l -> {
-            routes.addAll(getRoutes(l.lineId()));
+            List<MarpromRouteDto> lineRoutes = getRoutes(l.lineId(), date);
+            if (lineRoutes != null) {
+                routes.addAll(lineRoutes);
+            }
         });
         return routes;
     }
 
     public List<MarpromRouteDto> getRoutes(int lineId) {
+        return getRoutes(lineId, LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+    }
 
-        MarpromRoutesResponseDto response = marpromClient.getRoutes(lineId).block();
+    public List<MarpromRouteDto> getRoutes(int lineId, String date) {
+
+        MarpromRoutesResponseDto response = marpromClient.getRoutes(lineId, date).block();
 
         if (response == null) {
             System.out.println("Ni najdenih tras.");
@@ -105,8 +130,12 @@ public class TransitDataService {
     }
 
     public List<MarpromStopScheduleDto> getStopScheduleForLine(int lineId) {
+        return getStopScheduleForLine(lineId, LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+    }
 
-        MarpromScheduleResponse response = marpromClient.getStopScheduleForLine(lineId).block();
+    public List<MarpromStopScheduleDto> getStopScheduleForLine(int lineId, String date) {
+
+        MarpromScheduleResponse response = marpromClient.getStopScheduleForLine(lineId, date).block();
         if (response == null) {
             System.out.println("Ni najdenih voznih redov.");
             return null;
@@ -114,12 +143,22 @@ public class TransitDataService {
         System.out.println("\n--- ŠibaM: Začenjam prevzem voznega reda ---");
 
         List<MarpromStopScheduleDto> schedules = response.schedules();
+        if (schedules == null || schedules.isEmpty()) {
+            return schedules;
+        }
 
         MarpromStopScheduleDto schedule = schedules.getFirst();
-        System.out.printf("Postajalisce: %s (Ime: %s; Naslov: %s) %n",schedule.stopPoint().id(),schedule.stopPoint().name(), schedule.stopPoint().address());
-        MarpromLineScheduleDto scheduleForLine = schedule.scheduleForLine().getFirst();
-        MarpromRouteScheduleDto s = scheduleForLine.routeAndSchedules().getFirst();
-        System.out.printf("Vozni red za linijo: %s; Smer: %s; Prvi odhod: %s %n",scheduleForLine.lineId(),s.direction(),s.departures().getFirst());
+        if (schedule.scheduleForLine() != null && !schedule.scheduleForLine().isEmpty()) {
+            MarpromLineScheduleDto scheduleForLine = schedule.scheduleForLine().getFirst();
+            if (scheduleForLine.routeAndSchedules() != null && !scheduleForLine.routeAndSchedules().isEmpty()) {
+                MarpromRouteScheduleDto s = scheduleForLine.routeAndSchedules().getFirst();
+                String firstDeparture = s.departures() == null || s.departures().isEmpty()
+                        ? "n/a"
+                        : s.departures().getFirst();
+                System.out.printf("Postajalisce: %s (Ime: %s; Naslov: %s) %n",schedule.stopPoint().id(),schedule.stopPoint().name(), schedule.stopPoint().address());
+                System.out.printf("Vozni red za linijo: %s; Smer: %s; Prvi odhod: %s %n",scheduleForLine.lineId(),s.direction(),firstDeparture);
+            }
+        }
 
         return schedules;
     }

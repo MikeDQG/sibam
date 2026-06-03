@@ -39,10 +39,15 @@ export function SavedLocationMapCard({
   return (
     <article
       className={`group overflow-hidden rounded-lg border border-border bg-muted shadow-sm transition-[margin] duration-200 dark:border-neutral-600 dark:bg-neutral-800 ${
-        onDelete ? "mb-11 hover:mb-0" : ""
+        onDelete ? "mb-0 sm:mb-11 sm:hover:mb-0" : ""
       }`}
       aria-label={location.name}>
-      <div className='aspect-square overflow-hidden rounded-lg transition-[border-radius] duration-200 group-hover:rounded-b-none'>
+      <div
+        className={`aspect-square overflow-hidden transition-[border-radius] duration-200 ${
+          onDelete
+            ? "rounded-t-lg rounded-b-none sm:rounded-lg sm:group-hover:rounded-b-none"
+            : "rounded-lg"
+        }`}>
         <Map
           center={location.position}
           zoom={zoom}
@@ -86,7 +91,7 @@ export function SavedLocationMapCard({
             event.stopPropagation();
             onDelete(location.id);
           }}
-          className='flex h-11 max-h-0 w-full cursor-pointer items-center justify-center overflow-hidden rounded-b-lg bg-card/95 text-foreground transition-[max-height,color] duration-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 group-hover:max-h-11 dark:bg-neutral-800/95 dark:text-white dark:hover:text-red-600'
+          className='flex h-11 max-h-11 w-full cursor-pointer items-center justify-center overflow-hidden rounded-b-lg bg-card/95 text-foreground transition-[max-height,color] duration-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 sm:max-h-0 sm:group-hover:max-h-11 dark:bg-neutral-800/95 dark:text-white dark:hover:text-red-600'
           aria-label={`Izbriši lokacijo ${location.name}`}>
           <Trash size={20} />
         </button>

@@ -1,27 +1,11 @@
-import {
-  Bike,
-  Bus,
-  LocateFixed,
-  Minus,
-  Route,
-  Plus,
-  Search,
-  UserRound,
-  X,
-  LogOut,
-  ArrowUpDown,
-  Bookmark,
-} from "lucide-react";
+import { LocateFixed, Route } from "lucide-react";
 import { WeatherWidget } from "./WeatherWidget";
 import { RouteLoadingOverlay } from "./RouteLoadingOverlay";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import type { RoutePath } from "./RoutePolyline";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useState, useEffect, useRef } from "react";
-import { ThemeToggle } from "../ThemeToggle";
 import {
   usePlacesAutocomplete,
   MARIBOR_BOUNDS,
@@ -29,6 +13,14 @@ import {
 } from "../../hooks/usePlacesAutocomplete";
 import { LocationIconGlyph, type LocationIcon } from "./MapLocationPopup";
 import type { SavedAccountRoute } from "../Pages/AccountPageComponents/SavedRouteMapCard";
+import { DestinationSearch } from "./MainAppControlOverlayComponents/DestinationSearch";
+import { DirectionsInputs } from "./MainAppControlOverlayComponents/DirectionsInputs";
+import { MapControls } from "./MainAppControlOverlayComponents/MapControls";
+import { RouteControls } from "./MainAppControlOverlayComponents/RouteControls";
+import type {
+  Coordinates,
+  TimeMode,
+} from "./MainAppControlOverlayComponents/types";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const placesApiKey = import.meta.env.VITE_PLACES_API_KEY as string;
@@ -61,11 +53,6 @@ type ComputePathErrorResponse = {
   message?: unknown;
 };
 
-type Coordinates = {
-  lat: number;
-  lng: number;
-};
-
 type SavedSearchLocation = {
   id: string;
   name: string;
@@ -83,6 +70,70 @@ function isInsideMaribor({ lat, lng }: Coordinates) {
     lng >= MARIBOR_BOUNDS.low.longitude &&
     lng <= MARIBOR_BOUNDS.high.longitude
   );
+}
+
+function formatSavedRouteDuration(value?: string | number | null) {
+  const duration = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(duration)) return null;
+
+  return `${Math.round(duration / 60000)} min`;
+}
+
+function formatSavedRouteDistance(value?: string | number | null) {
+  const distance = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(distance)) return null;
+
+  const meters = Math.round(distance);
+  const kilometers = Math.floor(meters / 1000);
+  const remainingMeters = meters % 1000;
+
+  if (kilometers <= 0) return `${remainingMeters} m`;
+  if (remainingMeters === 0) return `${kilometers} km`;
+
+  return `${kilometers} km ${remainingMeters} m`;
+}
+
+function getJourneyPoint(
+  point:
+    | {
+        lat?: number;
+        lon?: number;
+        lng?: number;
+      }
+    | null
+    | undefined,
+) {
+  if (!point) return null;
+
+  const lat = point.lat;
+  const lng = point.lng ?? point.lon;
+  if (
+    typeof lat !== "number" ||
+    typeof lng !== "number" ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng)
+  ) {
+    return null;
+  }
+
+  return { lat, lng };
+}
+
+function getRouteEndpoints(route: SavedAccountRoute) {
+  const firstLeg = route.journey.legs[0];
+  const lastLeg = route.journey.legs.at(-1);
+
+  return {
+    origin:
+      getJourneyPoint(
+        route.journey.origin as Parameters<typeof getJourneyPoint>[0],
+      ) ??
+      getJourneyPoint(firstLeg?.polyline[0]),
+    destination:
+      getJourneyPoint(
+        route.journey.destination as Parameters<typeof getJourneyPoint>[0],
+      ) ?? getJourneyPoint(lastLeg?.polyline.at(-1)),
+  };
 }
 
 export const MainAppControlOverlay = ({
@@ -119,7 +170,7 @@ export const MainAppControlOverlay = ({
   const [useBike, setUseBike] = useState(true);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   const [isSavedRoutesOpen, setIsSavedRoutesOpen] = useState(false);
-  const [timeMode, setTimeMode] = useState<"depart" | "arrive">("depart");
+  const [timeMode, setTimeMode] = useState<TimeMode>("depart");
   const [selectedTime, setSelectedTime] = useState(() => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 1);
@@ -144,69 +195,6 @@ export const MainAppControlOverlay = ({
     return {
       lat: currentLocation.lat,
       lng: currentLocation.lng,
-    };
-  }
-
-  function formatSavedRouteDuration(value?: string | number | null) {
-    const duration = typeof value === "number" ? value : Number(value);
-    if (!Number.isFinite(duration)) return null;
-
-    return `${Math.round(duration / 60000)} min`;
-  }
-
-  function formatSavedRouteDistance(value?: string | number | null) {
-    const distance = typeof value === "number" ? value : Number(value);
-    if (!Number.isFinite(distance)) return null;
-
-    const meters = Math.round(distance);
-    const kilometers = Math.floor(meters / 1000);
-    const remainingMeters = meters % 1000;
-
-    if (kilometers <= 0) return `${remainingMeters} m`;
-    if (remainingMeters === 0) return `${kilometers} km`;
-
-    return `${kilometers} km ${remainingMeters} m`;
-  }
-
-  function getJourneyPoint(
-    point:
-      | {
-          lat?: number;
-          lon?: number;
-          lng?: number;
-        }
-      | null
-      | undefined,
-  ) {
-    if (!point) return null;
-
-    const lat = point.lat;
-    const lng = point.lng ?? point.lon;
-    if (
-      typeof lat !== "number" ||
-      typeof lng !== "number" ||
-      !Number.isFinite(lat) ||
-      !Number.isFinite(lng)
-    ) {
-      return null;
-    }
-
-    return { lat, lng };
-  }
-
-  function getRouteEndpoints(route: SavedAccountRoute) {
-    const firstLeg = route.journey.legs[0];
-    const lastLeg = route.journey.legs.at(-1);
-
-    return {
-      origin:
-        getJourneyPoint(
-          route.journey.origin as Parameters<typeof getJourneyPoint>[0],
-        ) ?? getJourneyPoint(firstLeg?.polyline[0]),
-      destination:
-        getJourneyPoint(
-          route.journey.destination as Parameters<typeof getJourneyPoint>[0],
-        ) ?? getJourneyPoint(lastLeg?.polyline.at(-1)),
     };
   }
 
@@ -333,6 +321,36 @@ export const MainAppControlOverlay = ({
     origin.setIsOpen(canUseCurrentLocation || hasSavedLocations);
     setIsSavedRoutesOpen(false);
     setShowDirections(true);
+  }
+
+  function handleDestinationClear() {
+    destination.clear();
+    setDestinationCoords(null);
+    onDestinationSelect?.(null);
+  }
+
+  function handleDestinationSearchClear() {
+    handleDestinationClear();
+    setSelectedPlace("");
+  }
+
+  function handleSavedRoutesToggle() {
+    origin.setIsOpen(false);
+    destination.setIsOpen(false);
+    setIsSavedRoutesOpen((isOpen) => !isOpen);
+  }
+
+  function handleToggleTimeMode() {
+    setTimeMode((mode) => (mode === "depart" ? "arrive" : "depart"));
+  }
+
+  function handleProfileClick() {
+    navigate(isLoggedIn ? "/account" : "/login");
+  }
+
+  function handleLogoutClick() {
+    auth.signOut();
+    navigate("/login");
   }
 
   function renderSavedRoutesDropdown() {
@@ -650,200 +668,45 @@ export const MainAppControlOverlay = ({
             className='pointer-events-auto flex min-w-0 flex-1 flex-col gap-1 min-[700px]:w-[38rem] min-[700px]:flex-none'>
             {showDirections ? (
               <>
-                <div className='relative'>
-                  <div className='overflow-hidden rounded-lg bg-white/95 text-neutral-900 shadow-md dark:bg-neutral-700 dark:text-white'>
-                    <div className='relative flex h-10 items-center pr-10'>
-                      <Search
-                        size={16}
-                        className='pointer-events-none absolute left-3 z-10 shrink-0 text-muted-foreground'
-                      />
-                      <Input
-                        type='text'
-                        value={origin.value}
-                        onChange={origin.handleChange}
-                        onFocus={handleOriginFocus}
-                        onKeyDown={(e) =>
-                          e.key === "Escape" && origin.setIsOpen(false)
-                        }
-                        placeholder='Kje štartaš?'
-                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none dark:bg-transparent focus-visible:ring-0 focus-visible:outline-none'
-                        aria-label='Kje štartaš?'
-                      />
-                      {origin.value && (
-                        <button
-                          type='button'
-                          onClick={handleClear}
-                          className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground dark:hover:text-white'
-                          aria-label='Počisti'>
-                          <X size={13} />
-                        </button>
-                      )}
-                    </div>
-                    <div className='h-px bg-border dark:bg-neutral-600' />
-                    <div className='relative flex h-10 items-center pr-10'>
-                      <Search
-                        size={16}
-                        className='pointer-events-none absolute left-3 z-10 shrink-0 text-muted-foreground'
-                      />
-                      <Input
-                        type='text'
-                        value={destination.value}
-                        onChange={destination.handleChange}
-                        onFocus={handleDestinationFocus}
-                        onKeyDown={(e) =>
-                          e.key === "Escape" && destination.setIsOpen(false)
-                        }
-                        placeholder='Kam šibaš?'
-                        className='h-full w-auto flex-1 rounded-none border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none dark:bg-transparent focus-visible:ring-0 focus-visible:outline-none'
-                        aria-label='Kam šibaš?'
-                      />
-                      {destination.value && (
-                        <button
-                          type='button'
-                          onClick={() => {
-                            destination.clear();
-                            setDestinationCoords(null);
-                            onDestinationSelect?.(null);
-                          }}
-                          className='mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground dark:hover:text-white'
-                          aria-label='Počisti'>
-                          <X size={13} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    type='button'
-                    onClick={handleSwap}
-                    className='absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-muted text-muted-foreground shadow-md transition-colors hover:text-foreground dark:bg-neutral-600 dark:text-neutral-300 dark:hover:text-white'
-                    aria-label='Zamenjaj smeri'>
-                    <ArrowUpDown size={16} />
-                  </button>
-                </div>
+                <DirectionsInputs
+                  origin={origin}
+                  destination={destination}
+                  onOriginFocus={handleOriginFocus}
+                  onDestinationFocus={handleDestinationFocus}
+                  onOriginClear={handleClear}
+                  onDestinationClear={handleDestinationClear}
+                  onSwap={handleSwap}
+                />
                 {renderLocationDropdown("origin")}
                 {renderLocationDropdown("destination")}
                 {renderSavedRoutesDropdown()}
-                <div className='flex items-center gap-2 max-[615px]:grid max-[615px]:grid-cols-2 max-[615px]:items-stretch max-[430px]:!grid-cols-1'>
-                  <div className='flex items-center gap-2 max-[615px]:order-3 max-[615px]:col-start-1 max-[615px]:row-start-3 max-[615px]:grid max-[615px]:grid-cols-2 max-[430px]:!row-start-4'>
-                    <button
-                      type='button'
-                      onClick={() => setUseBus((v) => !v)}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[615px]:justify-center max-[615px]:px-2 ${useBus ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
-                      <Bus size={14} />
-                      Bus
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => setUseBike((v) => !v)}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-md transition-colors max-[615px]:justify-center max-[615px]:px-2 ${useBike ? "bg-red-700 text-white" : "bg-white text-muted-foreground dark:bg-neutral-700 dark:text-neutral-400"}`}>
-                      <Bike size={14} />
-                      Kolo
-                    </button>
-                  </div>
-                  <div className='flex min-w-[190px] overflow-hidden rounded-lg bg-white text-neutral-900 shadow-md max-[615px]:order-2 max-[615px]:col-start-1 max-[615px]:row-start-2 max-[615px]:w-full max-[430px]:!row-start-3 dark:bg-neutral-700 dark:text-white'>
-                    <button
-                      type='button'
-                      onClick={() =>
-                        setTimeMode((m) =>
-                          m === "depart" ? "arrive" : "depart",
-                        )
-                      }
-                      className='min-w-[5.6rem] flex-1 whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted max-[615px]:px-2 dark:text-white dark:hover:bg-neutral-600'>
-                      {timeMode === "depart" ? "Odhod ob" : "Prihod do"}
-                    </button>
-                    <div className='w-px bg-border dark:bg-neutral-600' />
-                    <input
-                      type='time'
-                      value={selectedTime}
-                      onChange={(e) => setSelectedTime(e.target.value)}
-                      className='w-[5.5rem] bg-transparent px-2 py-1.5 text-sm focus:outline-none max-[615px]:w-[4.7rem] max-[615px]:px-1.5 dark:text-white'
-                    />
-                  </div>
-                  <button
-                    type='button'
-                    onClick={handleRouteRequest}
-                    disabled={
-                      !hasRoute &&
-                      !isRouteActive &&
-                      (!originCoords || !destinationCoords)
-                    }
-                    className='ml-auto flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-50 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-200 max-[615px]:order-4 max-[615px]:col-start-2 max-[615px]:row-start-2 max-[615px]:ml-0 max-[615px]:rounded-lg max-[615px]:px-3 max-[430px]:!col-start-1 max-[430px]:!row-start-2 max-[430px]:w-full dark:bg-neutral-200 dark:hover:bg-neutral-50 dark:disabled:bg-neutral-200 dark:disabled:hover:bg-neutral-200'>
-                    {isRouteActive
-                      ? "Končaj"
-                      : hasRoute
-                        ? "Začni"
-                        : "Najdi pot"}
-                  </button>
-                  <button
-                    type='button'
-                    onClick={() => {
-                      origin.setIsOpen(false);
-                      destination.setIsOpen(false);
-                      setIsSavedRoutesOpen((isOpen) => !isOpen);
-                    }}
-                    className='flex h-8 min-w-9 items-center justify-center whitespace-nowrap rounded-md bg-white/95 text-neutral-900 shadow-md transition-colors hover:text-red-700 max-[615px]:order-1 max-[615px]:col-span-2 max-[615px]:h-auto max-[615px]:w-full max-[615px]:gap-1.5 max-[615px]:px-3 max-[615px]:py-1.5 max-[615px]:text-sm max-[615px]:font-semibold max-[430px]:!col-span-1 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
-                    aria-label='Shranjene poti'>
-                    <Bookmark size={16} />
-                    <span className='hidden max-[615px]:inline'>
-                      Shranjene poti
-                    </span>
-                  </button>
-                </div>
+                <RouteControls
+                  useBus={useBus}
+                  useBike={useBike}
+                  timeMode={timeMode}
+                  selectedTime={selectedTime}
+                  hasRoute={hasRoute}
+                  isRouteActive={isRouteActive}
+                  originCoords={originCoords}
+                  destinationCoords={destinationCoords}
+                  onToggleBus={() => setUseBus((value) => !value)}
+                  onToggleBike={() => setUseBike((value) => !value)}
+                  onToggleTimeMode={handleToggleTimeMode}
+                  onSelectedTimeChange={setSelectedTime}
+                  onRouteRequest={handleRouteRequest}
+                  onSavedRoutesToggle={handleSavedRoutesToggle}
+                />
               </>
             ) : (
               <>
-                <div className='relative flex h-10 items-center rounded-lg bg-white/95 text-neutral-900 shadow-md dark:bg-neutral-700 dark:text-white'>
-                  <Search
-                    size={16}
-                    className='pointer-events-none absolute left-3 z-10 shrink-0 text-muted-foreground'
-                  />
-                  <Input
-                    type='text'
-                    value={destination.value}
-                    onChange={destination.handleChange}
-                    onFocus={handleDestinationFocus}
-                    onKeyDown={(e) =>
-                      e.key === "Escape" && destination.setIsOpen(false)
-                    }
-                    placeholder='Kam šibaš?'
-                    className='h-full w-auto flex-1 rounded-lg border-0 bg-transparent pl-8 pr-2 text-sm font-normal shadow-none dark:bg-transparent focus-visible:ring-0 focus-visible:outline-none'
-                    aria-label='Kam šibaš?'
-                  />
-                  {destination.value && (
-                    <button
-                      type='button'
-                      onClick={() => {
-                        destination.clear();
-                        setSelectedPlace("");
-                        setDestinationCoords(null);
-                        onDestinationSelect?.(null);
-                      }}
-                      className='mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground dark:hover:text-white'
-                      aria-label='Počisti'>
-                      <X size={13} />
-                    </button>
-                  )}
-                  <button
-                    type='button'
-                    onClick={() => {
-                      origin.setIsOpen(false);
-                      destination.setIsOpen(false);
-                      setIsSavedRoutesOpen((isOpen) => !isOpen);
-                    }}
-                    className='mr-2 flex h-6 w-6 cursor-pointer shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-red-700 dark:hover:text-red-200'
-                    aria-label='Shranjene poti'>
-                    <Bookmark size={16} />
-                  </button>
-                  {selectedPlace && !showDirections && (
-                    <button
-                      type='button'
-                      onClick={handleShowDirectionsClick}
-                      className='mr-2 flex h-6 w-6 cursor-pointer shrink-0 rotate-45 items-center justify-center rounded-sm bg-red-700 text-white shadow-sm transition-colors hover:bg-red-600'
-                      aria-label='Navodila za pot'>
-                      <Route size={14} className='-rotate-45' />
-                    </button>
-                  )}
-                </div>
+                <DestinationSearch
+                  destination={destination}
+                  selectedPlace={selectedPlace}
+                  onDestinationFocus={handleDestinationFocus}
+                  onDestinationClear={handleDestinationSearchClear}
+                  onSavedRoutesToggle={handleSavedRoutesToggle}
+                  onShowDirectionsClick={handleShowDirectionsClick}
+                />
                 {renderLocationDropdown("destination")}
                 {renderSavedRoutesDropdown()}
               </>
@@ -861,98 +724,16 @@ export const MainAppControlOverlay = ({
           </div>
         </div>
 
-        {/* Desni panel */}
-        {isLoggedIn ? (
-          <div
-            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-row gap-2 min-[700px]:top-3 max-[450px]:!fixed max-[450px]:!bottom-12 max-[450px]:!left-4 max-[450px]:!right-auto max-[450px]:!top-auto max-[450px]:flex-col ${showDirections ? "max-[700px]:top-24" : "max-[700px]:top-14"}`}>
-            <Button
-              type='button'
-              onClick={() => navigate("/account")}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'
-              aria-label='Profil'>
-              <UserRound strokeWidth={1.7} />
-            </Button>
-            <div className='flex flex-col gap-2'>
-              <Button
-                type='button'
-                onClick={() => {
-                  auth.signOut();
-                  navigate("/login");
-                }}
-                aria-label='Odjava'
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'>
-                <LogOut />
-              </Button>
-              <ThemeToggle />
-              <Button
-                type='button'
-                onClick={onZoomIn}
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
-                aria-label='Povečaj'>
-                <Plus size={20} />
-              </Button>
-              <Button
-                type='button'
-                onClick={onZoomOut}
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
-                aria-label='Pomanjšaj'>
-                <Minus size={20} />
-              </Button>
-              <Button
-                type='button'
-                onClick={onLocate}
-                disabled={isRouteActive}
-                title={
-                  isRouteActive
-                    ? "Med sledenjem poti se zemljevid centrira samodejno."
-                    : undefined
-                }
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
-                aria-label='Moja lokacija'>
-                <LocateFixed size={20} />
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div
-            className={`pointer-events-auto absolute right-0 flex shrink-0 flex-col gap-2 min-[700px]:top-2 max-[450px]:!fixed max-[450px]:!bottom-12 max-[450px]:!left-4 max-[450px]:!right-auto max-[450px]:!top-auto ${showDirections ? "max-[699px]:top-24" : "max-[699px]:top-14"}`}>
-            <Button
-              type='button'
-              onClick={() => navigate("/login")}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-red-700 text-white shadow-lg hover:text-red-200'
-              aria-label='Profil'>
-              <UserRound strokeWidth={1.7} />
-            </Button>
-            <ThemeToggle />
-            <Button
-              type='button'
-              onClick={onZoomIn}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
-              aria-label='Povečaj'>
-              <Plus size={20} />
-            </Button>
-            <Button
-              type='button'
-              onClick={onZoomOut}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
-              aria-label='Pomanjšaj'>
-              <Minus size={20} />
-            </Button>
-            <Button
-              type='button'
-              onClick={onLocate}
-              disabled={isRouteActive}
-              title={
-                isRouteActive
-                  ? "Med sledenjem poti se zemljevid centrira samodejno."
-                  : undefined
-              }
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
-              aria-label='Moja lokacija'>
-              <LocateFixed size={20} />
-            </Button>
-          </div>
-        )}
+        <MapControls
+          isLoggedIn={isLoggedIn}
+          showDirections={showDirections}
+          isRouteActive={isRouteActive}
+          onProfileClick={handleProfileClick}
+          onLogoutClick={handleLogoutClick}
+          onZoomIn={onZoomIn}
+          onZoomOut={onZoomOut}
+          onLocate={onLocate}
+        />
       </div>
     </>
   );

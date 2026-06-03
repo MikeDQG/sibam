@@ -368,30 +368,32 @@ export const MainAppControlOverlay = ({
               const distance = formatSavedRouteDistance(route.distance);
 
               return (
-                <li
-                  key={route.id}
-                  onMouseDown={() => handleSavedRouteSelect(route)}
-                  className='flex cursor-pointer items-start gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                  <span className='mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-700 text-white shadow-sm'>
-                    <Route size={15} />
-                  </span>
-                  <span className='min-w-0 text-left'>
-                    <span className='block truncate text-sm font-semibold leading-tight'>
-                      {route.name}
+                <li key={route.id} className='border-b border-border last:border-0 dark:border-neutral-600'>
+                  <button
+                    type='button'
+                    onMouseDown={() => handleSavedRouteSelect(route)}
+                    className='flex w-full cursor-pointer items-start gap-3 px-3 py-2 text-left hover:bg-muted dark:hover:bg-neutral-600'>
+                    <span className='mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-700 text-white shadow-sm'>
+                      <Route size={15} />
                     </span>
-                    {(duration || distance) && (
-                      <span className='mt-0.5 block text-xs leading-tight text-muted-foreground dark:text-neutral-300'>
-                        {[duration, distance].filter(Boolean).join(" • ")}
+                    <span className='min-w-0 text-left'>
+                      <span className='block truncate text-sm font-semibold leading-tight'>
+                        {route.name}
                       </span>
-                    )}
-                    {(route.originLabel || route.destinationLabel) && (
-                      <span className='mt-0.5 block truncate text-xs leading-tight text-muted-foreground dark:text-neutral-300'>
-                        {[route.originLabel, route.destinationLabel]
-                          .filter(Boolean)
-                          .join(" → ")}
-                      </span>
-                    )}
-                  </span>
+                      {(duration || distance) && (
+                        <span className='mt-0.5 block text-xs leading-tight text-muted-foreground dark:text-neutral-300'>
+                          {[duration, distance].filter(Boolean).join(" • ")}
+                        </span>
+                      )}
+                      {(route.originLabel || route.destinationLabel) && (
+                        <span className='mt-0.5 block truncate text-xs leading-tight text-muted-foreground dark:text-neutral-300'>
+                          {[route.originLabel, route.destinationLabel]
+                            .filter(Boolean)
+                            .join(" → ")}
+                        </span>
+                      )}
+                    </span>
+                  </button>
                 </li>
               );
             })}
@@ -499,13 +501,19 @@ export const MainAppControlOverlay = ({
       <ul className='overflow-hidden rounded-lg bg-white text-neutral-900 shadow-lg dark:bg-neutral-700 dark:text-white'>
         {/* trenutna lokacija uporabnika */}
         {canUseCurrentLocation && (
-          <li
-            onMouseDown={handleCurrentSelect}
-            className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-            <LocateFixed size={16} className='shrink-0 text-muted-foreground' />
-            <p className='text-sm font-medium leading-tight'>
-              {currentLocationLabel}
-            </p>
+          <li className='border-b border-border last:border-0 dark:border-neutral-600'>
+            <button
+              type='button'
+              onMouseDown={handleCurrentSelect}
+              className='flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left hover:bg-muted dark:hover:bg-neutral-600'>
+              <LocateFixed
+                size={16}
+                className='shrink-0 text-muted-foreground'
+              />
+              <span className='text-sm font-medium leading-tight'>
+                {currentLocationLabel}
+              </span>
+            </button>
           </li>
         )}
 
@@ -516,39 +524,45 @@ export const MainAppControlOverlay = ({
               Shranjene lokacije
             </li>
             {savedLocations.map((location) => (
-              <li
-                key={`${kind}-${location.id}`}
-                onMouseDown={() => handleSavedLocationSelect(kind, location)}
-                className='flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-                <span
-                  className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white shadow-sm'
-                  style={{ backgroundColor: location.color }}>
-                  <LocationIconGlyph icon={location.icon} size={15} />
-                </span>
-                <p className='min-w-0 truncate text-sm font-medium leading-tight'>
-                  {location.name}
-                </p>
+              <li key={`${kind}-${location.id}`} className='border-b border-border last:border-0 dark:border-neutral-600'>
+                <button
+                  type='button'
+                  onMouseDown={() => handleSavedLocationSelect(kind, location)}
+                  className='flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left hover:bg-muted dark:hover:bg-neutral-600'>
+                  <span
+                    className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white shadow-sm'
+                    style={{ backgroundColor: location.color }}>
+                    <LocationIconGlyph icon={location.icon} size={15} />
+                  </span>
+                  <span className='min-w-0 truncate text-sm font-medium leading-tight'>
+                    {location.name}
+                  </span>
+                </button>
               </li>
             ))}
           </>
         )}
 
         {/* predikcije autocomplete-a */}
-        <div className='border-t-3 border-border dark:border-neutral-600'>
-          {autocomplete.predictions.map((prediction) => (
-            <li
-              key={prediction.placeId}
+        {autocomplete.predictions.map((prediction, index) => (
+          <li
+            key={prediction.placeId}
+            className={`border-b border-border last:border-0 dark:border-neutral-600 ${
+              index === 0 ? "border-t-3" : ""
+            }`}>
+            <button
+              type='button'
               onMouseDown={() => handlePredictionSelect(prediction)}
-              className='cursor-pointer border-b border-border px-3 py-2 last:border-0 hover:bg-muted dark:border-neutral-600 dark:hover:bg-neutral-600'>
-              <p className='text-sm font-medium leading-tight'>
+              className='w-full cursor-pointer px-3 py-2 text-left hover:bg-muted dark:hover:bg-neutral-600'>
+              <span className='block text-sm font-medium leading-tight'>
                 {prediction.mainText}
-              </p>
-              <p className='mt-0.5 text-xs leading-tight text-muted-foreground'>
+              </span>
+              <span className='mt-0.5 block text-xs leading-tight text-muted-foreground'>
                 {prediction.secondaryText}
-              </p>
-            </li>
-          ))}
-        </div>
+              </span>
+            </button>
+          </li>
+        ))}
       </ul>
     );
   }
@@ -655,12 +669,13 @@ export const MainAppControlOverlay = ({
       <div className='pointer-events-none absolute inset-x-4 top-4 z-20 flex flex-row items-start gap-2'>
         <div className='mt-3 flex min-w-0 flex-1 flex-row items-start gap-2 max-[699px]:w-full max-[699px]:flex-none'>
           {/* logotip */}
-          <img
-            src='/logo.svg'
-            alt='ŠibaM'
+          <button
+            type='button'
             className='pointer-events-auto h-10 w-auto shrink-0 cursor-pointer max-[699px]:hidden'
             onClick={() => navigate("/")}
-          />
+            aria-label='Domov'>
+            <img src='/logo.svg' alt='ŠibaM' className='h-full w-auto' />
+          </button>
 
           {/* searchbar */}
           <div

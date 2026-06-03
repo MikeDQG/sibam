@@ -176,6 +176,12 @@ Ko uporabnik klikne `Najdi pot`, frontend poklice endpoint `GET /compute` z quer
 
 Frontend poslje samo enega od parametrov `leaveAt` ali `arriveBy`, odvisno od izbranega time mode-a.
 
+### Izbira trenutne lokacije kot parameter poti
+
+Moznost `Trenutna lokacija` se v dropdownu za zacetek ali konec poti prikaze samo, ce je trenutna lokacija uporabnika znana in je znotraj podprtega obmocja Maribora (`MARIBOR_BOUNDS`).
+
+Ce je trenutna lokacija zunaj mej podprtega obmocja, je ni mogoce uporabiti kot zacetek ali konec poti. V tem primeru se `Trenutna lokacija` v izboru ne prikaze, uporabnik pa mora izbrati lokacijo prek iskalnika ali shranjene lokacije.
+
 ### Izbira shranjene lokacije kot parameter poti
 
 Shranjene lokacije se prikazejo v dropdownu iskalnika, ce obstajajo. Ko uporabnik izbere shranjeno lokacijo:

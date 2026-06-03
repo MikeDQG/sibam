@@ -150,6 +150,8 @@ function handleLocate() {
 
 `handleLocate` poklice `locateUser`, ki prek Geolocation API-ja pridobi trenutno lokacijo uporabnika. Ce je uporabnik znotraj podprtega obmocja, se `center` nastavi na uporabnikovo lokacijo in zoom se pri rocni lokaciji nastavi na `16`. Ce je uporabnik izven obmocja, aplikacija prikaze Maribor in po potrebi toast sporocilo.
 
+Trenutna lokacija se lahko uporabi kot zacetek ali konec poti samo, ce je znotraj podprtega obmocja Maribora. Ce je uporabnikova trenutna lokacija zunaj teh mej, se moznost `Trenutna lokacija` v dropdownu za izbiro poti ne prikaze.
+
 Med aktivnim sledenjem poti je gumb `Moja lokacija` onemogocen. Takrat aplikacija ze samodejno centrira zemljevid na uporabnika, dodatni rocni geolocation klici pa lahko povzrocijo nepotrebno preskakovanje kamere oziroma obcutek glitchanja.
 
 V istem desnem overlay panelu sta tudi `ThemeToggle` in profil oziroma prijava/odjava. `ThemeToggle` ne premika zemljevida, vpliva pa na `theme`, ki ga `MainMap` prebere prek `useTheme` in pretvori v `colorScheme='DARK'` ali `colorScheme='LIGHT'` za komponento `Map`.

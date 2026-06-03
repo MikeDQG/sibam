@@ -596,20 +596,15 @@ export const MainAppControlOverlay = ({
   }
 
   function normalizeRouteResponse(data: unknown): RoutePath {
-    const response = data as RoutePath & {
+    const response = data as {
       routes?: RoutePath[];
-      bestRoute?: RoutePath;
-      route?: RoutePath;
+      status?: string;
     };
 
-    if (Array.isArray(response.legs)) {
-      return response;
-    }
-
-    const bestRoute = response.bestRoute ?? response.route ?? response.routes?.[0];
-    if (bestRoute && Array.isArray(bestRoute.legs)) {
+    const firstRoute = response.routes?.[0];
+    if (firstRoute && Array.isArray(firstRoute.legs)) {
       return {
-        ...bestRoute,
+        ...firstRoute,
         routes: response.routes,
       };
     }

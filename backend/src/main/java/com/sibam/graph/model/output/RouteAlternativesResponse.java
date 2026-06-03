@@ -1,6 +1,5 @@
 package com.sibam.graph.model.output;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sibam.graph.model.GeoPoint;
 
@@ -14,10 +13,6 @@ public record RouteAlternativesResponse(
         GeoPoint destination,
         @JsonProperty("destination_address")
         String destinationAddress,
-        List<RouteAlternative> routes,
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        RouteAlternative route,
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        RouteAlternative bestRoute
+        List<RouteAlternative> routes
 ) {
 }

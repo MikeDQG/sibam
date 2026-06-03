@@ -3,6 +3,7 @@ package com.sibam.api;
 import com.sibam.engine.VaoSerializer;
 import com.sibam.graph.bootstrap.GraphBootstrap;
 import com.sibam.graph.model.GeoPoint;
+import com.sibam.graph.model.RouteAlternativeLabel;
 import com.sibam.graph.model.output.RouteAlternative;
 import com.sibam.graph.model.output.RouteAlternativesResponse;
 import com.sibam.graph.routing.RouteAlternativeService;
@@ -34,7 +35,15 @@ class ComputePathControllerTest {
         ComputePathController controller = new ComputePathController(vaoSerializer, graphBootstrap, routeAlternativeService);
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        RouteAlternative route = new RouteAlternative(1, "Fastest", 100, 500, List.of("WALK"), List.of());
+        RouteAlternative route = new RouteAlternative(
+                1,
+                RouteAlternativeLabel.FASTEST.displayName(),
+                List.of(RouteAlternativeLabel.FASTEST.displayName()),
+                100,
+                500,
+                List.of("WALK"),
+                List.of()
+        );
         when(routeAlternativeService.findAlternatives(
                 anyDouble(),
                 anyDouble(),
@@ -51,9 +60,7 @@ class ComputePathControllerTest {
                 null,
                 new GeoPoint(2, 2),
                 null,
-                List.of(route),
-                route,
-                route
+                List.of(route)
         ));
 
         mockMvc.perform(get("/compute")
@@ -67,7 +74,10 @@ class ComputePathControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.routes").isArray())
                 .andExpect(jsonPath("$.routes[0].rank").value(1))
-                .andExpect(jsonPath("$.bestRoute.label").value("Fastest"));
+                .andExpect(jsonPath("$.routes[0].labels[0]").value(RouteAlternativeLabel.FASTEST.displayName()))
+                .andExpect(jsonPath("$.routes[0].label").value(RouteAlternativeLabel.FASTEST.displayName()))
+                .andExpect(jsonPath("$.route").doesNotExist())
+                .andExpect(jsonPath("$.bestRoute").doesNotExist());
     }
 
     @Test

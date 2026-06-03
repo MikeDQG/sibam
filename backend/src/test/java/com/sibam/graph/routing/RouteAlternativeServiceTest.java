@@ -1,6 +1,7 @@
 package com.sibam.graph.routing;
 
 import com.sibam.graph.model.GeoPoint;
+import com.sibam.graph.model.RouteAlternativeLabel;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.model.output.Leg;
 import com.sibam.graph.model.output.RouteAlternativesResponse;
@@ -68,6 +69,29 @@ class RouteAlternativeServiceTest {
                 .containsExactly(1000L, 1200L, 1500L);
         assertThat(response.routes().stream().flatMap(route -> route.modes().stream()).toList())
                 .contains("BUS", "BIKE");
+        assertThat(response.routes().get(2).labels())
+                .contains(RouteAlternativeLabel.BIKE_FRIENDLY.displayName());
+    }
+
+    @Test
+    void fastestBikeRouteKeepsBothLabels() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = service(router);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                .thenReturn(candidate(journey(1000, "WALK", "BIKE"), 1, 2, 3))
+                .thenReturn(null);
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
+
+        assertThat(response.routes()).hasSize(1);
+        assertThat(response.routes().getFirst().rank()).isEqualTo(1);
+        assertThat(response.routes().getFirst().label()).isEqualTo(RouteAlternativeLabel.FASTEST.displayName());
+        assertThat(response.routes().getFirst().labels())
+                .containsExactly(
+                        RouteAlternativeLabel.FASTEST.displayName(),
+                        RouteAlternativeLabel.BIKE_FRIENDLY.displayName()
+                );
     }
 
     @Test

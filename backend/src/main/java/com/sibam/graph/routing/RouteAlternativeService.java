@@ -1,6 +1,8 @@
 package com.sibam.graph.routing;
 
 import com.sibam.graph.model.GeoPoint;
+import com.sibam.graph.model.EdgeType;
+import com.sibam.graph.model.RouteAlternativeLabel;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.model.output.Leg;
 import com.sibam.graph.model.output.RouteAlternative;
@@ -50,10 +52,10 @@ public class RouteAlternativeService {
             boolean allowBus
     ) {
         List<SearchProfile> profiles = List.of(
-                new SearchProfile("Fastest", 1.0, 1.0),
-                new SearchProfile("Bike friendly", 0.85, 1.10),
-                new SearchProfile("Transit friendly", 1.20, 0.90),
-                new SearchProfile("Alternative", 1.05, 1.05)
+                new SearchProfile(RouteAlternativeLabel.FASTEST, 1.0, 1.0),
+                new SearchProfile(RouteAlternativeLabel.BIKE_FRIENDLY, 0.85, 1.10),
+                new SearchProfile(RouteAlternativeLabel.TRANSIT_FRIENDLY, 1.20, 0.90),
+                new SearchProfile(RouteAlternativeLabel.ALTERNATIVE, 1.05, 1.05)
         );
         List<Candidate> accepted = new ArrayList<>();
         Set<Integer> penalizedNodes = new LinkedHashSet<>();
@@ -108,16 +110,13 @@ public class RouteAlternativeService {
             alternatives.add(toAlternative(i + 1, qualityFiltered.get(i)));
         }
 
-        RouteAlternative bestRoute = alternatives.isEmpty() ? null : alternatives.getFirst();
         return new RouteAlternativesResponse(
                 alternatives.isEmpty() ? "not_found" : "success",
                 new GeoPoint(originLat, originLon),
                 originAddress,
                 new GeoPoint(destinationLat, destinationLon),
                 destinationAddress,
-                alternatives,
-                bestRoute,
-                bestRoute
+                alternatives
         );
     }
 
@@ -135,10 +134,10 @@ public class RouteAlternativeService {
 
     private boolean violatesModes(Journey journey, boolean allowBike, boolean allowBus) {
         for (Leg leg : journey.legs()) {
-            if (!allowBike && "BIKE".equals(leg.mode())) {
+            if (!allowBike && EdgeType.BIKE.name().equals(leg.mode())) {
                 return true;
             }
-            if (!allowBus && "BUS".equals(leg.mode())) {
+            if (!allowBus && EdgeType.BUS.name().equals(leg.mode())) {
                 return true;
             }
         }
@@ -170,14 +169,37 @@ public class RouteAlternativeService {
 
     private RouteAlternative toAlternative(int rank, Candidate candidate) {
         Journey journey = candidate.routeCandidate().journey();
+        List<String> modes = journey.legs().stream().map(Leg::mode).toList();
+        List<String> labels = labelsFor(rank, candidate, modes);
         return new RouteAlternative(
                 rank,
-                rank == 1 ? "Fastest" : candidate.label(),
+                labels.getFirst(),
+                labels,
                 candidate.durationSeconds(),
                 parseInt(journey.distance()),
-                journey.legs().stream().map(Leg::mode).toList(),
+                modes,
                 journey.legs()
         );
+    }
+
+    private List<String> labelsFor(int rank, Candidate candidate, List<String> modes) {
+        LinkedHashSet<RouteAlternativeLabel> labels = new LinkedHashSet<>();
+        if (rank == 1) {
+            labels.add(RouteAlternativeLabel.FASTEST);
+        }
+        labels.add(candidate.label());
+        if (modes.contains(EdgeType.BIKE.name())) {
+            labels.add(RouteAlternativeLabel.BIKE_FRIENDLY);
+        }
+        if (modes.contains(EdgeType.BUS.name())) {
+            labels.add(RouteAlternativeLabel.TRANSIT_FRIENDLY);
+        }
+        if (labels.isEmpty()) {
+            labels.add(RouteAlternativeLabel.ALTERNATIVE);
+        }
+        return labels.stream()
+                .map(RouteAlternativeLabel::displayName)
+                .toList();
     }
 
     private int parseInt(String value) {
@@ -192,10 +214,10 @@ public class RouteAlternativeService {
         }
     }
 
-    private record SearchProfile(String label, double bikeMultiplier, double busMultiplier) {
+    private record SearchProfile(RouteAlternativeLabel label, double bikeMultiplier, double busMultiplier) {
     }
 
-    private record Candidate(String label, AStarRouter.RouteCandidate routeCandidate) {
+    private record Candidate(RouteAlternativeLabel label, AStarRouter.RouteCandidate routeCandidate) {
         long durationSeconds() {
             String duration = routeCandidate.journey().duration();
             if (duration == null || duration.isBlank()) {

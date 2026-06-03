@@ -93,9 +93,7 @@ public class ComputePathController {
                     resolvedOriginAddress,
                     new GeoPoint(destinationLat, destinationLon),
                     resolvedDestinationAddress,
-                    java.util.List.of(),
-                    null,
-                    null
+                    java.util.List.of()
             ));
         }
 

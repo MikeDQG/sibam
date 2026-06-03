@@ -7,6 +7,7 @@ import { useState } from "react";
 import { FaGoogle } from "react-icons/fa";
 import { auth } from "../../firebase";
 import { ThemeToggle } from "../ThemeToggle";
+import { FirebaseError } from "firebase/app";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -32,8 +33,9 @@ export const Login = () => {
       );
       await syncUserSession(await userCredential.user.getIdToken());
       navigate("/home");
-    } catch (error: any) {
-      switch (error.code) {
+    } catch (error: unknown) {
+      const errorCode = error instanceof FirebaseError ? error.code : "";
+      switch (errorCode) {
         case "auth/invalid-credential":
           setError("Napačen email ali geslo.");
           break;
@@ -57,19 +59,20 @@ export const Login = () => {
 
       await syncUserSession(token);
       navigate("/home");
-    } catch (error: any) {
+    } catch {
       setError("Prišlo je do napake pri Google prijavi.");
     }
   };
 
   return (
     <div className='relative flex min-h-screen w-full items-center justify-end bg-neutral-800 max-[699px]:justify-center'>
-      <img
-        src='logo.svg'
+      <button
+        type='button'
         className='absolute left-9 top-6 z-2 h-15 w-auto cursor-pointer max-[699px]:hidden'
-        alt='Logo'
         onClick={() => navigate("/")}
-      />
+        aria-label='Domov'>
+        <img src='logo.svg' className='h-full w-auto' alt='Logo' />
+      </button>
       <img
         className='absolute left-0 top-0 h-full w-[80%] max-w-[80%] object-cover max-[699px]:hidden'
         src='/LandingPage/background.jpeg'

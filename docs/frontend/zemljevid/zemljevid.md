@@ -111,6 +111,25 @@ Privzete Google Maps kontrole so izklopljene z `disableDefaultUI` in `zoomContro
 
 Te kontrole niso renderirane znotraj Google Maps UI-ja, ampak kot navaden React overlay nad zemljevidom. Wrapper overlaya uporablja `pointer-events-none`, posamezni gumbi pa `pointer-events-auto`, da so gumbi klikabilni, preostali del overlaya pa ne blokira interakcije z zemljevidom.
 
+`MainAppControlOverlay` ostaja state owner za overlay logiko, vendar so vizualni deli razdeljeni v manjse komponente v mapi:
+
+```text
+frontend/src/components/MainAppComponents/MainAppControlOverlayComponents/
+```
+
+Struktura komponent je:
+
+- `MapControls`: desni panel z navigacijo na profil/prijavo, odjavo, temo in map kontrolami.
+- `MapZoomLocateButtons`: gumbi za zoom in trenutno lokacijo.
+- `ProfileButton`: skupen profil/prijava gumb.
+- `DestinationSearch`: enovrsticni search bar, ki se prikaze pred odpiranjem navodil za pot.
+- `DirectionsInputs`: dvovrsticni vnos za izhodisce in cilj ter gumb za zamenjavo smeri.
+- `SearchInputRow`: ponovljiva vrstica za Places autocomplete input z ikono in clear gumbom.
+- `RouteControls`: spodnji sklop kontrol za `Bus`, `Kolo`, cas, `Najdi pot`/`Zacni`/`Koncaj` in shranjene poti.
+- `types.ts`: skupni tipi za overlay komponente, na primer `Coordinates`, `TimeMode` in `PlacesAutocomplete`.
+
+Te komponente ne hranijo glavnega stanja zemljevida. Stanje ostane v `MainAppControlOverlay`, podkomponente pa dobijo vrednosti in handlerje prek propsov. S tem je JSX overlaya locen od logike za Places autocomplete, izbiro lokacij in klic `/compute`.
+
 Za neposredno upravljanje zemljevida so pomembni trije gumbi:
 
 - `Povečaj` z ikono `Plus`, ki poklice `onZoomIn`.

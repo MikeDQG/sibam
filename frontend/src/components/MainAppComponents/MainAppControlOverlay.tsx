@@ -180,6 +180,23 @@ export const MainAppControlOverlay = ({
 
   const origin = usePlacesAutocomplete(placesApiKey);
   const destination = usePlacesAutocomplete(placesApiKey);
+  const originInput = {
+    ...origin,
+    handleChange(event: Parameters<typeof origin.handleChange>[0]) {
+      origin.handleChange(event);
+      setOriginCoords(null);
+      onPlaceSelect?.(null);
+    },
+  };
+  const destinationInput = {
+    ...destination,
+    handleChange(event: Parameters<typeof destination.handleChange>[0]) {
+      destination.handleChange(event);
+      setDestinationCoords(null);
+      setSelectedPlace("");
+      onDestinationSelect?.(null);
+    },
+  };
   const { setIsOpen: setOriginIsOpen } = origin;
   const { setIsOpen: setDestinationIsOpen } = destination;
   const canUseCurrentLocation =
@@ -440,14 +457,15 @@ export const MainAppControlOverlay = ({
 
   function handleSwap() {
     const tempValue = origin.value;
+    const tempCoords = originCoords;
+
     origin.setValue(destination.value);
     destination.setValue(tempValue);
-    if (originCoords && destinationCoords) {
-      onPlaceSelect?.(destinationCoords);
-      onDestinationSelect?.(originCoords);
-      setOriginCoords(destinationCoords);
-      setDestinationCoords(originCoords);
-    }
+
+    setOriginCoords(destinationCoords);
+    setDestinationCoords(tempCoords);
+    onPlaceSelect?.(destinationCoords);
+    onDestinationSelect?.(tempCoords);
   }
 
   function handleOriginFocus() {
@@ -684,8 +702,8 @@ export const MainAppControlOverlay = ({
             {showDirections ? (
               <>
                 <DirectionsInputs
-                  origin={origin}
-                  destination={destination}
+                  origin={originInput}
+                  destination={destinationInput}
                   onOriginFocus={handleOriginFocus}
                   onDestinationFocus={handleDestinationFocus}
                   onOriginClear={handleClear}
@@ -715,7 +733,7 @@ export const MainAppControlOverlay = ({
             ) : (
               <>
                 <DestinationSearch
-                  destination={destination}
+                  destination={destinationInput}
                   selectedPlace={selectedPlace}
                   onDestinationFocus={handleDestinationFocus}
                   onDestinationClear={handleDestinationSearchClear}

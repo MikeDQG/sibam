@@ -103,6 +103,35 @@ describe("zemljevid", () => {
     );
   });
 
+  it("klik na MBajk prevzem in oddajo sprozi pravilna callbacka", () => {
+    const onBikeIconClick = vi.fn();
+    renderWithTheme(
+      <MainMap
+        center={mariborCenter}
+        zoom={13}
+        legs={routeLegs}
+        onBikeIconClick={onBikeIconClick}
+        onMapLocationSave={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByAltText("Bajk postaja za prevzem"));
+    fireEvent.click(screen.getByAltText("Bajk postaja za oddajo"));
+
+    expect(onBikeIconClick).toHaveBeenNthCalledWith(
+      1,
+      routeLegs[2],
+      expect.objectContaining({ lat: expect.any(Number), lng: expect.any(Number) }),
+      "bikePickupIcon",
+    );
+    expect(onBikeIconClick).toHaveBeenNthCalledWith(
+      2,
+      routeLegs[2],
+      expect.objectContaining({ lat: expect.any(Number), lng: expect.any(Number) }),
+      "bikeReturnIcon",
+    );
+  });
+
   it("desni klik za ustvarjanje nove shranjene lokacije", () => {
     const onMapContextSelect = vi.fn();
     renderWithTheme(
@@ -133,5 +162,88 @@ describe("zemljevid", () => {
     fireEvent.click(screen.getByText(savedLocation.name));
     fireEvent.click(screen.getByRole("button", { name: "Izbriši" }));
     expect(onSavedLocationDelete).toHaveBeenCalledWith(savedLocation.id);
+  });
+
+  it("delete prompt se lahko zapre brez brisanja", () => {
+    const onSavedLocationDelete = vi.fn();
+    renderWithTheme(
+      <MainMap
+        center={mariborCenter}
+        zoom={13}
+        savedLocations={[savedLocation]}
+        onSavedLocationDelete={onSavedLocationDelete}
+        onMapLocationSave={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(savedLocation.name));
+    fireEvent.click(screen.getByRole("button", { name: "Prekliči" }));
+
+    expect(onSavedLocationDelete).not.toHaveBeenCalled();
+    expect(screen.queryByText("Izbriši shranjeno lokacijo?")).not.toBeInTheDocument();
+  });
+
+  it("delete prompt se zapre tudi prek InfoWindow close gumba", () => {
+    const onSavedLocationDelete = vi.fn();
+    renderWithTheme(
+      <MainMap
+        center={mariborCenter}
+        zoom={13}
+        savedLocations={[savedLocation]}
+        onSavedLocationDelete={onSavedLocationDelete}
+        onMapLocationSave={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(savedLocation.name));
+    fireEvent.click(screen.getByRole("button", { name: "Zapri" }));
+
+    expect(screen.queryByText("Izbriši shranjeno lokacijo?")).not.toBeInTheDocument();
+    expect(onSavedLocationDelete).not.toHaveBeenCalled();
+  });
+
+  it("shranjena lokacija brez delete handlerja ne odpre prompta", () => {
+    renderWithTheme(
+      <MainMap
+        center={mariborCenter}
+        zoom={13}
+        savedLocations={[savedLocation]}
+        onMapLocationSave={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(savedLocation.name));
+
+    expect(screen.queryByText("Izbriši shranjeno lokacijo?")).not.toBeInTheDocument();
+  });
+
+  it("prikaze izbran route popup in ga zapre", () => {
+    const onRoutePopupClose = vi.fn();
+    renderWithTheme(
+      <MainMap
+        center={mariborCenter}
+        zoom={13}
+        selectedLeg={{ leg: routeLegs[0], position: mariborCenter, source: "path" }}
+        onRoutePopupClose={onRoutePopupClose}
+        onMapLocationSave={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Zapri podatke o poti" }));
+    expect(onRoutePopupClose).toHaveBeenCalled();
+  });
+
+  it("fitBounds se uporabi, ko sta znana zacetek in cilj", () => {
+    renderWithTheme(
+      <MainMap
+        center={mariborCenter}
+        zoom={13}
+        markerPosition={mariborCenter}
+        destinationMarkerPosition={{ lat: 46.56, lng: 15.66 }}
+        onMapLocationSave={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByTestId("mock-marker")).toHaveLength(2);
   });
 });

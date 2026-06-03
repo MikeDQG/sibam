@@ -53,19 +53,18 @@ Za odpravo nizke pokritosti so dodani oziroma razsirjeni naslednji testi:
 - `src/test/unit-testi/sonner.test.tsx` preverja, da `Toaster` poda temo, ikone, stil in toast nastavitve knjiznici `sonner`.
 - `src/test/unit-testi/use-places-autocomplete.test.tsx` preverja debounce, Google Places request, normalizacijo predlogov, prazen vnos, `clear`, `closeDropdown` in napako pri fetchu.
 - `src/test/integracijski-testi/main-app-home.test.tsx` pokriva geolokacijo, callbacke zemljevida in overlaya, izracunano pot, napako poti, shranjevanje in brisanje lokacij, shranjevanje poti, shranjene poti ter aktivno sledenje.
+- `src/lib/text.test.ts` neposredno pokriva normalizacijo whitespace-a, odstranjevanje HTML oznak z `DOMParser` in fallback brez `DOMParser`.
+- `src/test/unit-testi/vreme.test.tsx` pokriva vse veje ikon v `WeatherWidget`, loading stanje, zaokrozevanje temperature in napako API-ja.
+- `src/test/integracijski-testi/auth-forms.test.tsx` pokriva dodatne Firebase napake, Google auth napake, prikaz/skritje gesel, validacijo imena/emaila in navigacijo med prijavo ter registracijo.
+- `src/test/integracijski-testi/user-session-provider.test.tsx` pokriva neuspesen fetch/sync seje, sync brez imena, odjavljen auth state in uporabo hooka zunaj providerja.
+- `src/test/integracijski-testi/account-page.test.tsx` pokriva manjkajoc auth token, napake nalaganja, filtriranje neveljavnih podatkov, brisanje lokacij/poti, odjavo in obnovitev seje prek `fetchUserSession`.
+- `src/test/integracijski-testi/main-app-control-overlay.test.tsx` pokriva shranjene lokacije, trenutno lokacijo, shranjene poti, fallback compute response, napake Places API-ja, network napake, swap, clear, profile/logout, transport toggles in zapiranje loading overlaya.
+- `src/test/unit-testi/route-options.test.tsx`, `route-popup.test.tsx`, `zemljevid.test.tsx`, `route-polyline.test.tsx` in `responsive-ui.test.tsx` dodatno pokrivajo route sheet, popupe, zemljevid, polyline klike in map controls veje.
 
 ## Pricakovani rezultat
 
-Po zagonu `npm test` naj bodo posebej problematicne datoteke pokrite vsaj tako:
+Po zagonu `npm test` mora `frontend/coverage/lcov.info` vsebovati pokritost za produkcijske datoteke, testne helperje in entrypoint datoteke pa mora SonarQube obravnavati kot izkljucene oziroma testne datoteke.
 
-- `src/App.tsx`: 100% lines
-- `src/components/LandingPageComponents/FeaturesSection.tsx`: 100% lines
-- `src/components/LandingPageComponents/Footer.tsx`: 100% lines
-- `src/components/LandingPageComponents/Header.tsx`: 100% lines
-- `src/components/LandingPageComponents/HeroSection.tsx`: 100% lines
-- `src/components/Pages/LandingPage.tsx`: 100% lines
-- `src/components/ui/sonner.tsx`: 100% lines
-- `src/hooks/usePlacesAutocomplete.ts`: 100% lines
-- `src/components/Pages/MainAppHome.tsx`: nad 80% lines
+Pokritost se vzdrzuje z namenskimi testi za sklope, ki imajo uporabnisko logiko, API veje, validacije, prikaz napak, navigacijo, odzive zemljevida in stanja komponent. Pri dodajanju nove funkcionalnosti se testni sklop razsiri v isti testni datoteki oziroma v novem testu ob modulu, ce obstojece datoteke tega scenarija ne pokrivajo jasno.
 
 Ce Sonar se vedno prikaze `src/test/**` ali `src/main.tsx` kot 0% pokrite datoteke, je treba preveriti, ali analiza uporablja posodobljen `frontend/sonar-project.properties` in sveze ustvarjen `coverage/lcov.info`.

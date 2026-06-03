@@ -204,6 +204,8 @@ Trenutno stanje integracijskih testov:
 - `MainAppControlOverlay` ima integracijske teste za Places autocomplete, izbiro lokacij, `/compute`, loading, napake in preklop stanja poti.
 - `MainAppHome` ima integracijske teste za geolokacijo, callbacke zemljevida, izracunano pot, napako poti, shranjevanje in brisanje lokacij, shranjevanje poti, izbiro shranjene poti ter aktivno sledenje.
 - `Login` in `Register` imata teste za osnovne auth tokove in validacijo obrazcev.
+- `AccountPage` dodatno pokriva no-token stanje, napake nalaganja, filtriranje neveljavnih shranjenih podatkov, uspesno in neuspesno brisanje lokacij/poti ter odjavo.
+- `MainAppControlOverlay` dodatno pokriva shranjene poti, shranjene lokacije, trenutno lokacijo kot izhodisce/cilj, swap, clear, Places API napake, fallback compute response, network napake, profile/logout in transport toggles.
 
 ## Pravila za nove integracijske teste
 
@@ -226,6 +228,9 @@ Poleg prioritetnih integracijskih scenarijev so dodani tudi ciljni unit testi za
 - `frontend/src/test/unit-testi/sonner.test.tsx` preveri props, ki jih lokalni `Toaster` poda knjiznici `sonner`.
 - `frontend/src/test/unit-testi/use-places-autocomplete.test.tsx` preveri debounce, Places API request, normalizacijo predlogov in fallback ob napaki.
 - `frontend/src/test/integracijski-testi/main-app-home.test.tsx` z mockanimi `MainMap`, `MainAppControlOverlay` in `RouteOptions` preveri stanje `MainAppHome` brez odvisnosti od realnega Google zemljevida.
+- `frontend/src/lib/text.test.ts` preveri normalizacijo besedila navodil, vkljucno s fallbackom brez `DOMParser`.
+- `frontend/src/test/unit-testi/vreme.test.tsx`, `route-popup.test.tsx`, `route-options.test.tsx`, `zemljevid.test.tsx`, `route-polyline.test.tsx` in `responsive-ui.test.tsx` pokrijejo dodatne veje manjsih komponent, ki jih SonarQube meri kot pogoje.
+- `frontend/src/test/integracijski-testi/auth-forms.test.tsx`, `user-session-provider.test.tsx`, `account-page.test.tsx` in `main-app-control-overlay.test.tsx` pokrijejo vecje auth, profilne in overlay tokove z uspesnimi ter neuspesnimi scenariji.
 
 Za pravila izkljucitve testnih helperjev in entrypoint datotek glej `pokritost-sonarqube.md`.
 

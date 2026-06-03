@@ -1,6 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
-import { MapLocationPopup } from "../../components/MainAppComponents/MapLocationPopup";
-import { createLocationPayload, mariborCenter, render, screen } from "../frontendPlanFixtures";
+import {
+  isLocationIcon,
+  LocationIconGlyph,
+  MapLocationPopup,
+} from "../../components/MainAppComponents/MapLocationPopup";
+import {
+  createLocationPayload,
+  fireEvent,
+  mariborCenter,
+  render,
+  screen,
+} from "../frontendPlanFixtures";
 
 const draft = {
   position: mariborCenter,
@@ -52,6 +62,51 @@ describe("shranjevanje-lokacije", () => {
     render(<MapLocationPopup draft={{ ...draft, name: "Dom" }} onSave={vi.fn()} />);
 
     expect(screen.getByDisplayValue("Dom")).toBeInTheDocument();
+  });
+
+  it("shrani trimano ime in sprozi izbiro barve ter ikone", () => {
+    const onSave = vi.fn();
+    const onColorChange = vi.fn();
+    const onIconChange = vi.fn();
+    render(
+      <MapLocationPopup
+        draft={{ ...draft, name: " Dom " }}
+        onSave={onSave}
+        onColorChange={onColorChange}
+        onIconChange={onIconChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Modra" }));
+    fireEvent.click(screen.getByRole("button", { name: "Šola" }));
+    fireEvent.click(screen.getByRole("button", { name: "Shrani" }));
+
+    expect(onColorChange).toHaveBeenCalledWith("#2563eb");
+    expect(onIconChange).toHaveBeenCalledWith("school");
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: "Dom" }));
+  });
+
+  it("posodobi ime ob spremembi draft lokacije", () => {
+    const { rerender } = render(
+      <MapLocationPopup draft={{ ...draft, name: "Dom" }} onSave={vi.fn()} />,
+    );
+
+    rerender(
+      <MapLocationPopup
+        draft={{ ...draft, position: { lat: 46.56, lng: 15.66 }, name: "Služba" }}
+        onSave={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByDisplayValue("Služba")).toBeInTheDocument();
+  });
+
+  it("prepozna veljavne ikone in za neznano ikono uporabi fallback", () => {
+    expect(isLocationIcon("home")).toBe(true);
+    expect(isLocationIcon("unknown")).toBe(false);
+
+    render(<LocationIconGlyph icon={"unknown" as "home"} />);
+    expect(document.querySelector("svg")).toBeInTheDocument();
   });
 
   it("napaka pri shranjevanju prikaze uporabniku sporocilo", () => {

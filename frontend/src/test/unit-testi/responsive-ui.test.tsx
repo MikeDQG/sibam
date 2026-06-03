@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { MapZoomLocateButtons } from "../../components/MainAppComponents/MainAppControlOverlayComponents/MapZoomLocateButtons";
 import { RouteControls } from "../../components/MainAppComponents/MainAppControlOverlayComponents/RouteControls";
 import { SavedLocationMapCard } from "../../components/Pages/AccountPageComponents/SavedLocationMapCard";
 import {
@@ -107,5 +108,22 @@ describe("responsive-ui", () => {
     renderWithTheme(<SavedLocationMapCard location={savedLocation} />);
 
     expect(screen.getByRole("article", { name: savedLocation.name })).toHaveClass("rounded-lg");
+  });
+
+  it("locate gumb je med aktivno potjo disabled in ima pojasnilo", () => {
+    render(
+      <MapZoomLocateButtons
+        onZoomIn={vi.fn()}
+        onZoomOut={vi.fn()}
+        onLocate={vi.fn()}
+        isRouteActive
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Moja lokacija" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Moja lokacija" })).toHaveAttribute(
+      "title",
+      "Med sledenjem poti se zemljevid centrira samodejno.",
+    );
   });
 });

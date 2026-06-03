@@ -293,6 +293,8 @@ Za datoteke, ki so bile prej prikazane kot 0% pokrite, obstajajo naslednji namen
 - `sonner.test.tsx` testira konfiguracijo `Toaster`.
 - `use-places-autocomplete.test.tsx` testira hook za Google Places autocomplete.
 - `main-app-home.test.tsx` testira orkestracijo `MainAppHome` prek mockanih mej sistema.
+- `auth-forms.test.tsx`, `user-session-provider.test.tsx`, `account-page.test.tsx` in `main-app-control-overlay.test.tsx` testirajo dodatne uspesne ter neuspesne integracijske tokove, ki dvignejo pokritost auth, profila in glavnega overlaya.
+- `text.test.ts`, `vreme.test.tsx`, `route-popup.test.tsx`, `route-options.test.tsx`, `zemljevid.test.tsx`, `route-polyline.test.tsx` in `responsive-ui.test.tsx` testirajo dodatne veje manjsih komponent in helperjev.
 
 ### Zemljevid
 

@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -107,6 +106,69 @@ class RouteAlternativeServiceTest {
         RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
 
         assertThat(response.routes()).hasSize(2);
+    }
+
+    @Test
+    void returnsNotFoundStatusWhenNoRoutesAvailable() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = service(router);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                .thenReturn(null);
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
+
+        assertThat(response.status()).isEqualTo("not_found");
+        assertThat(response.routes()).isEmpty();
+    }
+
+    @Test
+    void stopsAcceptingRoutesAfterMaxRoutesReached() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = service(router); // maxRoutes = 3
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                .thenReturn(candidate(journey(1000, "BUS"), 1, 2))
+                .thenReturn(candidate(journey(1100, "BUS"), 3, 4))
+                .thenReturn(candidate(journey(1200, "BUS"), 5, 6))
+                .thenReturn(candidate(journey(1300, "BUS"), 7, 8));
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
+
+        assertThat(response.routes()).hasSize(3);
+    }
+
+    @Test
+    void qualityFilterDropsRoutesTooMuchSlowerThanFastest() {
+        AStarRouter router = mock(AStarRouter.class);
+        // maxSlowdownMultiplier = 1.4 → fastest=1000s, cutoff=1400s → 3000s route is dropped
+        RouteAlternativeService service = new RouteAlternativeService(router, 3, 0.8, 1.4, 180);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                .thenReturn(candidate(journey(1000, "BUS"), 1, 2))
+                .thenReturn(candidate(journey(3000, "BIKE"), 3, 4))
+                .thenReturn(null);
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
+
+        assertThat(response.routes()).hasSize(1);
+        assertThat(response.routes().getFirst().modes()).containsExactly("BUS");
+    }
+
+    @Test
+    void responseIncludesOriginAndDestinationCoordinates() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = service(router);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                .thenReturn(null);
+
+        RouteAlternativesResponse response = service.findAlternatives(46.55, 15.64, 46.56, 15.65, "Origin", "Dest", LocalTime.NOON, true, true);
+
+        assertThat(response.origin().lat()).isEqualTo(46.55);
+        assertThat(response.destination().lat()).isEqualTo(46.56);
+        assertThat(response.originAddress()).isEqualTo("Origin");
+        assertThat(response.destinationAddress()).isEqualTo("Dest");
     }
 
     private RouteAlternativeService service(AStarRouter router) {

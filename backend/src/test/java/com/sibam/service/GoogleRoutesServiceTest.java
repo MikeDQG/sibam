@@ -78,7 +78,7 @@ class GoogleRoutesServiceTest {
         assertThat(result.steps().get(0).maneuver()).isEqualTo("DEPART");
         assertThat(result.steps().get(0).distanceMeters()).isEqualTo(40);
         assertThat(result.steps().get(0).durationSeconds()).isEqualTo(6);
-        assertThat(result.steps().get(0).startPolylineIndex()).isEqualTo(0);
+        assertThat(result.steps().get(0).startPolylineIndex()).isZero();
         assertThat(result.steps().get(0).endPolylineIndex()).isEqualTo(1);
         assertThat(result.steps().get(1).instruction()).isEqualTo("Turn left onto Pohorska ulica");
         assertThat(result.steps().get(1).maneuver()).isEqualTo("TURN_LEFT");
@@ -87,8 +87,132 @@ class GoogleRoutesServiceTest {
         assertThat(result.steps().get(1).endPolylineIndex()).isEqualTo(2);
 
         String serializedStep = new ObjectMapper().writeValueAsString(result.steps().getFirst());
-        assertThat(serializedStep).doesNotContain("polyline");
-        assertThat(serializedStep).contains("\"startPolylineIndex\":0");
-        assertThat(serializedStep).contains("\"endPolylineIndex\":1");
+        assertThat(serializedStep)
+                .doesNotContain("polyline")
+                .contains("\"startPolylineIndex\":0")
+                .contains("\"endPolylineIndex\":1");
+    }
+
+    @Test
+    void parseRouteDetailsReturnsFallbackWhenRoutesArrayIsEmpty() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        GeoPoint origin = new GeoPoint(46.55, 15.64);
+        GeoPoint dest   = new GeoPoint(46.56, 15.65);
+        GoogleRoutesService.RouteDetails result = service.parseRouteDetails(
+                "{\"routes\":[]}", origin, dest
+        );
+
+        assertThat(result.polyline()).containsExactly(origin, dest);
+        assertThat(result.steps()).isEmpty();
+    }
+
+    @Test
+    void parseRouteDetailsReturnsFallbackWhenPolylineCoordinatesAreEmpty() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        GeoPoint origin = new GeoPoint(46.55, 15.64);
+        GeoPoint dest   = new GeoPoint(46.56, 15.65);
+        String response = """
+                {"routes":[{"polyline":{"geoJsonLinestring":{"coordinates":[]}},"legs":[]}]}
+                """;
+
+        GoogleRoutesService.RouteDetails result = service.parseRouteDetails(response, origin, dest);
+
+        assertThat(result.polyline()).containsExactly(origin, dest);
+        assertThat(result.steps()).isEmpty();
+    }
+
+    @Test
+    void parseRouteDetailsWithEncodedPolylineFormat() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "ENCODED_POLYLINE");
+
+        // "_p~iF~ps|U_ulLnnqC_mqNvxq`@" encodes 3 known points
+        String response = """
+                {"routes":[{
+                  "polyline":{"encodedPolyline":"_p~iF~ps|U_ulLnnqC_mqNvxq`@"},
+                  "legs":[]
+                }]}
+                """;
+
+        GeoPoint origin = new GeoPoint(38.5, -120.2);
+        GeoPoint dest   = new GeoPoint(40.7, -120.95);
+        GoogleRoutesService.RouteDetails result = service.parseRouteDetails(response, origin, dest);
+
+        assertThat(result.polyline()).hasSizeGreaterThan(1);
+        assertThat(result.steps()).isEmpty();
+    }
+
+    @Test
+    void parseRouteDetailsWithNoLegsProducesNoSteps() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        String response = """
+                {"routes":[{
+                  "polyline":{"geoJsonLinestring":{"coordinates":[[15.64,46.55],[15.65,46.56]]}},
+                  "legs":[]
+                }]}
+                """;
+
+        GoogleRoutesService.RouteDetails result = service.parseRouteDetails(
+                response, new GeoPoint(46.55, 15.64), new GeoPoint(46.56, 15.65)
+        );
+
+        assertThat(result.polyline()).hasSize(2);
+        assertThat(result.steps()).isEmpty();
+    }
+
+    @Test
+    void fetchRouteDetailsReturnsNullWhenApiKeyIsBlank() {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "apiKey", "");
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        GoogleRoutesService.RouteDetails result = service.fetchRouteDetails(
+                new GeoPoint(46.55, 15.64), new GeoPoint(46.56, 15.65), com.sibam.graph.model.EdgeType.WALK
+        );
+
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void fetchPolylineFallsBackToOriginAndDestinationWhenApiKeyIsBlank() {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "apiKey", "");
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        GeoPoint origin = new GeoPoint(46.55, 15.64);
+        GeoPoint dest   = new GeoPoint(46.56, 15.65);
+
+        assertThat(service.fetchPolyline(origin, dest)).containsExactly(origin, dest);
+    }
+
+    @Test
+    void parseRouteDetailsWithStepHavingNoDuration() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        String response = """
+                {"routes":[{
+                  "polyline":{"geoJsonLinestring":{"coordinates":[[15.64,46.55],[15.65,46.56]]}},
+                  "legs":[{"steps":[{
+                    "distanceMeters": 100,
+                    "polyline":{"geoJsonLinestring":{"coordinates":[[15.64,46.55],[15.65,46.56]]}},
+                    "navigationInstruction":{"maneuver":"DEPART","instructions":"Go straight"}
+                  }]}]
+                }]}
+                """;
+
+        GoogleRoutesService.RouteDetails result = service.parseRouteDetails(
+                response, new GeoPoint(46.55, 15.64), new GeoPoint(46.56, 15.65)
+        );
+
+        assertThat(result.steps()).hasSize(1);
+        assertThat(result.steps().get(0).durationSeconds()).isZero();
+        assertThat(result.steps().get(0).instruction()).isEqualTo("Go straight");
     }
 }

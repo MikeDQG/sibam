@@ -11,6 +11,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -18,6 +19,12 @@ class SchedulerServiceTest {
 
     private static final Clock MIDDAY = Clock.fixed(
             Instant.parse("2026-06-02T10:00:00Z"), // 12:00 Ljubljana (UTC+2)
+            ZoneId.of("Europe/Ljubljana")
+    );
+
+    // 03:00 Ljubljana — outside 05:00–23:00 operating window
+    private static final Clock NIGHT = Clock.fixed(
+            Instant.parse("2026-06-02T01:00:00Z"),
             ZoneId.of("Europe/Ljubljana")
     );
 
@@ -92,5 +99,63 @@ class SchedulerServiceTest {
         scheduler.fetchBusIngestion();
 
         verify(gtfsRTDataService).ingestRealtimeTrips(any());
+    }
+
+    // outside operating hours — all three methods skip regardless of flag
+
+    @Test
+    void fetchBikeIngestionSkipsOutsideOperatingHours() {
+        SchedulerService nightScheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, NIGHT);
+        ReflectionTestUtils.setField(nightScheduler, "fetchBikeIngestion", true);
+
+        nightScheduler.fetchBikeIngestion();
+
+        verify(mbajkDataService, never()).ingestBikesData(any());
+    }
+
+    @Test
+    void fetchWeatherIngestionSkipsOutsideOperatingHours() {
+        SchedulerService nightScheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, NIGHT);
+        ReflectionTestUtils.setField(nightScheduler, "fetchWeatherIngestion", true);
+
+        nightScheduler.fetchWeatherIngestion();
+
+        verify(weatherDataService, never()).ingestWeatherData(any());
+    }
+
+    @Test
+    void fetchBusIngestionSkipsOutsideOperatingHours() {
+        SchedulerService nightScheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, NIGHT);
+        ReflectionTestUtils.setField(nightScheduler, "fetchBusIngestion", true);
+
+        nightScheduler.fetchBusIngestion();
+
+        verify(gtfsRTDataService, never()).ingestRealtimeTrips(any());
+    }
+
+    // exception handling — exceptions are caught and must not propagate
+
+    @Test
+    void fetchBikeIngestionDoesNotPropagateException() {
+        ReflectionTestUtils.setField(scheduler, "fetchBikeIngestion", true);
+        doThrow(new RuntimeException("network error")).when(mbajkDataService).ingestBikesData(any());
+
+        assertThatCode(() -> scheduler.fetchBikeIngestion()).doesNotThrowAnyException();
+    }
+
+    @Test
+    void fetchWeatherIngestionDoesNotPropagateException() {
+        ReflectionTestUtils.setField(scheduler, "fetchWeatherIngestion", true);
+        doThrow(new RuntimeException("network error")).when(weatherDataService).ingestWeatherData(any());
+
+        assertThatCode(() -> scheduler.fetchWeatherIngestion()).doesNotThrowAnyException();
+    }
+
+    @Test
+    void fetchBusIngestionDoesNotPropagateException() {
+        ReflectionTestUtils.setField(scheduler, "fetchBusIngestion", true);
+        doThrow(new RuntimeException("network error")).when(gtfsRTDataService).ingestRealtimeTrips(any());
+
+        assertThatCode(() -> scheduler.fetchBusIngestion()).doesNotThrowAnyException();
     }
 }

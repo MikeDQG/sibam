@@ -20,6 +20,7 @@ import com.sibam.service.GoogleRoutesService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -339,6 +340,9 @@ class AStarRouterTest {
 
         VaoSerializer vaoSerializer = mock(VaoSerializer.class);
         when(vaoSerializer.getSchedulesMap()).thenReturn(Map.of());
+        when(vaoSerializer.getSchedulesMap(any(LocalDate.class))).thenReturn(Map.of());
+        when(vaoSerializer.getScheduleDates()).thenReturn(List.of());
+        when(vaoSerializer.isRouteActiveOnDate(anyInt(), any(LocalDate.class))).thenReturn(true);
         when(vaoSerializer.getRoutesMap()).thenReturn(Map.of(1001, routeVao));
 
         InMemoryGraphStore graphStore = new InMemoryGraphStore();
@@ -368,6 +372,9 @@ class AStarRouterTest {
         HelperService helperService = new HelperService();
         VaoSerializer vaoSerializer = mock(VaoSerializer.class);
         when(vaoSerializer.getSchedulesMap()).thenReturn(Map.of());
+        when(vaoSerializer.getSchedulesMap(any(LocalDate.class))).thenReturn(Map.of());
+        when(vaoSerializer.getScheduleDates()).thenReturn(List.of());
+        when(vaoSerializer.isRouteActiveOnDate(anyInt(), any(LocalDate.class))).thenReturn(true);
         when(vaoSerializer.getRoutesMap()).thenReturn(Map.of());
         return new AStarRouter(
                 graphStore, new SpatialSearchService(helperService), helperService,
@@ -391,6 +398,9 @@ class AStarRouterTest {
         HelperService helperService = new HelperService();
         VaoSerializer vaoSerializer = mock(VaoSerializer.class);
         when(vaoSerializer.getSchedulesMap()).thenReturn(Map.of());
+        when(vaoSerializer.getSchedulesMap(any(LocalDate.class))).thenReturn(Map.of());
+        when(vaoSerializer.getScheduleDates()).thenReturn(List.of());
+        when(vaoSerializer.isRouteActiveOnDate(anyInt(), any(LocalDate.class))).thenReturn(true);
         return new AStarRouter(
                 graphStore,
                 new SpatialSearchService(helperService),

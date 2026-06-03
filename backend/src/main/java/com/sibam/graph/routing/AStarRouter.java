@@ -272,6 +272,9 @@ public class AStarRouter {
                         startMillis + secondsToMillis(currentCostSeconds),
                         weatherContext
                 );
+                if (relaxation == null) {
+                    continue;
+                }
                 int tentative = currentCostSeconds + relaxation.costSeconds();
                 SearchState nextState = nextState(current.state(), edge);
 
@@ -315,6 +318,9 @@ public class AStarRouter {
         }
 
         long departureMillis = nextBusDepartureMillis(edge, currentMillis);
+        if (departureMillis < 0) {
+            return null;
+        }
         long arrivalMillis = departureMillis + secondsToMillis(edge.getCostSeconds());
         int costSeconds = (int) Math.max(1, Math.round((arrivalMillis - currentMillis) / 1000.0));
         costSeconds += transferPenaltySeconds(lastBusRoute, edge, weatherContext);
@@ -364,19 +370,45 @@ public class AStarRouter {
         int scheduleStopPointId = edge.getScheduleStopPointId() == null
                 ? edge.getFromNodeId()
                 : edge.getScheduleStopPointId();
-        StopScheduleVao stopSchedule = vaoSerializer.getSchedulesMap().get(scheduleStopPointId);
-        if (stopSchedule == null || stopSchedule.scheduleForLine() == null) {
+        LocalDate currentDate = LocalDateTime.ofInstant(
+                java.time.Instant.ofEpochMilli(currentMillis),
+                ZoneId.systemDefault()
+        ).toLocalDate();
+
+        if (!vaoSerializer.isRouteActiveOnDate(routeInfo.routeId(), currentDate)) {
+            return -1;
+        }
+
+        Map<Integer, StopScheduleVao> schedulesForDate = vaoSerializer.getSchedulesMap(currentDate);
+        if (schedulesForDate == null || schedulesForDate.isEmpty()) {
             return currentMillis;
+        }
+
+        return departureCandidatesForDate(schedulesForDate, scheduleStopPointId, routeInfo, currentMillis, currentDate).stream()
+                .min(Long::compareTo)
+                .orElse(-1L);
+    }
+
+    private List<Long> departureCandidatesForDate(
+            Map<Integer, StopScheduleVao> schedulesForDate,
+            int scheduleStopPointId,
+            RouteInfo routeInfo,
+            long currentMillis,
+            LocalDate date
+    ) {
+        StopScheduleVao stopSchedule = schedulesForDate.get(scheduleStopPointId);
+        if (stopSchedule == null || stopSchedule.scheduleForLine() == null) {
+            return List.of();
         }
 
         return stopSchedule.scheduleForLine().stream()
                 .filter(lineSchedule -> lineSchedule.lineId() == routeInfo.lineId())
                 .flatMap(lineSchedule -> matchingRouteSchedules(lineSchedule, routeInfo).stream())
                 .flatMap(routeSchedule -> routeSchedule.departures().stream())
-                .map(departure -> departureMillis(departure, currentMillis))
+                .map(departure -> departureMillis(departure, date, currentMillis))
                 .filter(Objects::nonNull)
-                .min(Long::compareTo)
-                .orElse(currentMillis);
+                .filter(candidate -> candidate >= currentMillis)
+                .toList();
     }
 
     private List<RouteScheduleVao> matchingRouteSchedules(LineScheduleVao lineSchedule, RouteInfo routeInfo) {
@@ -414,27 +446,13 @@ public class AStarRouter {
         return false;
     }
 
-    private Long departureMillis(String departure, long currentMillis) {
+    private Long departureMillis(String departure, LocalDate date, long currentMillis) {
         try {
             LocalTime departureTime = LocalTime.parse(departure, DEPARTURE_TIME_FORMATTER);
-            LocalDate currentDate = LocalDateTime.ofInstant(
-                    java.time.Instant.ofEpochMilli(currentMillis),
-                    ZoneId.systemDefault()
-            ).toLocalDate();
-            long candidate = currentDate.atTime(departureTime)
+            return date.atTime(departureTime)
                     .atZone(ZoneId.systemDefault())
                     .toInstant()
                     .toEpochMilli();
-
-            if (candidate < currentMillis) {
-                candidate = currentDate.plusDays(1)
-                        .atTime(departureTime)
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant()
-                        .toEpochMilli();
-            }
-
-            return candidate;
         } catch (DateTimeParseException ignored) {
             return null;
         }

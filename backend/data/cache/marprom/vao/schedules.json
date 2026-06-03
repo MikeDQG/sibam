@@ -301,6 +301,12 @@
     "name" : "Brezje",
     "address" : "Dupleška cesta 81",
     "scheduleForLine" : [ {
+      "lineId" : 78,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dobrava - Avtobusna postaja",
+        "departures" : [ "05:13", "06:13", "07:13", "08:13", "09:13", "09:53", "10:33", "11:13", "11:53", "12:33", "13:13", "14:13", "15:13", "16:13", "17:13", "18:13", "19:13", "20:13", "21:13", "22:13" ]
+      } ]
+    }, {
       "lineId" : 82,
       "routeAndSchedules" : [ {
         "direction" : "Dupleška kanal - Avtobusna postaja",
@@ -309,12 +315,6 @@
         "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
         "departures" : [ "05:21", "05:51", "06:21", "06:51", "07:21", "07:51", "08:51", "10:51", "11:51", "12:51", "13:51", "14:21", "14:51", "15:51", "16:21", "16:51", "18:51", "20:51", "21:56" ]
       } ]
-    }, {
-      "lineId" : 78,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dobrava - Avtobusna postaja",
-        "departures" : [ "05:13", "06:13", "07:13", "08:13", "09:13", "09:53", "10:33", "11:13", "11:53", "12:33", "13:13", "14:13", "15:13", "16:13", "17:13", "18:13", "19:13", "20:13", "21:13", "22:13" ]
-      } ]
     } ]
   },
   "26" : {
@@ -322,6 +322,12 @@
     "name" : "Brezje",
     "address" : "Dupleška cesta 75",
     "scheduleForLine" : [ {
+      "lineId" : 78,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dobrava - Supernova",
+        "departures" : [ "05:15", "06:15", "07:15", "08:15", "08:55", "09:35", "10:15", "10:55", "11:35", "12:15", "13:15", "14:15", "15:15", "16:15", "17:15", "18:15", "19:15", "20:15", "21:15", "22:25" ]
+      } ]
+    }, {
       "lineId" : 82,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Dupleška kanal",
@@ -329,12 +335,6 @@
       }, {
         "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
         "departures" : [ "06:04", "06:34", "07:04", "07:34", "08:34", "10:34", "11:34", "12:34", "13:34", "14:04", "14:34", "15:34", "16:04", "16:34", "17:04", "18:34", "20:34", "21:44", "22:39" ]
-      } ]
-    }, {
-      "lineId" : 78,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dobrava - Supernova",
-        "departures" : [ "05:15", "06:15", "07:15", "08:15", "08:55", "09:35", "10:15", "10:55", "11:35", "12:15", "13:15", "14:15", "15:15", "16:15", "17:15", "18:15", "19:15", "20:15", "21:15", "22:25" ]
       } ]
     } ]
   },
@@ -439,15 +439,6 @@
     "name" : "Cesta XIV. divizije",
     "address" : "Cesta XIV. divizije 108",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dupleška kanal",
-        "departures" : [ "08:02", "09:32", "13:02", "15:02", "17:32", "19:32" ]
-      }, {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "06:02", "06:32", "07:02", "07:32", "08:32", "10:32", "11:32", "12:32", "13:32", "14:02", "14:32", "15:32", "16:02", "16:32", "17:02", "18:32", "20:32", "21:42", "22:37" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
@@ -459,6 +450,15 @@
         "direction" : "Avtobusna postaja - Dobrava - Supernova",
         "departures" : [ "05:13", "06:13", "07:13", "08:13", "08:53", "09:33", "10:13", "10:53", "11:33", "12:13", "13:13", "14:13", "15:13", "16:13", "17:13", "18:13", "19:13", "20:13", "21:13", "22:23" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dupleška kanal",
+        "departures" : [ "08:02", "09:32", "13:02", "15:02", "17:32", "19:32" ]
+      }, {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "06:02", "06:32", "07:02", "07:32", "08:32", "10:32", "11:32", "12:32", "13:32", "14:02", "14:32", "15:32", "16:02", "16:32", "17:02", "18:32", "20:32", "21:42", "22:37" ]
+      } ]
     } ]
   },
   "34" : {
@@ -466,15 +466,6 @@
     "name" : "Cesta XIV. divizije",
     "address" : "Cesta XIV. divizije 101",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Dupleška kanal - Avtobusna postaja",
-        "departures" : [ "08:24", "09:54", "13:24", "15:24", "17:54", "19:54" ]
-      }, {
-        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
-        "departures" : [ "05:23", "05:53", "06:23", "06:53", "07:23", "07:53", "08:53", "10:53", "11:53", "12:53", "13:53", "14:23", "14:53", "15:53", "16:23", "16:53", "18:53", "20:53", "21:58" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
@@ -485,6 +476,15 @@
       "routeAndSchedules" : [ {
         "direction" : "Supernova - Dobrava - Avtobusna postaja",
         "departures" : [ "05:15", "06:15", "07:15", "08:15", "09:15", "09:55", "10:35", "11:15", "11:55", "12:35", "13:15", "14:15", "15:15", "16:15", "17:15", "18:15", "19:15", "20:15", "21:15", "22:15" ]
+      } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Dupleška kanal - Avtobusna postaja",
+        "departures" : [ "08:24", "09:54", "13:24", "15:24", "17:54", "19:54" ]
+      }, {
+        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
+        "departures" : [ "05:23", "05:53", "06:23", "06:53", "07:23", "07:53", "08:53", "10:53", "11:53", "12:53", "13:53", "14:23", "14:53", "15:53", "16:23", "16:53", "18:53", "20:53", "21:58" ]
       } ]
     } ]
   },
@@ -547,15 +547,6 @@
     "name" : "Čufarjeva - dom st. obč.",
     "address" : "Čufarjeva cesta 23",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Dupleška kanal - Avtobusna postaja",
-        "departures" : [ "08:27", "09:57", "13:27", "15:27", "17:57", "19:57" ]
-      }, {
-        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
-        "departures" : [ "05:26", "05:56", "06:26", "06:56", "07:26", "07:56", "08:56", "10:56", "11:56", "12:56", "13:56", "14:26", "14:56", "15:56", "16:26", "16:56", "18:56", "20:56", "22:01" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
@@ -570,6 +561,15 @@
         "direction" : "Zrkovci - Avtobusna postaja",
         "departures" : [ "05:07", "09:17", "12:52", "17:22", "18:52", "20:22" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Dupleška kanal - Avtobusna postaja",
+        "departures" : [ "08:27", "09:57", "13:27", "15:27", "17:57", "19:57" ]
+      }, {
+        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
+        "departures" : [ "05:26", "05:56", "06:26", "06:56", "07:26", "07:56", "08:56", "10:56", "11:56", "12:56", "13:56", "14:26", "14:56", "15:56", "16:26", "16:56", "18:56", "20:56", "22:01" ]
+      } ]
     } ]
   },
   "40" : {
@@ -577,15 +577,6 @@
     "name" : "Čufarjeva - dom st. obč.",
     "address" : "Čufarjeva cesta 23",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dupleška kanal",
-        "departures" : [ "07:59", "09:29", "12:59", "14:59", "17:29", "19:29" ]
-      }, {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "05:59", "06:29", "06:59", "07:29", "08:29", "10:29", "11:29", "12:29", "13:29", "13:59", "14:29", "15:29", "15:59", "16:29", "16:59", "18:29", "20:29", "21:39", "22:34" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
@@ -612,6 +603,15 @@
         "direction" : "Mlinska AP - Trčova Griček - Grušova",
         "departures" : [ "05:29", "08:14", "09:24", "10:44", "13:34", "16:29", "19:09", "20:34", "22:14" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dupleška kanal",
+        "departures" : [ "07:59", "09:29", "12:59", "14:59", "17:29", "19:29" ]
+      }, {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "05:59", "06:29", "06:59", "07:29", "08:29", "10:29", "11:29", "12:29", "13:29", "13:59", "14:29", "15:29", "15:59", "16:29", "16:59", "18:29", "20:29", "21:39", "22:34" ]
+      } ]
     } ]
   },
   "41" : {
@@ -619,15 +619,6 @@
     "name" : "Čufarjeva - TVD Partizan",
     "address" : "Pobreška cesta",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Dupleška kanal - Avtobusna postaja",
-        "departures" : [ "08:28", "09:58", "13:28", "15:28", "17:58", "19:58" ]
-      }, {
-        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
-        "departures" : [ "05:27", "05:57", "06:27", "06:57", "07:27", "07:57", "08:57", "10:57", "11:57", "12:57", "13:57", "14:27", "14:57", "15:57", "16:27", "16:57", "18:57", "20:57", "22:02" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
@@ -648,6 +639,15 @@
         "direction" : "Supernova - Dobrava - Avtobusna postaja",
         "departures" : [ "05:20", "06:20", "07:20", "08:20", "09:20", "10:00", "10:40", "11:20", "12:00", "12:40", "13:20", "14:20", "15:20", "16:20", "17:20", "18:20", "19:20", "20:20", "21:20", "22:20" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Dupleška kanal - Avtobusna postaja",
+        "departures" : [ "08:28", "09:58", "13:28", "15:28", "17:58", "19:58" ]
+      }, {
+        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
+        "departures" : [ "05:27", "05:57", "06:27", "06:57", "07:27", "07:57", "08:57", "10:57", "11:57", "12:57", "13:57", "14:27", "14:57", "15:57", "16:27", "16:57", "18:57", "20:57", "22:02" ]
+      } ]
     } ]
   },
   "42" : {
@@ -655,15 +655,6 @@
     "name" : "Čufarjeva - TVD Partizan",
     "address" : "Čufarjeva cesta",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dupleška kanal",
-        "departures" : [ "07:58", "09:28", "12:58", "14:58", "17:28", "19:28" ]
-      }, {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "05:58", "06:28", "06:58", "07:28", "08:28", "10:28", "11:28", "12:28", "13:28", "13:58", "14:28", "15:28", "15:58", "16:28", "16:58", "18:28", "20:28", "21:38", "22:33" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
@@ -689,6 +680,15 @@
       }, {
         "direction" : "Mlinska AP - Trčova Griček - Grušova",
         "departures" : [ "05:28", "08:13", "09:23", "10:43", "13:33", "16:28", "19:08", "20:33", "22:13" ]
+      } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dupleška kanal",
+        "departures" : [ "07:58", "09:28", "12:58", "14:58", "17:28", "19:28" ]
+      }, {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "05:58", "06:28", "06:58", "07:28", "08:28", "10:28", "11:28", "12:28", "13:28", "13:58", "14:28", "15:28", "15:58", "16:28", "16:58", "18:28", "20:28", "21:38", "22:33" ]
       } ]
     } ]
   },
@@ -724,16 +724,16 @@
     "name" : "Dogoše - Gasilski dom",
     "address" : "Dupleška cesta 234",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "06:07", "06:37", "07:07", "07:37", "08:37", "10:37", "11:37", "12:37", "13:37", "14:07", "14:37", "15:37", "16:07", "16:37", "17:07", "18:37", "20:37", "21:47", "22:42" ]
-      } ]
-    }, {
       "lineId" : 75,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Dogoše",
         "departures" : [ "05:52", "06:52", "07:57", "10:37", "13:52", "14:57", "16:02", "21:47" ]
+      } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "06:07", "06:37", "07:07", "07:37", "08:37", "10:37", "11:37", "12:37", "13:37", "14:07", "14:37", "15:37", "16:07", "16:37", "17:07", "18:37", "20:37", "21:47", "22:42" ]
       } ]
     } ]
   },
@@ -832,12 +832,6 @@
         "departures" : [ "05:41", "06:06", "06:34", "06:54", "07:22", "07:44", "08:08", "08:28", "08:57", "09:24", "09:54", "10:24", "10:54", "11:24", "11:54", "12:27", "12:57", "13:17", "13:42", "14:07", "14:35", "15:00", "15:25", "15:44", "16:12", "16:37", "17:02", "17:27", "17:49", "18:14", "18:44", "19:14", "19:44", "20:14", "20:44", "21:14", "21:44", "22:14", "22:41" ]
       } ]
     }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:10", "07:25", "08:40", "09:55", "11:10", "12:25", "13:40", "14:55", "16:10", "17:25", "18:55", "20:25", "21:55" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja -  Pekre - Limbuš",
@@ -845,6 +839,12 @@
       }, {
         "direction" : "Avtobusna postaja - Lesarska šola - Pekre - Limbuš",
         "departures" : [ "06:41", "07:01", "07:26", "07:46", "08:31", "09:16", "11:16", "13:26", "14:36", "18:36", "19:36", "20:36", "21:36", "22:36" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:10", "07:25", "08:40", "09:55", "11:10", "12:25", "13:40", "14:55", "16:10", "17:25", "18:55", "20:25", "21:55" ]
       } ]
     } ]
   },
@@ -919,6 +919,12 @@
     "name" : "Dupleška - Jarčeva",
     "address" : "Dupleška cesta 131",
     "scheduleForLine" : [ {
+      "lineId" : 78,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dobrava - Avtobusna postaja",
+        "departures" : [ "05:12", "06:12", "07:12", "08:12", "09:12", "09:52", "10:32", "11:12", "11:52", "12:32", "13:12", "14:12", "15:12", "16:12", "17:12", "18:12", "19:12", "20:12", "21:12", "22:12" ]
+      } ]
+    }, {
       "lineId" : 82,
       "routeAndSchedules" : [ {
         "direction" : "Dupleška kanal - Avtobusna postaja",
@@ -927,12 +933,6 @@
         "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
         "departures" : [ "05:20", "05:50", "06:20", "06:50", "07:20", "07:50", "08:50", "10:50", "11:50", "12:50", "13:50", "14:20", "14:50", "15:50", "16:20", "16:50", "18:50", "20:50", "21:55" ]
       } ]
-    }, {
-      "lineId" : 78,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dobrava - Avtobusna postaja",
-        "departures" : [ "05:12", "06:12", "07:12", "08:12", "09:12", "09:52", "10:32", "11:12", "11:52", "12:32", "13:12", "14:12", "15:12", "16:12", "17:12", "18:12", "19:12", "20:12", "21:12", "22:12" ]
-      } ]
     } ]
   },
   "58" : {
@@ -940,6 +940,12 @@
     "name" : "Dupleška - Jarčeva",
     "address" : "Dupleška cesta 124",
     "scheduleForLine" : [ {
+      "lineId" : 78,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dobrava - Supernova",
+        "departures" : [ "05:16", "06:16", "07:16", "08:16", "08:56", "09:36", "10:16", "10:56", "11:36", "12:16", "13:16", "14:16", "15:16", "16:16", "17:16", "18:16", "19:16", "20:16", "21:16", "22:26" ]
+      } ]
+    }, {
       "lineId" : 82,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Dupleška kanal",
@@ -947,12 +953,6 @@
       }, {
         "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
         "departures" : [ "06:05", "06:35", "07:05", "07:35", "08:35", "10:35", "11:35", "12:35", "13:35", "14:05", "14:35", "15:35", "16:05", "16:35", "17:05", "18:35", "20:35", "21:45", "22:40" ]
-      } ]
-    }, {
-      "lineId" : 78,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dobrava - Supernova",
-        "departures" : [ "05:16", "06:16", "07:16", "08:16", "08:56", "09:36", "10:16", "10:56", "11:36", "12:16", "13:16", "14:16", "15:16", "16:16", "17:16", "18:16", "19:16", "20:16", "21:16", "22:26" ]
       } ]
     } ]
   },
@@ -985,6 +985,12 @@
     "name" : "Dupleška - kanal",
     "address" : "Dupleška cesta 200",
     "scheduleForLine" : [ {
+      "lineId" : 78,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dobrava - Avtobusna postaja",
+        "departures" : [ "05:11", "06:11", "07:11", "08:11", "09:11", "09:51", "10:31", "11:11", "11:51", "12:31", "13:11", "14:11", "15:11", "16:11", "17:11", "18:11", "19:11", "20:11", "21:11", "22:11" ]
+      } ]
+    }, {
       "lineId" : 82,
       "routeAndSchedules" : [ {
         "direction" : "Dupleška kanal - Avtobusna postaja",
@@ -993,12 +999,6 @@
         "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
         "departures" : [ "05:19", "05:49", "06:19", "06:49", "07:19", "07:49", "08:49", "10:49", "11:49", "12:49", "13:49", "14:19", "14:49", "15:49", "16:19", "16:49", "18:49", "20:49", "21:54" ]
       } ]
-    }, {
-      "lineId" : 78,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dobrava - Avtobusna postaja",
-        "departures" : [ "05:11", "06:11", "07:11", "08:11", "09:11", "09:51", "10:31", "11:11", "11:51", "12:31", "13:11", "14:11", "15:11", "16:11", "17:11", "18:11", "19:11", "20:11", "21:11", "22:11" ]
-      } ]
     } ]
   },
   "62" : {
@@ -1006,15 +1006,6 @@
     "name" : "Dupleška - Tezenska",
     "address" : "Dupleška cesta",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dupleška kanal",
-        "departures" : [ "08:03", "09:33", "13:03", "15:03", "17:33", "19:33" ]
-      }, {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "06:03", "06:33", "07:03", "07:33", "08:33", "10:33", "11:33", "12:33", "13:33", "14:03", "14:33", "15:33", "16:03", "16:33", "17:03", "18:33", "20:33", "21:43", "22:38" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
@@ -1026,6 +1017,15 @@
         "direction" : "Avtobusna postaja - Dobrava - Supernova",
         "departures" : [ "05:14", "06:14", "07:14", "08:14", "08:54", "09:34", "10:14", "10:54", "11:34", "12:14", "13:14", "14:14", "15:14", "16:14", "17:14", "18:14", "19:14", "20:14", "21:14", "22:24" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dupleška kanal",
+        "departures" : [ "08:03", "09:33", "13:03", "15:03", "17:33", "19:33" ]
+      }, {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "06:03", "06:33", "07:03", "07:33", "08:33", "10:33", "11:33", "12:33", "13:33", "14:03", "14:33", "15:33", "16:03", "16:33", "17:03", "18:33", "20:33", "21:43", "22:38" ]
+      } ]
     } ]
   },
   "63" : {
@@ -1033,15 +1033,6 @@
     "name" : "Dupleška - Tezenska",
     "address" : "Dupleška cesta 23",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Dupleška kanal - Avtobusna postaja",
-        "departures" : [ "08:23", "09:53", "13:23", "15:23", "17:53", "19:53" ]
-      }, {
-        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
-        "departures" : [ "05:22", "05:52", "06:22", "06:52", "07:22", "07:52", "08:52", "10:52", "11:52", "12:52", "13:52", "14:22", "14:52", "15:52", "16:22", "16:52", "18:52", "20:52", "21:57" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
@@ -1052,6 +1043,15 @@
       "routeAndSchedules" : [ {
         "direction" : "Supernova - Dobrava - Avtobusna postaja",
         "departures" : [ "05:14", "06:14", "07:14", "08:14", "09:14", "09:54", "10:34", "11:14", "11:54", "12:34", "13:14", "14:14", "15:14", "16:14", "17:14", "18:14", "19:14", "20:14", "21:14", "22:14" ]
+      } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Dupleška kanal - Avtobusna postaja",
+        "departures" : [ "08:23", "09:53", "13:23", "15:23", "17:53", "19:53" ]
+      }, {
+        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
+        "departures" : [ "05:22", "05:52", "06:22", "06:52", "07:22", "07:52", "08:52", "10:52", "11:52", "12:52", "13:52", "14:22", "14:52", "15:52", "16:22", "16:52", "18:52", "20:52", "21:57" ]
       } ]
     } ]
   },
@@ -1108,12 +1108,6 @@
     "name" : "Dvorana Tabor - Koresova",
     "address" : "Koresova ulica 5",
     "scheduleForLine" : [ {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Pekre - Turnerjeva",
-        "departures" : [ "05:17", "05:42", "06:07", "06:32", "07:00", "07:31", "08:01", "08:29", "08:59", "09:27", "09:57", "10:42", "11:17", "11:57", "12:37", "13:02", "13:27", "14:00", "14:27", "14:53", "15:30", "15:52", "16:23", "16:52", "17:17", "17:52", "18:22", "18:52", "19:22", "19:52", "20:22", "20:52", "21:22", "21:52" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -1122,6 +1116,12 @@
         "direction" : "Limbuš - Pekre - Studenci - Avtobusna postaja",
         "departures" : [ "05:44", "06:14", "06:44", "07:09", "08:14", "08:39", "08:59", "09:24", "09:44", "10:44", "11:14", "11:44", "12:14", "12:44", "15:49", "16:14", "16:39", "16:59", "17:49", "18:09", "18:34", "19:04", "19:34", "20:04", "20:34", "21:04", "22:04", "22:34" ]
       } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Pekre - Turnerjeva",
+        "departures" : [ "05:17", "05:42", "06:07", "06:32", "07:00", "07:31", "08:01", "08:29", "08:59", "09:27", "09:57", "10:42", "11:17", "11:57", "12:37", "13:02", "13:27", "14:00", "14:27", "14:53", "15:30", "15:52", "16:23", "16:52", "17:17", "17:52", "18:22", "18:52", "19:22", "19:52", "20:22", "20:52", "21:22", "21:52" ]
+      } ]
     } ]
   },
   "69" : {
@@ -1129,12 +1129,6 @@
     "name" : "Dvorana Tabor - Koresova",
     "address" : "Koresova ulica 4",
     "scheduleForLine" : [ {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Turnerjeva - Pekre",
-        "departures" : [ "05:50", "06:15", "06:47", "07:13", "07:44", "08:16", "08:46", "09:08", "09:37", "10:03", "10:38", "11:18", "11:58", "12:38", "13:18", "13:44", "14:14", "14:45", "15:11", "15:40", "16:11", "16:36", "17:03", "17:33", "18:07", "18:37", "19:07", "19:37", "20:07", "20:37", "21:07", "21:43", "22:28" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja -  Pekre - Limbuš",
@@ -1142,6 +1136,12 @@
       }, {
         "direction" : "Avtobusna postaja - Lesarska šola - Pekre - Limbuš",
         "departures" : [ "06:37", "06:57", "07:22", "07:42", "08:27", "09:12", "11:12", "13:22", "14:32", "18:32", "19:32", "20:32", "21:32", "22:32" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Turnerjeva - Pekre",
+        "departures" : [ "05:50", "06:15", "06:47", "07:13", "07:44", "08:16", "08:46", "09:08", "09:37", "10:03", "10:38", "11:18", "11:58", "12:38", "13:18", "13:44", "14:14", "14:45", "15:11", "15:40", "16:11", "16:36", "17:03", "17:33", "18:07", "18:37", "19:07", "19:37", "20:07", "20:37", "21:07", "21:43", "22:28" ]
       } ]
     } ]
   },
@@ -1198,12 +1198,6 @@
     "name" : "Erjavčeva",
     "address" : "Erjavčeva ulica",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:28", "06:33", "07:48", "09:03", "10:18", "11:33", "12:48", "14:03", "15:18", "16:33", "17:48", "19:18", "20:48", "22:18" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -1212,6 +1206,12 @@
         "direction" : "Limbuš - Pekre - Studenci - Avtobusna postaja",
         "departures" : [ "05:36", "06:06", "06:36", "07:01", "08:06", "08:31", "08:51", "09:16", "09:36", "10:36", "11:06", "11:36", "12:06", "12:36", "15:41", "16:06", "16:31", "16:51", "17:41", "18:01", "18:26", "18:56", "19:26", "19:56", "20:26", "20:56", "21:56", "22:26" ]
       } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:28", "06:33", "07:48", "09:03", "10:18", "11:33", "12:48", "14:03", "15:18", "16:33", "17:48", "19:18", "20:48", "22:18" ]
+      } ]
     } ]
   },
   "75" : {
@@ -1219,12 +1219,6 @@
     "name" : "Erjavčeva",
     "address" : "Erjavčeva ulica",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:13", "07:28", "08:43", "09:58", "11:13", "12:28", "13:43", "14:58", "16:13", "17:28", "18:58", "20:28", "21:58" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja -  Pekre - Limbuš",
@@ -1233,6 +1227,12 @@
         "direction" : "Avtobusna postaja - Lesarska šola - Pekre - Limbuš",
         "departures" : [ "06:44", "07:04", "07:29", "07:49", "08:34", "09:19", "11:19", "13:29", "14:39", "18:39", "19:39", "20:39", "21:39", "22:39" ]
       } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:13", "07:28", "08:43", "09:58", "11:13", "12:28", "13:43", "14:58", "16:13", "17:28", "18:58", "20:28", "21:58" ]
+      } ]
     } ]
   },
   "77" : {
@@ -1240,12 +1240,6 @@
     "name" : "Erjavčeva - ZD",
     "address" : "Erjavčeva ulica 43",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:30", "06:35", "07:50", "09:05", "10:20", "11:35", "12:50", "14:05", "15:20", "16:35", "17:50", "19:20", "20:50", "22:20" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -1254,6 +1248,12 @@
         "direction" : "Limbuš - Pekre - Studenci - Avtobusna postaja",
         "departures" : [ "05:38", "06:08", "06:38", "07:03", "08:08", "08:33", "08:53", "09:18", "09:38", "10:38", "11:08", "11:38", "12:08", "12:38", "15:43", "16:08", "16:33", "16:53", "17:43", "18:03", "18:28", "18:58", "19:28", "19:58", "20:28", "20:58", "21:58", "22:28" ]
       } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:30", "06:35", "07:50", "09:05", "10:20", "11:35", "12:50", "14:05", "15:20", "16:35", "17:50", "19:20", "20:50", "22:20" ]
+      } ]
     } ]
   },
   "84" : {
@@ -1261,25 +1261,10 @@
     "name" : "Glavni trg - Elektro",
     "address" : "Vetrinjska ulica 2",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dupleška kanal",
-        "departures" : [ "07:51", "09:21", "12:51", "14:51", "17:21", "19:21" ]
-      }, {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "05:51", "06:21", "06:51", "07:21", "08:21", "10:21", "11:21", "12:21", "13:21", "13:51", "14:21", "15:21", "15:51", "16:21", "16:51", "18:21", "20:21", "21:31", "22:26" ]
-      } ]
-    }, {
       "lineId" : 68,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Ljubljanska - Nova vas",
         "departures" : [ "05:06", "05:26", "05:46", "06:01", "06:16", "06:31", "06:46", "07:01", "07:16", "07:31", "07:46", "08:01", "08:26", "08:46", "09:06", "09:26", "09:46", "10:06", "10:26", "10:46", "11:06", "11:26", "11:46", "12:06", "12:26", "12:46", "13:01", "13:16", "13:31", "13:46", "14:01", "14:16", "14:31", "14:46", "15:01", "15:16", "15:31", "15:46", "16:01", "16:26", "16:46", "17:06", "17:26", "17:46", "18:06", "18:26", "18:46", "19:06", "19:26", "19:46", "20:06", "20:26", "20:46", "21:16", "21:46", "22:16" ]
-      } ]
-    }, {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Turnerjeva - Pekre",
-        "departures" : [ "05:46", "06:11", "06:43", "07:08", "07:39", "08:11", "08:42", "09:04", "09:33", "09:59", "10:34", "11:14", "11:54", "12:34", "13:14", "13:39", "14:09", "14:40", "15:06", "15:35", "16:06", "16:31", "16:59", "17:29", "18:03", "18:33", "19:03", "19:33", "20:03", "20:33", "21:03", "21:39", "22:24" ]
       } ]
     }, {
       "lineId" : 70,
@@ -1350,6 +1335,21 @@
         "direction" : "Avtobusna postaja - Stražun",
         "departures" : [ "06:06", "08:51", "10:51", "13:11", "14:31", "17:51", "19:51" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dupleška kanal",
+        "departures" : [ "07:51", "09:21", "12:51", "14:51", "17:21", "19:21" ]
+      }, {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "05:51", "06:21", "06:51", "07:21", "08:21", "10:21", "11:21", "12:21", "13:21", "13:51", "14:21", "15:21", "15:51", "16:21", "16:51", "18:21", "20:21", "21:31", "22:26" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Turnerjeva - Pekre",
+        "departures" : [ "05:46", "06:11", "06:43", "07:08", "07:39", "08:11", "08:42", "09:04", "09:33", "09:59", "10:34", "11:14", "11:54", "12:34", "13:14", "13:39", "14:09", "14:40", "15:06", "15:35", "16:06", "16:31", "16:59", "17:29", "18:03", "18:33", "19:03", "19:33", "20:03", "20:33", "21:03", "21:39", "22:24" ]
+      } ]
     } ]
   },
   "85" : {
@@ -1357,25 +1357,10 @@
     "name" : "Glavni trg - Elektro",
     "address" : "Glavni trg 24",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Dupleška kanal - Avtobusna postaja",
-        "departures" : [ "08:34", "10:04", "13:34", "15:34", "18:04", "20:04" ]
-      }, {
-        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
-        "departures" : [ "05:33", "06:03", "06:33", "07:03", "07:33", "08:03", "09:03", "11:03", "12:03", "13:03", "14:03", "14:33", "15:03", "16:03", "16:33", "17:03", "19:03", "21:03", "22:08" ]
-      } ]
-    }, {
       "lineId" : 68,
       "routeAndSchedules" : [ {
         "direction" : "Nova vas - Ljubljanska - Avtobusna postaja",
         "departures" : [ "05:19", "05:39", "05:54", "06:09", "06:24", "06:39", "06:54", "07:09", "07:24", "07:39", "07:54", "08:09", "08:29", "08:49", "09:09", "09:29", "09:49", "10:09", "10:29", "10:49", "11:09", "11:29", "11:49", "12:09", "12:29", "12:54", "13:09", "13:24", "13:39", "13:54", "14:09", "14:24", "14:39", "14:54", "15:09", "15:24", "15:39", "15:54", "16:09", "16:29", "16:49", "17:09", "17:29", "17:49", "18:09", "18:29", "18:49", "19:09", "19:29", "19:49", "20:09", "20:29", "20:49", "21:09", "21:39", "22:19" ]
-      } ]
-    }, {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Pekre - Turnerjeva",
-        "departures" : [ "05:22", "05:47", "06:12", "06:37", "07:07", "07:36", "08:07", "08:34", "09:04", "09:32", "10:02", "10:47", "11:22", "12:02", "12:42", "13:07", "13:33", "14:05", "14:32", "14:58", "15:36", "15:57", "16:28", "16:57", "17:22", "17:57", "18:27", "18:57", "19:27", "19:57", "20:27", "20:57", "21:27", "21:57" ]
       } ]
     }, {
       "lineId" : 70,
@@ -1434,6 +1419,21 @@
         "direction" : "Stražun - Avtobusna postaja",
         "departures" : [ "06:36", "09:26", "11:26", "13:41", "15:06", "18:26", "20:26" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Dupleška kanal - Avtobusna postaja",
+        "departures" : [ "08:34", "10:04", "13:34", "15:34", "18:04", "20:04" ]
+      }, {
+        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
+        "departures" : [ "05:33", "06:03", "06:33", "07:03", "07:33", "08:03", "09:03", "11:03", "12:03", "13:03", "14:03", "14:33", "15:03", "16:03", "16:33", "17:03", "19:03", "21:03", "22:08" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Pekre - Turnerjeva",
+        "departures" : [ "05:22", "05:47", "06:12", "06:37", "07:07", "07:36", "08:07", "08:34", "09:04", "09:32", "10:02", "10:47", "11:22", "12:02", "12:42", "13:07", "13:33", "14:05", "14:32", "14:58", "15:36", "15:57", "16:28", "16:57", "17:22", "17:57", "18:27", "18:57", "19:27", "19:57", "20:27", "20:57", "21:27", "21:57" ]
+      } ]
     } ]
   },
   "86" : {
@@ -1441,16 +1441,16 @@
     "name" : "Gorkega - Preradovičeva",
     "address" : "Gorkega ulica 30",
     "scheduleForLine" : [ {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Turnerjeva - Pekre",
-        "departures" : [ "05:49", "06:14", "06:46", "07:12", "07:43", "08:15", "08:45", "09:07", "09:36", "10:02", "10:37", "11:17", "11:57", "12:37", "13:17", "13:43", "14:13", "14:44", "15:10", "15:39", "16:10", "16:35", "17:02", "17:32", "18:06", "18:36", "19:06", "19:36", "20:06", "20:36", "21:06", "21:42", "22:27" ]
-      } ]
-    }, {
       "lineId" : 71,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Vzpenjača",
         "departures" : [ "04:59", "05:19", "05:39", "05:59", "06:19", "06:34", "06:49", "07:04", "07:19", "07:34", "07:49", "08:04", "08:19", "08:34", "08:49", "09:09", "09:29", "09:49", "10:09", "10:29", "10:49", "11:09", "11:29", "11:49", "12:09", "12:29", "12:49", "13:09", "13:24", "13:39", "13:54", "14:09", "14:24", "14:39", "14:54", "15:09", "15:24", "15:39", "15:54", "16:09", "16:29", "16:49", "17:09", "17:29", "17:49", "18:09", "18:29", "18:49", "19:09", "19:29", "19:49", "20:09", "20:29", "20:49", "21:09", "21:39", "22:09", "22:39", "23:09" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Turnerjeva - Pekre",
+        "departures" : [ "05:49", "06:14", "06:46", "07:12", "07:43", "08:15", "08:45", "09:07", "09:36", "10:02", "10:37", "11:17", "11:57", "12:37", "13:17", "13:43", "14:13", "14:44", "15:10", "15:39", "16:10", "16:35", "17:02", "17:32", "18:06", "18:36", "19:06", "19:36", "20:06", "20:36", "21:06", "21:42", "22:27" ]
       } ]
     } ]
   },
@@ -1459,16 +1459,16 @@
     "name" : "Gorkega - Preradovičeva",
     "address" : "Cesta zmage 9",
     "scheduleForLine" : [ {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Pekre - Turnerjeva",
-        "departures" : [ "05:18", "05:43", "06:08", "06:33", "07:01", "07:32", "08:02", "08:30", "09:00", "09:28", "09:58", "10:43", "11:18", "11:58", "12:38", "13:03", "13:28", "14:01", "14:28", "14:54", "15:31", "15:53", "16:24", "16:53", "17:18", "17:53", "18:23", "18:53", "19:23", "19:53", "20:23", "20:53", "21:23", "21:53" ]
-      } ]
-    }, {
       "lineId" : 71,
       "routeAndSchedules" : [ {
         "direction" : "Vzpenjača - Avtobusna postaja",
         "departures" : [ "05:01", "05:21", "05:41", "06:01", "06:21", "06:36", "06:51", "07:06", "07:21", "07:36", "07:51", "08:06", "08:21", "08:36", "08:51", "09:11", "09:31", "09:51", "10:11", "10:31", "10:51", "11:11", "11:31", "11:51", "12:11", "12:31", "12:51", "13:11", "13:26", "13:41", "13:56", "14:11", "14:26", "14:41", "14:56", "15:11", "15:26", "15:41", "15:56", "16:11", "16:31", "16:51", "17:11", "17:31", "17:51", "18:11", "18:31", "18:51", "19:11", "19:31", "19:51", "20:11", "20:31", "20:51", "21:11", "21:41", "22:11", "22:41", "23:11", "23:41" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Pekre - Turnerjeva",
+        "departures" : [ "05:18", "05:43", "06:08", "06:33", "07:01", "07:32", "08:02", "08:30", "09:00", "09:28", "09:58", "10:43", "11:18", "11:58", "12:38", "13:03", "13:28", "14:01", "14:28", "14:54", "15:31", "15:53", "16:24", "16:53", "17:18", "17:53", "18:23", "18:53", "19:23", "19:53", "20:23", "20:53", "21:23", "21:53" ]
       } ]
     } ]
   },
@@ -1477,16 +1477,16 @@
     "name" : "Univerzitetni kampus 1",
     "address" : "Gosposvetska cesta 86",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
-        "departures" : [ "05:49", "06:29", "06:59", "07:34", "08:14", "08:54", "09:39", "10:19", "10:54", "11:34", "12:09", "12:49", "13:24", "14:04", "14:39", "15:19", "15:54", "16:34", "17:09", "17:49", "18:24", "19:04", "19:39", "20:19", "20:54", "21:34", "22:09", "22:49" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
         "departures" : [ "05:38", "06:03", "06:31", "06:51", "07:19", "07:41", "08:05", "08:25", "08:54", "09:21", "09:51", "10:21", "10:51", "11:21", "11:51", "12:24", "12:54", "13:14", "13:39", "14:04", "14:32", "14:57", "15:22", "15:41", "16:09", "16:34", "16:59", "17:24", "17:46", "18:11", "18:41", "19:11", "19:41", "20:11", "20:41", "21:11", "21:41", "22:11", "22:38" ]
+      } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
+        "departures" : [ "05:49", "06:29", "06:59", "07:34", "08:14", "08:54", "09:39", "10:19", "10:54", "11:34", "12:09", "12:49", "13:24", "14:04", "14:39", "15:19", "15:54", "16:34", "17:09", "17:49", "18:24", "19:04", "19:39", "20:19", "20:54", "21:34", "22:09", "22:49" ]
       } ]
     }, {
       "lineId" : 85,
@@ -1501,16 +1501,16 @@
     "name" : "Univerzitetni kampus 1",
     "address" : "Gosposvetska cesta 71",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Bresternica - Avtobusna postaja",
-        "departures" : [ "05:03", "05:43", "06:08", "06:48", "07:23", "08:03", "08:43", "09:23", "10:03", "10:43", "11:18", "11:58", "12:33", "13:13", "13:48", "14:28", "15:03", "15:43", "16:18", "16:58", "17:33", "18:13", "18:48", "19:28", "20:03", "20:43", "21:18", "21:58" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
         "departures" : [ "05:03", "05:23", "05:48", "06:09", "06:34", "06:57", "07:23", "07:43", "08:08", "08:28", "08:52", "09:09", "09:37", "10:07", "10:37", "11:07", "11:37", "12:07", "12:27", "12:52", "13:17", "13:42", "14:07", "14:32", "14:57", "15:22", "15:47", "16:12", "16:32", "17:02", "17:32", "18:02", "18:32", "19:02", "19:29", "19:59", "20:29", "20:59", "21:29", "21:59", "22:29" ]
+      } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Bresternica - Avtobusna postaja",
+        "departures" : [ "05:03", "05:43", "06:08", "06:48", "07:23", "08:03", "08:43", "09:23", "10:03", "10:43", "11:18", "11:58", "12:33", "13:13", "13:48", "14:28", "15:03", "15:43", "16:18", "16:58", "17:33", "18:13", "18:48", "19:28", "20:03", "20:43", "21:18", "21:58" ]
       } ]
     }, {
       "lineId" : 85,
@@ -1525,28 +1525,10 @@
     "name" : "Tretja gimnazija",
     "address" : "Gosposvetska cesta 9",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Bresternica - Avtobusna postaja",
-        "departures" : [ "05:06", "05:46", "06:11", "06:51", "07:26", "08:06", "08:46", "09:26", "10:06", "10:46", "11:21", "12:01", "12:36", "13:16", "13:51", "14:31", "15:06", "15:46", "16:21", "17:01", "17:36", "18:16", "18:51", "19:31", "20:06", "20:46", "21:21", "22:01" ]
-      } ]
-    }, {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Turnerjeva - Pekre",
-        "departures" : [ "05:38", "06:03", "06:33", "06:58", "07:28", "07:59", "08:29", "08:54", "09:23", "09:48", "10:23", "11:03", "11:43", "12:23", "13:03", "13:28", "13:58", "14:28", "14:53", "15:23", "15:53", "16:19", "16:48", "17:18", "17:53", "18:23", "18:53", "19:23", "19:53", "20:23", "20:53", "21:28", "22:13" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
         "departures" : [ "05:06", "05:26", "05:51", "06:12", "06:37", "07:00", "07:28", "07:48", "08:13", "08:33", "08:55", "09:12", "09:40", "10:10", "10:40", "11:10", "11:40", "12:10", "12:30", "12:55", "13:20", "13:45", "14:10", "14:35", "15:00", "15:25", "15:50", "16:15", "16:35", "17:05", "17:35", "18:05", "18:35", "19:05", "19:32", "20:02", "20:32", "21:02", "21:32", "22:02", "22:32" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:39", "06:44", "07:59", "09:14", "10:29", "11:44", "12:59", "14:14", "15:29", "16:44", "17:59", "19:29", "20:59", "22:29" ]
       } ]
     }, {
       "lineId" : 73,
@@ -1560,6 +1542,24 @@
         "direction" : "Rošpoh - Avtobusna postaja",
         "departures" : [ "05:13", "14:28" ]
       } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Bresternica - Avtobusna postaja",
+        "departures" : [ "05:06", "05:46", "06:11", "06:51", "07:26", "08:06", "08:46", "09:26", "10:06", "10:46", "11:21", "12:01", "12:36", "13:16", "13:51", "14:31", "15:06", "15:46", "16:21", "17:01", "17:36", "18:16", "18:51", "19:31", "20:06", "20:46", "21:21", "22:01" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Turnerjeva - Pekre",
+        "departures" : [ "05:38", "06:03", "06:33", "06:58", "07:28", "07:59", "08:29", "08:54", "09:23", "09:48", "10:23", "11:03", "11:43", "12:23", "13:03", "13:28", "13:58", "14:28", "14:53", "15:23", "15:53", "16:19", "16:48", "17:18", "17:53", "18:23", "18:53", "19:23", "19:53", "20:23", "20:53", "21:28", "22:13" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:39", "06:44", "07:59", "09:14", "10:29", "11:44", "12:59", "14:14", "15:29", "16:44", "17:59", "19:29", "20:59", "22:29" ]
+      } ]
     } ]
   },
   "91" : {
@@ -1567,28 +1567,10 @@
     "name" : "Tretja gimnazija",
     "address" : "Gosposvetska cesta 4",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
-        "departures" : [ "05:46", "06:26", "06:56", "07:31", "08:11", "08:51", "09:36", "10:16", "10:51", "11:31", "12:06", "12:46", "13:21", "14:01", "14:36", "15:16", "15:51", "16:31", "17:06", "17:46", "18:21", "19:01", "19:36", "20:16", "20:51", "21:31", "22:06", "22:46" ]
-      } ]
-    }, {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Pekre - Turnerjeva",
-        "departures" : [ "05:30", "05:55", "06:20", "06:45", "07:15", "07:46", "08:17", "08:43", "09:12", "09:40", "10:10", "10:55", "11:30", "12:10", "12:51", "13:15", "13:42", "14:17", "14:41", "15:08", "15:46", "16:08", "16:37", "17:05", "17:30", "18:05", "18:35", "19:05", "19:35", "20:05", "20:35", "21:05", "21:35", "22:05" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
         "departures" : [ "05:32", "05:57", "06:25", "06:45", "07:13", "07:35", "07:59", "08:19", "08:45", "09:15", "09:45", "10:15", "10:45", "11:15", "11:45", "12:15", "12:45", "13:05", "13:30", "13:55", "14:23", "14:48", "15:13", "15:35", "16:00", "16:25", "16:50", "17:15", "17:40", "18:05", "18:35", "19:05", "19:35", "20:05", "20:35", "21:05", "21:35", "22:05", "22:35" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:04", "07:19", "08:34", "09:49", "11:04", "12:19", "13:34", "14:49", "16:04", "17:19", "18:49", "20:19", "21:49" ]
       } ]
     }, {
       "lineId" : 73,
@@ -1602,6 +1584,24 @@
         "direction" : "Avtobusna postaja - Rošpoh",
         "departures" : [ "13:59" ]
       } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
+        "departures" : [ "05:46", "06:26", "06:56", "07:31", "08:11", "08:51", "09:36", "10:16", "10:51", "11:31", "12:06", "12:46", "13:21", "14:01", "14:36", "15:16", "15:51", "16:31", "17:06", "17:46", "18:21", "19:01", "19:36", "20:16", "20:51", "21:31", "22:06", "22:46" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Pekre - Turnerjeva",
+        "departures" : [ "05:30", "05:55", "06:20", "06:45", "07:15", "07:46", "08:17", "08:43", "09:12", "09:40", "10:10", "10:55", "11:30", "12:10", "12:51", "13:15", "13:42", "14:17", "14:41", "15:08", "15:46", "16:08", "16:37", "17:05", "17:30", "18:05", "18:35", "19:05", "19:35", "20:05", "20:35", "21:05", "21:35", "22:05" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:04", "07:19", "08:34", "09:49", "11:04", "12:19", "13:34", "14:49", "16:04", "17:19", "18:49", "20:19", "21:49" ]
+      } ]
     } ]
   },
   "92" : {
@@ -1609,22 +1609,10 @@
     "name" : "Gosposvetska - Kosarjeva",
     "address" : "Gosposvetska cesta 61",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Bresternica - Avtobusna postaja",
-        "departures" : [ "05:04", "05:44", "06:09", "06:49", "07:24", "08:04", "08:44", "09:24", "10:04", "10:44", "11:19", "11:59", "12:34", "13:14", "13:49", "14:29", "15:04", "15:44", "16:19", "16:59", "17:34", "18:14", "18:49", "19:29", "20:04", "20:44", "21:19", "21:59" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
         "departures" : [ "05:04", "05:24", "05:49", "06:10", "06:35", "06:58", "07:24", "07:44", "08:09", "08:29", "08:53", "09:10", "09:38", "10:08", "10:38", "11:08", "11:38", "12:08", "12:28", "12:53", "13:18", "13:43", "14:08", "14:33", "14:58", "15:23", "15:48", "16:13", "16:33", "17:03", "17:33", "18:03", "18:33", "19:03", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:37", "06:42", "07:57", "09:12", "10:27", "11:42", "12:57", "14:12", "15:27", "16:42", "17:57", "19:27", "20:57", "22:27" ]
       } ]
     }, {
       "lineId" : 73,
@@ -1638,6 +1626,18 @@
         "direction" : "Rošpoh - Avtobusna postaja",
         "departures" : [ "05:11", "14:26" ]
       } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Bresternica - Avtobusna postaja",
+        "departures" : [ "05:04", "05:44", "06:09", "06:49", "07:24", "08:04", "08:44", "09:24", "10:04", "10:44", "11:19", "11:59", "12:34", "13:14", "13:49", "14:29", "15:04", "15:44", "16:19", "16:59", "17:34", "18:14", "18:49", "19:29", "20:04", "20:44", "21:19", "21:59" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:37", "06:42", "07:57", "09:12", "10:27", "11:42", "12:57", "14:12", "15:27", "16:42", "17:57", "19:27", "20:57", "22:27" ]
+      } ]
     } ]
   },
   "93" : {
@@ -1645,22 +1645,10 @@
     "name" : "Gosposvetska - Kosarjeva",
     "address" : "Gosposvetska cesta 36",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
-        "departures" : [ "05:48", "06:28", "06:58", "07:33", "08:13", "08:53", "09:38", "10:18", "10:53", "11:33", "12:08", "12:48", "13:23", "14:03", "14:38", "15:18", "15:53", "16:33", "17:08", "17:48", "18:23", "19:03", "19:38", "20:18", "20:53", "21:33", "22:08", "22:48" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
         "departures" : [ "05:34", "05:59", "06:27", "06:47", "07:15", "07:37", "08:01", "08:21", "08:47", "09:17", "09:47", "10:17", "10:47", "11:17", "11:47", "12:17", "12:47", "13:07", "13:32", "13:57", "14:25", "14:50", "15:15", "15:37", "16:02", "16:27", "16:52", "17:17", "17:42", "18:07", "18:37", "19:07", "19:37", "20:07", "20:37", "21:07", "21:37", "22:07", "22:37" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:06", "07:21", "08:36", "09:51", "11:06", "12:21", "13:36", "14:51", "16:06", "17:21", "18:51", "20:21", "21:51" ]
       } ]
     }, {
       "lineId" : 73,
@@ -1674,6 +1662,18 @@
         "direction" : "Avtobusna postaja - Rošpoh",
         "departures" : [ "14:01" ]
       } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
+        "departures" : [ "05:48", "06:28", "06:58", "07:33", "08:13", "08:53", "09:38", "10:18", "10:53", "11:33", "12:08", "12:48", "13:23", "14:03", "14:38", "15:18", "15:53", "16:33", "17:08", "17:48", "18:23", "19:03", "19:38", "20:18", "20:53", "21:33", "22:08", "22:48" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:06", "07:21", "08:36", "09:51", "11:06", "12:21", "13:36", "14:51", "16:06", "17:21", "18:51", "20:21", "21:51" ]
+      } ]
     } ]
   },
   "94" : {
@@ -1681,22 +1681,10 @@
     "name" : "Gosposvetska - Vrbanska",
     "address" : "Gosposvetska cesta 20",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
-        "departures" : [ "05:47", "06:27", "06:57", "07:32", "08:12", "08:52", "09:37", "10:17", "10:52", "11:32", "12:07", "12:47", "13:22", "14:02", "14:37", "15:17", "15:52", "16:32", "17:07", "17:47", "18:22", "19:02", "19:37", "20:17", "20:52", "21:32", "22:07", "22:47" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
         "departures" : [ "05:33", "05:58", "06:26", "06:46", "07:14", "07:36", "08:00", "08:20", "08:46", "09:16", "09:46", "10:16", "10:46", "11:16", "11:46", "12:16", "12:46", "13:06", "13:31", "13:56", "14:24", "14:49", "15:14", "15:36", "16:01", "16:26", "16:51", "17:16", "17:41", "18:06", "18:36", "19:06", "19:36", "20:06", "20:36", "21:06", "21:36", "22:06", "22:36" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:05", "07:20", "08:35", "09:50", "11:05", "12:20", "13:35", "14:50", "16:05", "17:20", "18:50", "20:20", "21:50" ]
       } ]
     }, {
       "lineId" : 73,
@@ -1710,6 +1698,18 @@
         "direction" : "Avtobusna postaja - Rošpoh",
         "departures" : [ "14:00" ]
       } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
+        "departures" : [ "05:47", "06:27", "06:57", "07:32", "08:12", "08:52", "09:37", "10:17", "10:52", "11:32", "12:07", "12:47", "13:22", "14:02", "14:37", "15:17", "15:52", "16:32", "17:07", "17:47", "18:22", "19:02", "19:37", "20:17", "20:52", "21:32", "22:07", "22:47" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:05", "07:20", "08:35", "09:50", "11:05", "12:20", "13:35", "14:50", "16:05", "17:20", "18:50", "20:20", "21:50" ]
+      } ]
     } ]
   },
   "95" : {
@@ -1717,22 +1717,10 @@
     "name" : "Gosposvetska - Vrbanska",
     "address" : "Gosposvetska cesta 29",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Bresternica - Avtobusna postaja",
-        "departures" : [ "05:05", "05:45", "06:10", "06:50", "07:25", "08:05", "08:45", "09:25", "10:05", "10:45", "11:20", "12:00", "12:35", "13:15", "13:50", "14:30", "15:05", "15:45", "16:20", "17:00", "17:35", "18:15", "18:50", "19:30", "20:05", "20:45", "21:20", "22:00" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
         "departures" : [ "05:05", "05:25", "05:50", "06:11", "06:36", "06:59", "07:26", "07:46", "08:11", "08:31", "08:54", "09:11", "09:39", "10:09", "10:39", "11:09", "11:39", "12:09", "12:29", "12:54", "13:19", "13:44", "14:09", "14:34", "14:59", "15:24", "15:49", "16:14", "16:34", "17:04", "17:34", "18:04", "18:34", "19:04", "19:31", "20:01", "20:31", "21:01", "21:31", "22:01", "22:31" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:38", "06:43", "07:58", "09:13", "10:28", "11:43", "12:58", "14:13", "15:28", "16:43", "17:58", "19:28", "20:58", "22:28" ]
       } ]
     }, {
       "lineId" : 73,
@@ -1746,6 +1734,18 @@
         "direction" : "Rošpoh - Avtobusna postaja",
         "departures" : [ "05:12", "14:27" ]
       } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Bresternica - Avtobusna postaja",
+        "departures" : [ "05:05", "05:45", "06:10", "06:50", "07:25", "08:05", "08:45", "09:25", "10:05", "10:45", "11:20", "12:00", "12:35", "13:15", "13:50", "14:30", "15:05", "15:45", "16:20", "17:00", "17:35", "18:15", "18:50", "19:30", "20:05", "20:45", "21:20", "22:00" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:38", "06:43", "07:58", "09:13", "10:28", "11:43", "12:58", "14:13", "15:28", "16:43", "17:58", "19:28", "20:58", "22:28" ]
+      } ]
     } ]
   },
   "96" : {
@@ -1753,15 +1753,6 @@
     "name" : "Greenwich",
     "address" : "Pobreška cesta",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dupleška kanal",
-        "departures" : [ "07:57", "09:27", "12:57", "14:57", "17:27", "19:27" ]
-      }, {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "05:57", "06:27", "06:57", "07:27", "08:27", "10:27", "11:27", "12:27", "13:27", "13:57", "14:27", "15:27", "15:57", "16:27", "16:57", "18:27", "20:27", "21:37", "22:32" ]
-      } ]
-    }, {
       "lineId" : 75,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Dogoše",
@@ -1788,6 +1779,15 @@
         "direction" : "Avtobusna postaja - Dobrava - Supernova",
         "departures" : [ "05:07", "06:07", "07:07", "08:07", "08:47", "09:27", "10:07", "10:47", "11:27", "12:07", "13:07", "14:07", "15:07", "16:07", "17:07", "18:07", "19:07", "20:07", "21:07", "22:17" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dupleška kanal",
+        "departures" : [ "07:57", "09:27", "12:57", "14:57", "17:27", "19:27" ]
+      }, {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "05:57", "06:27", "06:57", "07:27", "08:27", "10:27", "11:27", "12:27", "13:27", "13:57", "14:27", "15:27", "15:57", "16:27", "16:57", "18:27", "20:27", "21:37", "22:32" ]
+      } ]
     } ]
   },
   "97" : {
@@ -1795,15 +1795,6 @@
     "name" : "Greenwich",
     "address" : "Pobreška cesta",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Dupleška kanal - Avtobusna postaja",
-        "departures" : [ "08:29", "09:59", "13:29", "15:29", "17:59", "19:59" ]
-      }, {
-        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
-        "departures" : [ "05:28", "05:58", "06:28", "06:58", "07:28", "07:58", "08:58", "10:58", "11:58", "12:58", "13:58", "14:28", "14:58", "15:58", "16:28", "16:58", "18:58", "20:58", "22:03" ]
-      } ]
-    }, {
       "lineId" : 75,
       "routeAndSchedules" : [ {
         "direction" : "Dogoše - Avtobusna postaja",
@@ -1817,6 +1808,15 @@
       "routeAndSchedules" : [ {
         "direction" : "Supernova - Dobrava - Avtobusna postaja",
         "departures" : [ "05:21", "06:21", "07:21", "08:21", "09:21", "10:01", "10:41", "11:21", "12:01", "12:41", "13:21", "14:21", "15:21", "16:21", "17:21", "18:21", "19:21", "20:21", "21:21", "22:21" ]
+      } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Dupleška kanal - Avtobusna postaja",
+        "departures" : [ "08:29", "09:59", "13:29", "15:29", "17:59", "19:59" ]
+      }, {
+        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
+        "departures" : [ "05:28", "05:58", "06:28", "06:58", "07:28", "07:58", "08:58", "10:58", "11:58", "12:58", "13:58", "14:28", "14:58", "15:58", "16:28", "16:58", "18:58", "20:58", "22:03" ]
       } ]
     } ]
   },
@@ -2359,28 +2359,10 @@
     "name" : "Krekova",
     "address" : "Livada 2",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
-        "departures" : [ "05:44", "06:24", "06:54", "07:29", "08:09", "08:49", "09:34", "10:14", "10:49", "11:29", "12:04", "12:44", "13:19", "13:59", "14:34", "15:14", "15:49", "16:29", "17:04", "17:44", "18:19", "18:59", "19:34", "20:14", "20:49", "21:29", "22:04", "22:44" ]
-      } ]
-    }, {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Pekre - Turnerjeva",
-        "departures" : [ "05:28", "05:53", "06:18", "06:43", "07:13", "07:43", "08:15", "08:41", "09:10", "09:38", "10:08", "10:53", "11:28", "12:08", "12:49", "13:13", "13:40", "14:15", "14:39", "15:06", "15:44", "16:06", "16:34", "17:03", "17:28", "18:03", "18:33", "19:03", "19:33", "20:03", "20:33", "21:03", "21:33", "22:03" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
         "departures" : [ "05:30", "05:55", "06:23", "06:43", "07:11", "07:33", "07:57", "08:17", "08:43", "09:13", "09:43", "10:13", "10:43", "11:13", "11:43", "12:13", "12:43", "13:03", "13:28", "13:53", "14:21", "14:46", "15:11", "15:33", "15:58", "16:23", "16:48", "17:13", "17:38", "18:03", "18:33", "19:03", "19:33", "20:03", "20:33", "21:03", "21:33", "22:03", "22:33" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:02", "07:17", "08:32", "09:47", "11:02", "12:17", "13:32", "14:47", "16:02", "17:17", "18:47", "20:17", "21:47" ]
       } ]
     }, {
       "lineId" : 73,
@@ -2394,6 +2376,24 @@
         "direction" : "Avtobusna postaja - Rošpoh",
         "departures" : [ "13:57" ]
       } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
+        "departures" : [ "05:44", "06:24", "06:54", "07:29", "08:09", "08:49", "09:34", "10:14", "10:49", "11:29", "12:04", "12:44", "13:19", "13:59", "14:34", "15:14", "15:49", "16:29", "17:04", "17:44", "18:19", "18:59", "19:34", "20:14", "20:49", "21:29", "22:04", "22:44" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Pekre - Turnerjeva",
+        "departures" : [ "05:28", "05:53", "06:18", "06:43", "07:13", "07:43", "08:15", "08:41", "09:10", "09:38", "10:08", "10:53", "11:28", "12:08", "12:49", "13:13", "13:40", "14:15", "14:39", "15:06", "15:44", "16:06", "16:34", "17:03", "17:28", "18:03", "18:33", "19:03", "19:33", "20:03", "20:33", "21:03", "21:33", "22:03" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:02", "07:17", "08:32", "09:47", "11:02", "12:17", "13:32", "14:47", "16:02", "17:17", "18:47", "20:17", "21:47" ]
+      } ]
     } ]
   },
   "144" : {
@@ -2401,28 +2401,10 @@
     "name" : "Krekova - občina",
     "address" : "Razlagova ulica 1",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
-        "departures" : [ "05:43", "06:23", "06:53", "07:28", "08:08", "08:48", "09:33", "10:13", "10:48", "11:28", "12:03", "12:43", "13:18", "13:58", "14:33", "15:13", "15:48", "16:28", "17:03", "17:43", "18:18", "18:58", "19:33", "20:13", "20:48", "21:28", "22:03", "22:43" ]
-      } ]
-    }, {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Pekre - Turnerjeva",
-        "departures" : [ "05:27", "05:52", "06:17", "06:42", "07:12", "07:41", "08:13", "08:39", "09:09", "09:37", "10:07", "10:52", "11:27", "12:07", "12:47", "13:12", "13:39", "14:13", "14:38", "15:04", "15:42", "16:04", "16:33", "17:02", "17:27", "18:02", "18:32", "19:02", "19:32", "20:02", "20:32", "21:02", "21:32", "22:02" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
         "departures" : [ "05:29", "05:54", "06:22", "06:42", "07:10", "07:32", "07:56", "08:16", "08:42", "09:12", "09:42", "10:12", "10:42", "11:12", "11:42", "12:12", "12:42", "13:02", "13:27", "13:52", "14:20", "14:45", "15:10", "15:32", "15:57", "16:22", "16:47", "17:12", "17:37", "18:02", "18:32", "19:02", "19:32", "20:02", "20:32", "21:02", "21:32", "22:02", "22:32" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:01", "07:16", "08:31", "09:46", "11:01", "12:16", "13:31", "14:46", "16:01", "17:16", "18:46", "20:16", "21:46" ]
       } ]
     }, {
       "lineId" : 73,
@@ -2435,6 +2417,24 @@
       }, {
         "direction" : "Avtobusna postaja - Rošpoh",
         "departures" : [ "13:56" ]
+      } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
+        "departures" : [ "05:43", "06:23", "06:53", "07:28", "08:08", "08:48", "09:33", "10:13", "10:48", "11:28", "12:03", "12:43", "13:18", "13:58", "14:33", "15:13", "15:48", "16:28", "17:03", "17:43", "18:18", "18:58", "19:33", "20:13", "20:48", "21:28", "22:03", "22:43" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Pekre - Turnerjeva",
+        "departures" : [ "05:27", "05:52", "06:17", "06:42", "07:12", "07:41", "08:13", "08:39", "09:09", "09:37", "10:07", "10:52", "11:27", "12:07", "12:47", "13:12", "13:39", "14:13", "14:38", "15:04", "15:42", "16:04", "16:33", "17:02", "17:27", "18:02", "18:32", "19:02", "19:32", "20:02", "20:32", "21:02", "21:32", "22:02" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:01", "07:16", "08:31", "09:46", "11:01", "12:16", "13:31", "14:46", "16:01", "17:16", "18:46", "20:16", "21:46" ]
       } ]
     } ]
   },
@@ -2551,6 +2551,12 @@
     "name" : "Lackova - Stara lipa",
     "address" : "Lackova cesta 47",
     "scheduleForLine" : [ {
+      "lineId" : 71,
+      "routeAndSchedules" : [ {
+        "direction" : "Vzpenjača - Avtobusna postaja",
+        "departures" : [ "04:53", "05:13", "05:33", "05:53", "06:13", "06:28", "06:43", "06:58", "07:13", "07:28", "07:43", "07:58", "08:13", "08:28", "08:43", "09:03", "09:23", "09:43", "10:03", "10:23", "10:43", "11:03", "11:23", "11:43", "12:03", "12:23", "12:43", "13:03", "13:18", "13:33", "13:48", "14:03", "14:18", "14:33", "14:48", "15:03", "15:18", "15:33", "15:48", "16:03", "16:23", "16:43", "17:03", "17:23", "17:43", "18:03", "18:23", "18:43", "19:03", "19:23", "19:43", "20:03", "20:23", "20:43", "21:03", "21:33", "22:03", "22:33", "23:03", "23:33" ]
+      } ]
+    }, {
       "lineId" : 80,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Prol. brigad - TC Merkur",
@@ -2562,12 +2568,6 @@
         "direction" : "Pekre - Turnerjeva",
         "departures" : [ "05:09", "05:34", "05:59", "06:24", "06:49", "07:19", "07:49", "08:19", "08:49", "09:19", "09:49", "10:34", "11:09", "11:49", "12:29", "12:54", "13:19", "13:49", "14:19", "14:44", "15:19", "15:44", "16:14", "16:44", "17:09", "17:44", "18:14", "18:44", "19:14", "19:44", "20:14", "20:44", "21:14", "21:44" ]
       } ]
-    }, {
-      "lineId" : 71,
-      "routeAndSchedules" : [ {
-        "direction" : "Vzpenjača - Avtobusna postaja",
-        "departures" : [ "04:53", "05:13", "05:33", "05:53", "06:13", "06:28", "06:43", "06:58", "07:13", "07:28", "07:43", "07:58", "08:13", "08:28", "08:43", "09:03", "09:23", "09:43", "10:03", "10:23", "10:43", "11:03", "11:23", "11:43", "12:03", "12:23", "12:43", "13:03", "13:18", "13:33", "13:48", "14:03", "14:18", "14:33", "14:48", "15:03", "15:18", "15:33", "15:48", "16:03", "16:23", "16:43", "17:03", "17:23", "17:43", "18:03", "18:23", "18:43", "19:03", "19:23", "19:43", "20:03", "20:23", "20:43", "21:03", "21:33", "22:03", "22:33", "23:03", "23:33" ]
-      } ]
     } ]
   },
   "153" : {
@@ -2575,6 +2575,12 @@
     "name" : "Lackova - Stara lipa",
     "address" : "Lackova cesta 44",
     "scheduleForLine" : [ {
+      "lineId" : 71,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Vzpenjača",
+        "departures" : [ "05:08", "05:28", "05:48", "06:08", "06:28", "06:43", "06:58", "07:13", "07:28", "07:43", "07:58", "08:13", "08:28", "08:43", "08:58", "09:18", "09:38", "09:58", "10:18", "10:38", "10:58", "11:18", "11:38", "11:58", "12:18", "12:38", "12:58", "13:18", "13:33", "13:48", "14:03", "14:18", "14:33", "14:48", "15:03", "15:18", "15:33", "15:48", "16:03", "16:18", "16:38", "16:58", "17:18", "17:38", "17:58", "18:18", "18:38", "18:58", "19:18", "19:38", "19:58", "20:18", "20:38", "20:58", "21:18", "21:48", "22:18", "22:48", "23:18" ]
+      } ]
+    }, {
       "lineId" : 80,
       "routeAndSchedules" : [ {
         "direction" : "TC Merkur - Pro. brigad - Limbuš",
@@ -2585,12 +2591,6 @@
       "routeAndSchedules" : [ {
         "direction" : "Turnerjeva - Pekre",
         "departures" : [ "05:58", "06:23", "06:55", "07:24", "07:55", "08:25", "08:57", "09:17", "09:46", "10:11", "10:46", "11:26", "12:06", "12:46", "13:28", "13:52", "14:22", "14:55", "15:22", "15:51", "16:22", "16:47", "17:13", "17:41", "18:15", "18:45", "19:15", "19:45", "20:15", "20:45", "21:15", "21:51", "22:36" ]
-      } ]
-    }, {
-      "lineId" : 71,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Vzpenjača",
-        "departures" : [ "05:08", "05:28", "05:48", "06:08", "06:28", "06:43", "06:58", "07:13", "07:28", "07:43", "07:58", "08:13", "08:28", "08:43", "08:58", "09:18", "09:38", "09:58", "10:18", "10:38", "10:58", "11:18", "11:38", "11:58", "12:18", "12:38", "12:58", "13:18", "13:33", "13:48", "14:03", "14:18", "14:33", "14:48", "15:03", "15:18", "15:33", "15:48", "16:03", "16:18", "16:38", "16:58", "17:18", "17:38", "17:58", "18:18", "18:38", "18:58", "19:18", "19:38", "19:58", "20:18", "20:38", "20:58", "21:18", "21:48", "22:18", "22:48", "23:18" ]
       } ]
     } ]
   },
@@ -2662,12 +2662,6 @@
     "name" : "Limbuš",
     "address" : "Lackova cesta 269",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "Limbuš - Prol. brigad - TC Merkur",
-        "departures" : [ "05:50", "06:50", "07:50", "08:50", "10:20", "11:50", "12:50", "13:50", "14:50", "15:50", "17:20", "18:50", "19:50", "20:50", "21:50" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -2685,6 +2679,12 @@
         "direction" : "Avtobusna postaja - Limbuš - Pekre",
         "departures" : [ "05:22", "06:22", "06:52", "08:32", "09:47", "11:02", "12:17", "12:52", "13:32", "14:02", "14:42", "16:27", "16:57", "17:57", "19:12", "20:27", "21:42", "22:37" ]
       } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "Limbuš - Prol. brigad - TC Merkur",
+        "departures" : [ "05:50", "06:50", "07:50", "08:50", "10:20", "11:50", "12:50", "13:50", "14:50", "15:50", "17:20", "18:50", "19:50", "20:50", "21:50" ]
+      } ]
     } ]
   },
   "159" : {
@@ -2692,12 +2692,6 @@
     "name" : "Limbuš - pošta",
     "address" : "Lackova cesta 213",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "Limbuš - Prol. brigad - TC Merkur",
-        "departures" : [ "05:51", "06:51", "07:51", "08:51", "10:21", "11:51", "12:51", "13:51", "14:51", "15:51", "17:21", "18:51", "19:51", "20:51", "21:51" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -2715,6 +2709,12 @@
         "direction" : "Avtobusna postaja - Limbuš - Pekre",
         "departures" : [ "05:23", "06:23", "06:53", "08:33", "09:48", "11:03", "12:18", "12:53", "13:33", "14:03", "14:43", "16:28", "16:58", "17:58", "19:13", "20:28", "21:43", "22:38" ]
       } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "Limbuš - Prol. brigad - TC Merkur",
+        "departures" : [ "05:51", "06:51", "07:51", "08:51", "10:21", "11:51", "12:51", "13:51", "14:51", "15:51", "17:21", "18:51", "19:51", "20:51", "21:51" ]
+      } ]
     } ]
   },
   "160" : {
@@ -2722,12 +2722,6 @@
     "name" : "Limbuš - pošta",
     "address" : "Lackova cesta 216",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "TC Merkur - Pro. brigad - Limbuš",
-        "departures" : [ "05:48", "06:48", "07:48", "08:48", "10:18", "11:48", "12:48", "13:48", "14:48", "15:48", "17:18", "18:48", "19:48", "20:48", "21:48" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja -  Pekre - Limbuš",
@@ -2744,6 +2738,12 @@
       }, {
         "direction" : "Pekre - Limbuš - Lesarska šola - Avtobusna postaja",
         "departures" : [ "06:26", "13:11", "13:41", "14:11" ]
+      } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "TC Merkur - Pro. brigad - Limbuš",
+        "departures" : [ "05:48", "06:48", "07:48", "08:48", "10:18", "11:48", "12:48", "13:48", "14:48", "15:48", "17:18", "18:48", "19:48", "20:48", "21:48" ]
       } ]
     } ]
   },
@@ -2767,12 +2767,6 @@
     "name" : "Limbuška - Lesarska",
     "address" : "Limbuška cesta 180",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:26", "06:31", "07:46", "09:01", "10:16", "11:31", "12:46", "14:01", "15:16", "16:31", "17:46", "19:16", "20:46", "22:16" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -2789,6 +2783,12 @@
       }, {
         "direction" : "Pekre - Limbuš - Lesarska šola - Avtobusna postaja",
         "departures" : [ "06:31", "13:16", "13:46", "14:16" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:26", "06:31", "07:46", "09:01", "10:16", "11:31", "12:46", "14:01", "15:16", "16:31", "17:46", "19:16", "20:46", "22:16" ]
       } ]
     } ]
   },
@@ -2962,12 +2962,6 @@
     "name" : "Ljubljanska - TC Mercator",
     "address" : "Ljubljanska ulica 88c",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "TC Merkur - Pro. brigad - Limbuš",
-        "departures" : [ "05:31", "06:31", "07:31", "08:31", "10:01", "11:31", "12:31", "13:31", "14:31", "15:31", "17:01", "18:31", "19:31", "20:31", "21:31" ]
-      } ]
-    }, {
       "lineId" : 68,
       "routeAndSchedules" : [ {
         "direction" : "Nova vas - Ljubljanska - Avtobusna postaja",
@@ -2979,6 +2973,12 @@
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
         "departures" : [ "04:53", "05:13", "05:38", "05:58", "06:23", "06:43", "07:08", "07:28", "07:53", "08:13", "08:38", "08:58", "09:23", "09:53", "10:23", "10:53", "11:23", "11:53", "12:13", "12:38", "13:03", "13:28", "13:53", "14:18", "14:43", "15:08", "15:33", "15:58", "16:18", "16:48", "17:18", "17:48", "18:18", "18:48", "19:18", "19:48", "20:18", "20:48", "21:18", "21:48", "22:18" ]
       } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "TC Merkur - Pro. brigad - Limbuš",
+        "departures" : [ "05:31", "06:31", "07:31", "08:31", "10:01", "11:31", "12:31", "13:31", "14:31", "15:31", "17:01", "18:31", "19:31", "20:31", "21:31" ]
+      } ]
     } ]
   },
   "175" : {
@@ -2986,12 +2986,6 @@
     "name" : "Ljubljanska - TC Mercator",
     "address" : "Ljubljanska ulica 88a",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "Limbuš - Prol. brigad - TC Merkur",
-        "departures" : [ "06:06", "07:06", "08:06", "09:06", "10:36", "12:06", "13:06", "14:06", "15:06", "16:06", "17:36", "19:06", "20:06", "21:06", "22:06" ]
-      } ]
-    }, {
       "lineId" : 68,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Ljubljanska - Nova vas",
@@ -3002,6 +2996,12 @@
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
         "departures" : [ "05:47", "06:12", "06:40", "07:03", "07:29", "07:50", "08:14", "08:34", "09:03", "09:30", "10:00", "10:33", "11:00", "11:30", "12:00", "12:33", "13:03", "13:25", "13:48", "14:13", "14:44", "15:08", "15:33", "15:52", "16:19", "16:43", "17:08", "17:33", "17:55", "18:20", "18:50", "19:20", "19:50", "20:20", "20:50", "21:20", "21:50", "22:20", "22:47" ]
+      } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "Limbuš - Prol. brigad - TC Merkur",
+        "departures" : [ "06:06", "07:06", "08:06", "09:06", "10:36", "12:06", "13:06", "14:06", "15:06", "16:06", "17:36", "19:06", "20:06", "21:06", "22:06" ]
       } ]
     } ]
   },
@@ -3064,15 +3064,6 @@
         "departures" : [ "05:05", "05:25", "05:50", "06:10", "06:35", "07:00", "07:20", "07:45", "08:10", "08:30", "08:55", "09:20", "09:50", "10:15", "10:45", "11:10", "11:40", "12:05", "12:35", "13:00", "13:30", "13:55", "14:15", "14:40", "15:05", "15:25", "15:50", "16:15", "16:40", "17:10", "17:35", "18:05", "18:30", "19:00", "19:25", "19:55", "20:30", "21:15", "21:50" ]
       } ]
     }, {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Dupleška kanal - Avtobusna postaja",
-        "departures" : [ "08:32", "10:02", "13:32", "15:32", "18:02", "20:02" ]
-      }, {
-        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
-        "departures" : [ "05:31", "06:01", "06:31", "07:01", "07:31", "08:01", "09:01", "11:01", "12:01", "13:01", "14:01", "14:31", "15:01", "16:01", "16:31", "17:01", "19:01", "21:01", "22:06" ]
-      } ]
-    }, {
       "lineId" : 75,
       "routeAndSchedules" : [ {
         "direction" : "Dogoše - Avtobusna postaja",
@@ -3096,6 +3087,15 @@
         "direction" : "Stražun - Avtobusna postaja",
         "departures" : [ "06:34", "09:24", "11:24", "13:39", "15:04", "18:24", "20:24" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Dupleška kanal - Avtobusna postaja",
+        "departures" : [ "08:32", "10:02", "13:32", "15:32", "18:02", "20:02" ]
+      }, {
+        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
+        "departures" : [ "05:31", "06:01", "06:31", "07:01", "07:31", "08:01", "09:01", "11:01", "12:01", "13:01", "14:01", "14:31", "15:01", "16:01", "16:31", "17:01", "19:01", "21:01", "22:06" ]
+      } ]
     } ]
   },
   "181" : {
@@ -3107,15 +3107,6 @@
       "routeAndSchedules" : [ {
         "direction" : "Kamnica - Univerzitetni kampus - Pobreška Europark",
         "departures" : [ "05:13", "05:38", "05:58", "06:23", "06:48", "07:08", "07:33", "07:58", "08:18", "08:43", "09:08", "09:38", "10:03", "10:33", "10:58", "11:28", "11:53", "12:23", "12:48", "13:18", "13:43", "14:03", "14:28", "14:53", "15:13", "15:38", "16:03", "16:28", "16:58", "17:23", "17:53", "18:18", "18:48", "19:13", "19:43", "20:23", "21:03", "21:43", "22:23" ]
-      } ]
-    }, {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dupleška kanal",
-        "departures" : [ "07:54", "09:24", "12:54", "14:54", "17:24", "19:24" ]
-      }, {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "05:54", "06:24", "06:54", "07:24", "08:24", "10:24", "11:24", "12:24", "13:24", "13:54", "14:24", "15:24", "15:54", "16:24", "16:54", "18:24", "20:24", "21:34", "22:29" ]
       } ]
     }, {
       "lineId" : 75,
@@ -3152,6 +3143,15 @@
       }, {
         "direction" : "Avtobusna postaja - Stražun",
         "departures" : [ "06:09", "08:54", "10:54", "13:14", "14:34", "17:54", "19:54" ]
+      } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dupleška kanal",
+        "departures" : [ "07:54", "09:24", "12:54", "14:54", "17:24", "19:24" ]
+      }, {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "05:54", "06:24", "06:54", "07:24", "08:24", "10:24", "11:24", "12:24", "13:24", "13:54", "14:24", "15:24", "15:54", "16:24", "16:54", "18:24", "20:24", "21:34", "22:29" ]
       } ]
     } ]
   },
@@ -3328,12 +3328,6 @@
         "departures" : [ "05:17", "05:37", "05:52", "06:07", "06:22", "06:37", "06:52", "07:07", "07:22", "07:37", "07:52", "08:07", "08:27", "08:47", "09:07", "09:27", "09:47", "10:07", "10:27", "10:47", "11:07", "11:27", "11:47", "12:07", "12:27", "12:52", "13:07", "13:22", "13:37", "13:52", "14:07", "14:22", "14:37", "14:52", "15:07", "15:22", "15:37", "15:52", "16:07", "16:27", "16:47", "17:07", "17:27", "17:47", "18:07", "18:27", "18:47", "19:07", "19:27", "19:47", "20:07", "20:27", "20:47", "21:07", "21:37", "22:17" ]
       } ]
     }, {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Pekre - Turnerjeva",
-        "departures" : [ "05:20", "05:45", "06:10", "06:35", "07:04", "07:34", "08:05", "08:32", "09:02", "09:30", "10:00", "10:45", "11:20", "12:00", "12:40", "13:05", "13:31", "14:03", "14:30", "14:56", "15:34", "15:55", "16:26", "16:55", "17:20", "17:55", "18:25", "18:55", "19:25", "19:55", "20:25", "20:55", "21:25", "21:55" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -3366,6 +3360,12 @@
         "direction" : "Razvanje - Betnavska - Avtobusna postaja",
         "departures" : [ "05:00", "05:30", "06:00", "06:30", "07:20", "07:45", "08:30", "09:30", "10:00", "12:00", "13:30", "14:30", "15:30", "16:30", "18:00", "20:00", "21:00", "22:05" ]
       } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Pekre - Turnerjeva",
+        "departures" : [ "05:20", "05:45", "06:10", "06:35", "07:04", "07:34", "08:05", "08:32", "09:02", "09:30", "10:00", "10:45", "11:20", "12:00", "12:40", "13:05", "13:31", "14:03", "14:30", "14:56", "15:34", "15:55", "16:26", "16:55", "17:20", "17:55", "18:25", "18:55", "19:25", "19:55", "20:25", "20:55", "21:25", "21:55" ]
+      } ]
     } ]
   },
   "192" : {
@@ -3373,15 +3373,6 @@
     "name" : "Avtobusna postaja",
     "address" : "Mlinska ulica 1, Glav. avtobusna post.v mestu Maribor.",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dupleška kanal",
-        "departures" : [ "07:45", "09:15", "12:45", "14:45", "17:15", "19:15" ]
-      }, {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "05:45", "06:15", "06:45", "07:15", "08:15", "10:15", "11:15", "12:15", "13:15", "13:45", "14:15", "15:15", "15:45", "16:15", "16:45", "18:15", "20:15", "21:25", "22:20" ]
-      } ]
-    }, {
       "lineId" : 67,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Tezno",
@@ -3392,12 +3383,6 @@
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Ljubljanska - Nova vas",
         "departures" : [ "05:00", "05:20", "05:40", "05:55", "06:10", "06:25", "06:40", "06:55", "07:10", "07:25", "07:40", "07:55", "08:20", "08:40", "09:00", "09:20", "09:40", "10:00", "10:20", "10:40", "11:00", "11:20", "11:40", "12:00", "12:20", "12:40", "12:55", "13:10", "13:25", "13:40", "13:55", "14:10", "14:25", "14:40", "14:55", "15:10", "15:25", "15:40", "15:55", "16:20", "16:40", "17:00", "17:20", "17:40", "18:00", "18:20", "18:40", "19:00", "19:20", "19:40", "20:00", "20:20", "20:40", "21:10", "21:40", "22:10" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "05:55", "07:10", "08:25", "09:40", "10:55", "12:10", "13:25", "14:40", "15:55", "17:10", "18:40", "20:10", "21:40" ]
       } ]
     }, {
       "lineId" : 70,
@@ -3467,6 +3452,21 @@
       }, {
         "direction" : "Avtobusna postaja - Stražun",
         "departures" : [ "06:00", "08:45", "10:45", "13:05", "14:25", "17:45", "19:45" ]
+      } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dupleška kanal",
+        "departures" : [ "07:45", "09:15", "12:45", "14:45", "17:15", "19:15" ]
+      }, {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "05:45", "06:15", "06:45", "07:15", "08:15", "10:15", "11:15", "12:15", "13:15", "13:45", "14:15", "15:15", "15:45", "16:15", "16:45", "18:15", "20:15", "21:25", "22:20" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "05:55", "07:10", "08:25", "09:40", "10:55", "12:10", "13:25", "14:40", "15:55", "17:10", "18:40", "20:10", "21:40" ]
       } ]
     } ]
   },
@@ -3739,12 +3739,6 @@
     "name" : "Avtobusna postaja",
     "address" : "Mlinska ulica 1, Postajališče na Mlinski cesti",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
-        "departures" : [ "05:20", "06:00", "06:30", "07:05", "07:45", "08:25", "09:10", "09:50", "10:25", "11:05", "11:40", "12:20", "12:55", "13:35", "14:10", "14:50", "15:25", "16:05", "16:40", "17:20", "17:55", "18:35", "19:10", "19:50", "20:25", "21:05", "21:40", "22:20" ]
-      } ]
-    }, {
       "lineId" : 76,
       "routeAndSchedules" : [ {
         "direction" : "Mlinska AP - Mal. odc. Trčova - Grušova",
@@ -3755,6 +3749,12 @@
       }, {
         "direction" : "Mlinska AP - Trčova Griček - Grušova",
         "departures" : [ "05:15", "08:00", "09:10", "10:30", "13:20", "16:15", "18:55", "20:20", "22:00" ]
+      } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
+        "departures" : [ "05:20", "06:00", "06:30", "07:05", "07:45", "08:25", "09:10", "09:50", "10:25", "11:05", "11:40", "12:20", "12:55", "13:35", "14:10", "14:50", "15:25", "16:05", "16:40", "17:20", "17:55", "18:35", "19:10", "19:50", "20:25", "21:05", "21:40", "22:20" ]
       } ]
     } ]
   },
@@ -4255,12 +4255,6 @@
     "name" : "Pekre",
     "address" : "Lackova cesta 165",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "Limbuš - Prol. brigad - TC Merkur",
-        "departures" : [ "05:52", "06:52", "07:52", "08:52", "10:22", "11:52", "12:52", "13:52", "14:52", "15:52", "17:22", "18:52", "19:52", "20:52", "21:52" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -4269,6 +4263,12 @@
         "direction" : "Limbuš - Pekre - Studenci - Avtobusna postaja",
         "departures" : [ "05:32", "06:02", "06:32", "06:57", "08:02", "08:27", "08:47", "09:12", "09:32", "10:32", "11:02", "11:32", "12:02", "12:32", "15:37", "16:02", "16:27", "16:47", "17:37", "17:57", "18:22", "18:52", "19:22", "19:52", "20:22", "20:52", "21:52", "22:22" ]
       } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "Limbuš - Prol. brigad - TC Merkur",
+        "departures" : [ "05:52", "06:52", "07:52", "08:52", "10:22", "11:52", "12:52", "13:52", "14:52", "15:52", "17:22", "18:52", "19:52", "20:52", "21:52" ]
+      } ]
     } ]
   },
   "249" : {
@@ -4276,12 +4276,6 @@
     "name" : "Pekre",
     "address" : "Lackova cesta 162",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "TC Merkur - Pro. brigad - Limbuš",
-        "departures" : [ "05:47", "06:47", "07:47", "08:47", "10:17", "11:47", "12:47", "13:47", "14:47", "15:47", "17:17", "18:47", "19:47", "20:47", "21:47" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja -  Pekre - Limbuš",
@@ -4298,6 +4292,12 @@
       }, {
         "direction" : "Pekre - Limbuš - Lesarska šola - Avtobusna postaja",
         "departures" : [ "06:25", "13:10", "13:40", "14:10" ]
+      } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "TC Merkur - Pro. brigad - Limbuš",
+        "departures" : [ "05:47", "06:47", "07:47", "08:47", "10:17", "11:47", "12:47", "13:47", "14:47", "15:47", "17:17", "18:47", "19:47", "20:47", "21:47" ]
       } ]
     } ]
   },
@@ -4318,15 +4318,6 @@
     "name" : "Pobreška - Europark",
     "address" : "Pobreška cesta",
     "scheduleForLine" : [ {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Dupleška kanal - Avtobusna postaja",
-        "departures" : [ "08:30", "10:00", "13:30", "15:30", "18:00", "20:00" ]
-      }, {
-        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
-        "departures" : [ "05:29", "05:59", "06:29", "06:59", "07:29", "07:59", "08:59", "10:59", "11:59", "12:59", "13:59", "14:29", "14:59", "15:59", "16:29", "16:59", "18:59", "20:59", "22:04" ]
-      } ]
-    }, {
       "lineId" : 75,
       "routeAndSchedules" : [ {
         "direction" : "Dogoše - Avtobusna postaja",
@@ -4350,6 +4341,15 @@
         "direction" : "Stražun - Avtobusna postaja",
         "departures" : [ "06:32", "09:22", "11:22", "13:37", "15:02", "18:22", "20:22" ]
       } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Dupleška kanal - Avtobusna postaja",
+        "departures" : [ "08:30", "10:00", "13:30", "15:30", "18:00", "20:00" ]
+      }, {
+        "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
+        "departures" : [ "05:29", "05:59", "06:29", "06:59", "07:29", "07:59", "08:59", "10:59", "11:59", "12:59", "13:59", "14:29", "14:59", "15:59", "16:29", "16:59", "18:59", "20:59", "22:04" ]
+      } ]
     } ]
   },
   "252" : {
@@ -4361,15 +4361,6 @@
       "routeAndSchedules" : [ {
         "direction" : "Pobreška Europark - Univerzitetni kampus - Kamnica",
         "departures" : [ "05:00", "05:20", "05:45", "06:05", "06:30", "06:55", "07:15", "07:40", "08:05", "08:25", "08:50", "09:15", "09:45", "10:10", "10:40", "11:05", "11:35", "12:00", "12:30", "12:55", "13:25", "13:50", "14:10", "14:35", "15:00", "15:20", "15:45", "16:10", "16:35", "17:05", "17:30", "18:00", "18:25", "18:55", "19:20", "19:50", "20:25", "21:10", "21:45" ]
-      } ]
-    }, {
-      "lineId" : 82,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dupleška kanal",
-        "departures" : [ "07:56", "09:26", "12:56", "14:56", "17:26", "19:26" ]
-      }, {
-        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
-        "departures" : [ "05:56", "06:26", "06:56", "07:26", "08:26", "10:26", "11:26", "12:26", "13:26", "13:56", "14:26", "15:26", "15:56", "16:26", "16:56", "18:26", "20:26", "21:36", "22:31" ]
       } ]
     }, {
       "lineId" : 75,
@@ -4406,6 +4397,15 @@
       }, {
         "direction" : "Avtobusna postaja - Stražun",
         "departures" : [ "06:11", "08:56", "10:56", "13:16", "14:36", "17:56", "19:56" ]
+      } ]
+    }, {
+      "lineId" : 82,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dupleška kanal",
+        "departures" : [ "07:56", "09:26", "12:56", "14:56", "17:26", "19:26" ]
+      }, {
+        "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
+        "departures" : [ "05:56", "06:26", "06:56", "07:26", "08:26", "10:26", "11:26", "12:26", "13:26", "13:56", "14:26", "15:26", "15:56", "16:26", "16:56", "18:26", "20:26", "21:36", "22:31" ]
       } ]
     } ]
   },
@@ -4621,12 +4621,6 @@
     "name" : "Prol. brigad - Kardeljeva",
     "address" : "Cesta proletarskih brigard 55",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "Limbuš - Prol. brigad - TC Merkur",
-        "departures" : [ "06:05", "07:05", "08:05", "09:05", "10:35", "12:05", "13:05", "14:05", "15:05", "16:05", "17:35", "19:05", "20:05", "21:05", "22:05" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
@@ -4638,6 +4632,12 @@
         "direction" : "Supernova - Dobrava - Avtobusna postaja",
         "departures" : [ "04:54", "05:54", "06:54", "07:54", "08:54", "09:34", "10:14", "10:54", "11:34", "12:14", "12:54", "13:54", "14:54", "15:54", "16:54", "17:54", "18:54", "19:54", "20:54", "21:54" ]
       } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "Limbuš - Prol. brigad - TC Merkur",
+        "departures" : [ "06:05", "07:05", "08:05", "09:05", "10:35", "12:05", "13:05", "14:05", "15:05", "16:05", "17:35", "19:05", "20:05", "21:05", "22:05" ]
+      } ]
     } ]
   },
   "275" : {
@@ -4645,12 +4645,6 @@
     "name" : "Prol. brigad - Kardeljeva",
     "address" : "Cesta proletarskih brigard 58",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "TC Merkur - Pro. brigad - Limbuš",
-        "departures" : [ "05:34", "06:34", "07:34", "08:34", "10:04", "11:34", "12:34", "13:34", "14:34", "15:34", "17:04", "18:34", "19:34", "20:34", "21:34" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
@@ -4668,6 +4662,12 @@
         "direction" : "Avtobusna postaja - Dobrava - Supernova",
         "departures" : [ "05:37", "06:37", "07:37", "08:37", "09:17", "09:57", "10:37", "11:17", "11:57", "12:37", "13:37", "14:37", "15:37", "16:37", "17:37", "18:37", "19:37", "20:37", "21:37", "22:47" ]
       } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "TC Merkur - Pro. brigad - Limbuš",
+        "departures" : [ "05:34", "06:34", "07:34", "08:34", "10:04", "11:34", "12:34", "13:34", "14:34", "15:34", "17:04", "18:34", "19:34", "20:34", "21:34" ]
+      } ]
     } ]
   },
   "276" : {
@@ -4675,12 +4675,6 @@
     "name" : "Prol. brigad - lekarna",
     "address" : "Cesta proletarskih brigard 71",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "Limbuš - Prol. brigad - TC Merkur",
-        "departures" : [ "06:04", "07:04", "08:04", "09:04", "10:34", "12:04", "13:04", "14:04", "15:04", "16:04", "17:34", "19:04", "20:04", "21:04", "22:04" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
@@ -4692,6 +4686,12 @@
         "direction" : "Supernova - Dobrava - Avtobusna postaja",
         "departures" : [ "04:53", "05:53", "06:53", "07:53", "08:53", "09:33", "10:13", "10:53", "11:33", "12:13", "12:53", "13:53", "14:53", "15:53", "16:53", "17:53", "18:53", "19:53", "20:53", "21:53" ]
       } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "Limbuš - Prol. brigad - TC Merkur",
+        "departures" : [ "06:04", "07:04", "08:04", "09:04", "10:34", "12:04", "13:04", "14:04", "15:04", "16:04", "17:34", "19:04", "20:04", "21:04", "22:04" ]
+      } ]
     } ]
   },
   "277" : {
@@ -4699,12 +4699,6 @@
     "name" : "Prol. brigad - lekarna",
     "address" : "Cesta proletarskih brigard",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "TC Merkur - Pro. brigad - Limbuš",
-        "departures" : [ "05:35", "06:35", "07:35", "08:35", "10:05", "11:35", "12:35", "13:35", "14:35", "15:35", "17:05", "18:35", "19:35", "20:35", "21:35" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
@@ -4716,6 +4710,12 @@
         "direction" : "Avtobusna postaja - Dobrava - Supernova",
         "departures" : [ "05:38", "06:38", "07:38", "08:38", "09:18", "09:58", "10:38", "11:18", "11:58", "12:38", "13:38", "14:38", "15:38", "16:38", "17:38", "18:38", "19:38", "20:38", "21:38", "22:48" ]
       } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "TC Merkur - Pro. brigad - Limbuš",
+        "departures" : [ "05:35", "06:35", "07:35", "08:35", "10:05", "11:35", "12:35", "13:35", "14:35", "15:35", "17:05", "18:35", "19:35", "20:35", "21:35" ]
+      } ]
     } ]
   },
   "278" : {
@@ -4723,12 +4723,6 @@
     "name" : "Prol. brigad - Ljubljan.",
     "address" : "Dalmatinska ulica 45",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "TC Merkur - Pro. brigad - Limbuš",
-        "departures" : [ "05:32", "06:32", "07:32", "08:32", "10:02", "11:32", "12:32", "13:32", "14:32", "15:32", "17:02", "18:32", "19:32", "20:32", "21:32" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
@@ -4739,6 +4733,12 @@
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Dobrava - Supernova",
         "departures" : [ "05:35", "06:35", "07:35", "08:35", "09:15", "09:55", "10:35", "11:15", "11:55", "12:35", "13:35", "14:35", "15:35", "16:35", "17:35", "18:35", "19:35", "20:35", "21:35", "22:45" ]
+      } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "TC Merkur - Pro. brigad - Limbuš",
+        "departures" : [ "05:32", "06:32", "07:32", "08:32", "10:02", "11:32", "12:32", "13:32", "14:32", "15:32", "17:02", "18:32", "19:32", "20:32", "21:32" ]
       } ]
     } ]
   },
@@ -4759,6 +4759,18 @@
     "name" : "Supernova",
     "address" : "Borova vas",
     "scheduleForLine" : [ {
+      "lineId" : 69,
+      "routeAndSchedules" : [ {
+        "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
+        "departures" : [ "05:43", "06:08", "06:36", "06:57", "07:25", "07:46", "08:10", "08:30", "08:59", "09:26", "09:56", "10:27", "10:56", "11:26", "11:56", "12:29", "12:59", "13:20", "13:44", "14:09", "14:38", "15:03", "15:28", "15:47", "16:14", "16:39", "17:04", "17:29", "17:51", "18:16", "18:46", "19:16", "19:46", "20:16", "20:46", "21:16", "21:46", "22:16", "22:43" ]
+      } ]
+    }, {
+      "lineId" : 78,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dobrava - Avtobusna postaja",
+        "departures" : [ "04:51", "05:51", "06:51", "07:51", "08:51", "09:31", "10:11", "10:51", "11:31", "12:11", "12:51", "13:51", "14:51", "15:51", "16:51", "17:51", "18:51", "19:51", "20:51", "21:51" ]
+      } ]
+    }, {
       "lineId" : 80,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Prol. brigad - TC Merkur",
@@ -4772,18 +4784,6 @@
       "routeAndSchedules" : [ {
         "direction" : "Turnerjeva - Pekre",
         "departures" : [ "05:53", "06:18", "06:50", "07:18", "07:49", "08:20", "08:51", "09:12", "09:41", "10:06", "10:41", "11:21", "12:01", "12:41", "13:22", "13:47", "14:17", "14:49", "15:15", "15:45", "16:16", "16:41", "17:07", "17:36", "18:10", "18:40", "19:10", "19:40", "20:10", "20:40", "21:10", "21:46", "22:31" ]
-      } ]
-    }, {
-      "lineId" : 69,
-      "routeAndSchedules" : [ {
-        "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
-        "departures" : [ "05:43", "06:08", "06:36", "06:57", "07:25", "07:46", "08:10", "08:30", "08:59", "09:26", "09:56", "10:27", "10:56", "11:26", "11:56", "12:29", "12:59", "13:20", "13:44", "14:09", "14:38", "15:03", "15:28", "15:47", "16:14", "16:39", "17:04", "17:29", "17:51", "18:16", "18:46", "19:16", "19:46", "20:16", "20:46", "21:16", "21:46", "22:16", "22:43" ]
-      } ]
-    }, {
-      "lineId" : 78,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dobrava - Avtobusna postaja",
-        "departures" : [ "04:51", "05:51", "06:51", "07:51", "08:51", "09:31", "10:11", "10:51", "11:31", "12:11", "12:51", "13:51", "14:51", "15:51", "16:51", "17:51", "18:51", "19:51", "20:51", "21:51" ]
       } ]
     } ]
   },
@@ -4810,6 +4810,18 @@
     "name" : "Prol. brigad - vojašnica",
     "address" : "Stantetova ulica 20",
     "scheduleForLine" : [ {
+      "lineId" : 69,
+      "routeAndSchedules" : [ {
+        "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
+        "departures" : [ "04:57", "05:17", "05:42", "06:03", "06:28", "06:48", "07:13", "07:33", "07:58", "08:18", "08:43", "09:03", "09:28", "09:58", "10:28", "10:58", "11:28", "11:58", "12:18", "12:43", "13:08", "13:33", "13:58", "14:23", "14:48", "15:13", "15:38", "16:03", "16:23", "16:53", "17:23", "17:53", "18:23", "18:53", "19:23", "19:53", "20:23", "20:53", "21:23", "21:53", "22:23" ]
+      } ]
+    }, {
+      "lineId" : 78,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dobrava - Supernova",
+        "departures" : [ "05:39", "06:39", "07:39", "08:39", "09:19", "09:59", "10:39", "11:19", "11:59", "12:39", "13:39", "14:39", "15:39", "16:39", "17:39", "18:39", "19:39", "20:39", "21:39", "22:49" ]
+      } ]
+    }, {
       "lineId" : 80,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Prol. brigad - TC Merkur",
@@ -4824,18 +4836,6 @@
         "direction" : "Pekre - Turnerjeva",
         "departures" : [ "05:14", "05:39", "06:04", "06:29", "06:55", "07:26", "07:56", "08:25", "08:55", "09:24", "09:54", "10:39", "11:14", "11:54", "12:34", "12:59", "13:24", "13:55", "14:24", "14:49", "15:25", "15:49", "16:19", "16:49", "17:14", "17:49", "18:19", "18:49", "19:19", "19:49", "20:19", "20:49", "21:19", "21:49" ]
       } ]
-    }, {
-      "lineId" : 69,
-      "routeAndSchedules" : [ {
-        "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
-        "departures" : [ "04:57", "05:17", "05:42", "06:03", "06:28", "06:48", "07:13", "07:33", "07:58", "08:18", "08:43", "09:03", "09:28", "09:58", "10:28", "10:58", "11:28", "11:58", "12:18", "12:43", "13:08", "13:33", "13:58", "14:23", "14:48", "15:13", "15:38", "16:03", "16:23", "16:53", "17:23", "17:53", "18:23", "18:53", "19:23", "19:53", "20:23", "20:53", "21:23", "21:53", "22:23" ]
-      } ]
-    }, {
-      "lineId" : 78,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dobrava - Supernova",
-        "departures" : [ "05:39", "06:39", "07:39", "08:39", "09:19", "09:59", "10:39", "11:19", "11:59", "12:39", "13:39", "14:39", "15:39", "16:39", "17:39", "18:39", "19:39", "20:39", "21:39", "22:49" ]
-      } ]
     } ]
   },
   "283" : {
@@ -4843,12 +4843,6 @@
     "name" : "Prol. brigad - vojašnica",
     "address" : "Cesta proletarskih brigad 79",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "Limbuš - Prol. brigad - TC Merkur",
-        "departures" : [ "06:03", "07:03", "08:03", "09:03", "10:33", "12:03", "13:03", "14:03", "15:03", "16:03", "17:33", "19:03", "20:03", "21:03", "22:03" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
@@ -4859,6 +4853,12 @@
       "routeAndSchedules" : [ {
         "direction" : "Supernova - Dobrava - Avtobusna postaja",
         "departures" : [ "04:52", "05:52", "06:52", "07:52", "08:52", "09:32", "10:12", "10:52", "11:32", "12:12", "12:52", "13:52", "14:52", "15:52", "16:52", "17:52", "18:52", "19:52", "20:52", "21:52" ]
+      } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "Limbuš - Prol. brigad - TC Merkur",
+        "departures" : [ "06:03", "07:03", "08:03", "09:03", "10:33", "12:03", "13:03", "14:03", "15:03", "16:03", "17:33", "19:03", "20:03", "21:03", "22:03" ]
       } ]
     } ]
   },
@@ -5521,12 +5521,6 @@
     "name" : "Šarhova",
     "address" : "Kalohova ulica 41",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:12", "07:27", "08:42", "09:57", "11:12", "12:27", "13:42", "14:57", "16:12", "17:27", "18:57", "20:27", "21:57" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja -  Pekre - Limbuš",
@@ -5535,6 +5529,12 @@
         "direction" : "Avtobusna postaja - Lesarska šola - Pekre - Limbuš",
         "departures" : [ "06:43", "07:03", "07:28", "07:48", "08:33", "09:18", "11:18", "13:28", "14:38", "18:38", "19:38", "20:38", "21:38", "22:38" ]
       } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:12", "07:27", "08:42", "09:57", "11:12", "12:27", "13:42", "14:57", "16:12", "17:27", "18:57", "20:27", "21:57" ]
+      } ]
     } ]
   },
   "335" : {
@@ -5542,12 +5542,6 @@
     "name" : "Šarhova - pošta",
     "address" : "Šarhova ulica 48",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:11", "07:26", "08:41", "09:56", "11:11", "12:26", "13:41", "14:56", "16:11", "17:26", "18:56", "20:26", "21:56" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja -  Pekre - Limbuš",
@@ -5556,6 +5550,12 @@
         "direction" : "Avtobusna postaja - Lesarska šola - Pekre - Limbuš",
         "departures" : [ "06:42", "07:02", "07:27", "07:47", "08:32", "09:17", "11:17", "13:27", "14:37", "18:37", "19:37", "20:37", "21:37", "22:37" ]
       } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:11", "07:26", "08:41", "09:56", "11:11", "12:26", "13:41", "14:56", "16:11", "17:26", "18:56", "20:26", "21:56" ]
+      } ]
     } ]
   },
   "336" : {
@@ -5563,12 +5563,6 @@
     "name" : "Šarhova - pošta",
     "address" : "Šarhova ulica 59a",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:32", "06:37", "07:52", "09:07", "10:22", "11:37", "12:52", "14:07", "15:22", "16:37", "17:52", "19:22", "20:52", "22:22" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -5576,6 +5570,12 @@
       }, {
         "direction" : "Limbuš - Pekre - Studenci - Avtobusna postaja",
         "departures" : [ "05:40", "06:10", "06:40", "07:05", "08:10", "08:35", "08:55", "09:20", "09:40", "10:40", "11:10", "11:40", "12:10", "12:40", "15:45", "16:10", "16:35", "16:55", "17:45", "18:05", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "22:00", "22:30" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:32", "06:37", "07:52", "09:07", "10:22", "11:37", "12:52", "14:07", "15:22", "16:37", "17:52", "19:22", "20:52", "22:22" ]
       } ]
     } ]
   },
@@ -5686,12 +5686,6 @@
     "name" : "UKC - Tabor",
     "address" : "Dvorakova ulica 12",
     "scheduleForLine" : [ {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Turnerjeva - Pekre",
-        "departures" : [ "05:48", "06:13", "06:45", "07:10", "07:41", "08:13", "08:44", "09:06", "09:35", "10:01", "10:36", "11:16", "11:56", "12:36", "13:16", "13:41", "14:11", "14:42", "15:08", "15:37", "16:08", "16:33", "17:01", "17:31", "18:05", "18:35", "19:05", "19:35", "20:05", "20:35", "21:05", "21:41", "22:26" ]
-      } ]
-    }, {
       "lineId" : 71,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Vzpenjača",
@@ -5714,6 +5708,12 @@
       }, {
         "direction" : "Avtobusna postaja - Betnavska - Razvanje",
         "departures" : [ "05:23", "05:53", "06:48", "07:53", "08:53", "09:23", "11:23", "12:53", "13:53", "14:53", "15:53", "17:23", "19:23", "20:33", "21:23", "22:23" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Turnerjeva - Pekre",
+        "departures" : [ "05:48", "06:13", "06:45", "07:10", "07:41", "08:13", "08:44", "09:06", "09:35", "10:01", "10:36", "11:16", "11:56", "12:36", "13:16", "13:41", "14:11", "14:42", "15:08", "15:37", "16:08", "16:33", "17:01", "17:31", "18:05", "18:35", "19:05", "19:35", "20:05", "20:35", "21:05", "21:41", "22:26" ]
       } ]
     } ]
   },
@@ -6385,16 +6385,16 @@
     "name" : "Ul. Eve Lovše - Betnava",
     "address" : "Ul. Eve Lovše 18",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "Limbuš - Prol. brigad - TC Merkur",
-        "departures" : [ "06:07", "07:07", "08:07", "09:07", "10:37", "12:07", "13:07", "14:07", "15:07", "16:07", "17:37", "19:07", "20:07", "21:07", "22:07" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
         "departures" : [ "05:48", "06:13", "06:41", "07:04", "07:30", "07:51", "08:15", "08:35", "09:04", "09:31", "10:01", "10:34", "11:01", "11:31", "12:01", "12:34", "13:04", "13:26", "13:49", "14:14", "14:45", "15:09", "15:34", "15:53", "16:20", "16:44", "17:09", "17:34", "17:56", "18:21", "18:51", "19:21", "19:51", "20:21", "20:51", "21:21", "21:51", "22:21", "22:48" ]
+      } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "Limbuš - Prol. brigad - TC Merkur",
+        "departures" : [ "06:07", "07:07", "08:07", "09:07", "10:37", "12:07", "13:07", "14:07", "15:07", "16:07", "17:37", "19:07", "20:07", "21:07", "22:07" ]
       } ]
     } ]
   },
@@ -6403,16 +6403,16 @@
     "name" : "Ul. Eve Lovše - Betnava",
     "address" : "Ul. Eve Lovše 18",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "TC Merkur - Pro. brigad - Limbuš",
-        "departures" : [ "05:30", "06:30", "07:30", "08:30", "10:00", "11:30", "12:30", "13:30", "14:30", "15:30", "17:00", "18:30", "19:30", "20:30", "21:30" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
         "departures" : [ "04:52", "05:12", "05:37", "05:57", "06:22", "06:42", "07:07", "07:27", "07:52", "08:12", "08:37", "08:57", "09:22", "09:52", "10:22", "10:52", "11:22", "11:52", "12:12", "12:37", "13:02", "13:27", "13:52", "14:17", "14:42", "15:07", "15:32", "15:57", "16:17", "16:47", "17:17", "17:47", "18:17", "18:47", "19:17", "19:47", "20:17", "20:47", "21:17", "21:47", "22:17" ]
+      } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "TC Merkur - Pro. brigad - Limbuš",
+        "departures" : [ "05:30", "06:30", "07:30", "08:30", "10:00", "11:30", "12:30", "13:30", "14:30", "15:30", "17:00", "18:30", "19:30", "20:30", "21:30" ]
       } ]
     } ]
   },
@@ -6433,16 +6433,16 @@
     "name" : "Ul. Eve Lovše - Energet.",
     "address" : "Ul. Eve Lovše 19",
     "scheduleForLine" : [ {
-      "lineId" : 80,
-      "routeAndSchedules" : [ {
-        "direction" : "TC Merkur - Pro. brigad - Limbuš",
-        "departures" : [ "05:29", "06:29", "07:29", "08:29", "09:59", "11:29", "12:29", "13:29", "14:29", "15:29", "16:59", "18:29", "19:29", "20:29", "21:29" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
         "departures" : [ "04:51", "05:11", "05:36", "05:56", "06:21", "06:41", "07:06", "07:26", "07:51", "08:11", "08:36", "08:56", "09:21", "09:51", "10:21", "10:51", "11:21", "11:51", "12:11", "12:36", "13:01", "13:26", "13:51", "14:16", "14:41", "15:06", "15:31", "15:56", "16:16", "16:46", "17:16", "17:46", "18:16", "18:46", "19:16", "19:46", "20:16", "20:46", "21:16", "21:46", "22:16" ]
+      } ]
+    }, {
+      "lineId" : 80,
+      "routeAndSchedules" : [ {
+        "direction" : "TC Merkur - Pro. brigad - Limbuš",
+        "departures" : [ "05:29", "06:29", "07:29", "08:29", "09:59", "11:29", "12:29", "13:29", "14:29", "15:29", "16:59", "18:29", "19:29", "20:29", "21:29" ]
       } ]
     } ]
   },
@@ -6505,6 +6505,12 @@
     "name" : "Ul. V. Vlahovića - S31",
     "address" : "Ulica Veljka Vlahovića",
     "scheduleForLine" : [ {
+      "lineId" : 69,
+      "routeAndSchedules" : [ {
+        "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
+        "departures" : [ "05:16", "05:41", "06:06", "06:26", "06:54", "07:13", "07:38", "07:58", "08:26", "08:56", "09:26", "09:56", "10:26", "10:56", "11:26", "11:56", "12:26", "12:46", "13:11", "13:36", "14:03", "14:28", "14:53", "15:16", "15:41", "16:06", "16:31", "16:56", "17:21", "17:46", "18:16", "18:46", "19:16", "19:46", "20:16", "20:46", "21:16", "21:46", "22:16" ]
+      } ]
+    }, {
       "lineId" : 82,
       "routeAndSchedules" : [ {
         "direction" : "Dupleška kanal - Avtobusna postaja",
@@ -6513,12 +6519,6 @@
         "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
         "departures" : [ "05:25", "05:55", "06:25", "06:55", "07:25", "07:55", "08:55", "10:55", "11:55", "12:55", "13:55", "14:25", "14:55", "15:55", "16:25", "16:55", "18:55", "20:55", "22:00" ]
       } ]
-    }, {
-      "lineId" : 69,
-      "routeAndSchedules" : [ {
-        "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
-        "departures" : [ "05:16", "05:41", "06:06", "06:26", "06:54", "07:13", "07:38", "07:58", "08:26", "08:56", "09:26", "09:56", "10:26", "10:56", "11:26", "11:56", "12:26", "12:46", "13:11", "13:36", "14:03", "14:28", "14:53", "15:16", "15:41", "16:06", "16:31", "16:56", "17:21", "17:46", "18:16", "18:46", "19:16", "19:46", "20:16", "20:46", "21:16", "21:46", "22:16" ]
-      } ]
     } ]
   },
   "385" : {
@@ -6526,6 +6526,12 @@
     "name" : "Ul. V. Vlahovića - S31",
     "address" : "Ulica Veljka Vlahovića 53",
     "scheduleForLine" : [ {
+      "lineId" : 69,
+      "routeAndSchedules" : [ {
+        "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
+        "departures" : [ "05:26", "05:46", "06:12", "06:33", "06:58", "07:21", "07:49", "08:09", "08:32", "08:52", "09:14", "09:31", "09:59", "10:29", "11:00", "11:29", "11:59", "12:29", "12:50", "13:16", "13:39", "14:06", "14:31", "14:55", "15:20", "15:45", "16:10", "16:34", "16:54", "17:24", "17:53", "18:23", "18:53", "19:23", "19:50", "20:20", "20:50", "21:20", "21:50", "22:20", "22:50" ]
+      } ]
+    }, {
       "lineId" : 82,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Dupleška kanal",
@@ -6534,12 +6540,6 @@
         "direction" : "Avtobusna postaja - Ul. Veljka Vlahovića - Zg. Duplek",
         "departures" : [ "06:00", "06:30", "07:00", "07:30", "08:30", "10:30", "11:30", "12:30", "13:30", "14:00", "14:30", "15:30", "16:00", "16:30", "17:00", "18:30", "20:30", "21:40", "22:35" ]
       } ]
-    }, {
-      "lineId" : 69,
-      "routeAndSchedules" : [ {
-        "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
-        "departures" : [ "05:26", "05:46", "06:12", "06:33", "06:58", "07:21", "07:49", "08:09", "08:32", "08:52", "09:14", "09:31", "09:59", "10:29", "11:00", "11:29", "11:59", "12:29", "12:50", "13:16", "13:39", "14:06", "14:31", "14:55", "15:20", "15:45", "16:10", "16:34", "16:54", "17:24", "17:53", "18:23", "18:53", "19:23", "19:50", "20:20", "20:50", "21:20", "21:50", "22:20", "22:50" ]
-      } ]
     } ]
   },
   "386" : {
@@ -6547,6 +6547,12 @@
     "name" : "Novo Pobrežje",
     "address" : "Ulica Veljka Vlahovića 25",
     "scheduleForLine" : [ {
+      "lineId" : 69,
+      "routeAndSchedules" : [ {
+        "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
+        "departures" : [ "05:15", "05:40", "06:05", "06:25", "06:53", "07:12", "07:37", "07:57", "08:25", "08:55", "09:25", "09:55", "10:25", "10:55", "11:25", "11:55", "12:25", "12:45", "13:10", "13:35", "14:01", "14:26", "14:51", "15:15", "15:40", "16:05", "16:30", "16:55", "17:20", "17:45", "18:15", "18:45", "19:15", "19:45", "20:15", "20:45", "21:15", "21:45", "22:15" ]
+      } ]
+    }, {
       "lineId" : 82,
       "routeAndSchedules" : [ {
         "direction" : "Dupleška kanal - Avtobusna postaja",
@@ -6554,12 +6560,6 @@
       }, {
         "direction" : "Zg. Duplek - Ul. Veljka Vlahovića - Avtobusna postaja",
         "departures" : [ "05:24", "05:54", "06:24", "06:54", "07:24", "07:54", "08:54", "10:54", "11:54", "12:54", "13:54", "14:24", "14:54", "15:54", "16:24", "16:54", "18:54", "20:54", "21:59" ]
-      } ]
-    }, {
-      "lineId" : 69,
-      "routeAndSchedules" : [ {
-        "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
-        "departures" : [ "05:15", "05:40", "06:05", "06:25", "06:53", "07:12", "07:37", "07:57", "08:25", "08:55", "09:25", "09:55", "10:25", "10:55", "11:25", "11:55", "12:25", "12:45", "13:10", "13:35", "14:01", "14:26", "14:51", "15:15", "15:40", "16:05", "16:30", "16:55", "17:20", "17:45", "18:15", "18:45", "19:15", "19:45", "20:15", "20:45", "21:15", "21:45", "22:15" ]
       } ]
     } ]
   },
@@ -7081,6 +7081,12 @@
     "name" : "ŽP Maribor ",
     "address" : "Trg Borisa Kidriča 1",
     "scheduleForLine" : [ {
+      "lineId" : 69,
+      "routeAndSchedules" : [ {
+        "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
+        "departures" : [ "05:18", "05:38", "06:03", "06:24", "06:49", "07:12", "07:40", "08:00", "08:23", "08:43", "09:05", "09:22", "09:50", "10:20", "10:50", "11:20", "11:50", "12:20", "12:40", "13:05", "13:30", "13:55", "14:20", "14:45", "15:10", "15:35", "16:00", "16:25", "16:45", "17:15", "17:45", "18:15", "18:45", "19:15", "19:42", "20:12", "20:42", "21:12", "21:42", "22:12", "22:42" ]
+      } ]
+    }, {
       "lineId" : 81,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
@@ -7092,12 +7098,6 @@
         "direction" : "Šentiljska Hofer - ŽP Maribor -  E.Leclerc",
         "departures" : [ "05:07", "06:07", "06:37", "07:07", "07:37", "08:07", "08:37", "09:07", "09:37", "10:07", "10:37", "11:07", "11:37", "12:07", "12:37", "13:07", "13:37", "14:07", "14:37", "15:07", "16:07", "17:37", "19:07", "20:37" ]
       } ]
-    }, {
-      "lineId" : 69,
-      "routeAndSchedules" : [ {
-        "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
-        "departures" : [ "05:18", "05:38", "06:03", "06:24", "06:49", "07:12", "07:40", "08:00", "08:23", "08:43", "09:05", "09:22", "09:50", "10:20", "10:50", "11:20", "11:50", "12:20", "12:40", "13:05", "13:30", "13:55", "14:20", "14:45", "15:10", "15:35", "16:00", "16:25", "16:45", "17:15", "17:45", "18:15", "18:45", "19:15", "19:42", "20:12", "20:42", "21:12", "21:42", "22:12", "22:42" ]
-      } ]
     } ]
   },
   "424" : {
@@ -7105,6 +7105,12 @@
     "name" : "ŽP Maribor ",
     "address" : "Partizanska cesta 50",
     "scheduleForLine" : [ {
+      "lineId" : 69,
+      "routeAndSchedules" : [ {
+        "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
+        "departures" : [ "05:24", "05:49", "06:17", "06:37", "07:05", "07:27", "07:51", "08:11", "08:37", "09:07", "09:37", "10:07", "10:37", "11:07", "11:37", "12:07", "12:37", "12:57", "13:22", "13:47", "14:15", "14:40", "15:05", "15:27", "15:52", "16:17", "16:42", "17:07", "17:32", "17:57", "18:27", "18:57", "19:27", "19:57", "20:27", "20:57", "21:27", "21:57", "22:27" ]
+      } ]
+    }, {
       "lineId" : 81,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
@@ -7115,12 +7121,6 @@
       "routeAndSchedules" : [ {
         "direction" : "E.Leclerc - ŽP Maribor - Šentiljska Hofer",
         "departures" : [ "05:45", "06:15", "06:45", "07:15", "07:45", "08:15", "08:45", "09:15", "09:45", "10:15", "10:45", "11:15", "11:45", "12:15", "12:45", "13:15", "13:45", "14:15", "14:45", "15:15", "15:45", "16:45", "18:15", "19:45", "21:15" ]
-      } ]
-    }, {
-      "lineId" : 69,
-      "routeAndSchedules" : [ {
-        "direction" : "Tabor Jadranska - Tezno - Pobrežje -  ŽP Maribor - UK Gosp.",
-        "departures" : [ "05:24", "05:49", "06:17", "06:37", "07:05", "07:27", "07:51", "08:11", "08:37", "09:07", "09:37", "10:07", "10:37", "11:07", "11:37", "12:07", "12:37", "12:57", "13:22", "13:47", "14:15", "14:40", "15:05", "15:27", "15:52", "16:17", "16:42", "17:07", "17:32", "17:57", "18:27", "18:57", "19:27", "19:57", "20:27", "20:57", "21:27", "21:57", "22:27" ]
       } ]
     } ]
   },
@@ -7393,28 +7393,10 @@
     "name" : "Mladinska - Trubarjeva",
     "address" : "Mladinska 17",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Bresternica - Avtobusna postaja",
-        "departures" : [ "05:10", "05:50", "06:15", "06:55", "07:30", "08:10", "08:50", "09:30", "10:10", "10:50", "11:25", "12:05", "12:40", "13:20", "13:55", "14:35", "15:10", "15:50", "16:25", "17:05", "17:40", "18:20", "18:55", "19:35", "20:10", "20:50", "21:25", "22:05" ]
-      } ]
-    }, {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Turnerjeva - Pekre",
-        "departures" : [ "05:39", "06:04", "06:36", "07:01", "07:32", "08:03", "08:33", "08:57", "09:26", "09:52", "10:27", "11:07", "11:47", "12:27", "13:07", "13:32", "14:02", "14:32", "14:57", "15:26", "15:57", "16:23", "16:52", "17:22", "17:56", "18:26", "18:56", "19:26", "19:56", "20:26", "20:56", "21:32", "22:17" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
         "departures" : [ "05:10", "05:30", "05:55", "06:16", "06:41", "07:04", "07:32", "07:52", "08:17", "08:37", "08:59", "09:16", "09:44", "10:14", "10:44", "11:14", "11:44", "12:14", "12:34", "12:59", "13:24", "13:49", "14:14", "14:39", "15:04", "15:29", "15:54", "16:19", "16:39", "17:09", "17:39", "18:09", "18:39", "19:09", "19:36", "20:06", "20:36", "21:06", "21:36", "22:06", "22:36" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:43", "06:48", "08:03", "09:18", "10:33", "11:48", "13:03", "14:18", "15:33", "16:48", "18:03", "19:33", "21:03", "22:33" ]
       } ]
     }, {
       "lineId" : 73,
@@ -7428,6 +7410,24 @@
         "direction" : "Rošpoh - Avtobusna postaja",
         "departures" : [ "05:17", "14:32" ]
       } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Bresternica - Avtobusna postaja",
+        "departures" : [ "05:10", "05:50", "06:15", "06:55", "07:30", "08:10", "08:50", "09:30", "10:10", "10:50", "11:25", "12:05", "12:40", "13:20", "13:55", "14:35", "15:10", "15:50", "16:25", "17:05", "17:40", "18:20", "18:55", "19:35", "20:10", "20:50", "21:25", "22:05" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Turnerjeva - Pekre",
+        "departures" : [ "05:39", "06:04", "06:36", "07:01", "07:32", "08:03", "08:33", "08:57", "09:26", "09:52", "10:27", "11:07", "11:47", "12:27", "13:07", "13:32", "14:02", "14:32", "14:57", "15:26", "15:57", "16:23", "16:52", "17:22", "17:56", "18:26", "18:56", "19:26", "19:56", "20:26", "20:56", "21:32", "22:17" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:43", "06:48", "08:03", "09:18", "10:33", "11:48", "13:03", "14:18", "15:33", "16:48", "18:03", "19:33", "21:03", "22:33" ]
+      } ]
     } ]
   },
   "453" : {
@@ -7435,28 +7435,10 @@
     "name" : "Mladinska - muzej Maribor",
     "address" : "Mladinska ulica 2",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Bresternica - Avtobusna postaja",
-        "departures" : [ "05:11", "05:51", "06:16", "06:56", "07:31", "08:11", "08:51", "09:31", "10:11", "10:51", "11:26", "12:06", "12:41", "13:21", "13:56", "14:36", "15:11", "15:51", "16:26", "17:06", "17:41", "18:21", "18:56", "19:36", "20:11", "20:51", "21:26", "22:06" ]
-      } ]
-    }, {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Turnerjeva - Pekre",
-        "departures" : [ "05:40", "06:05", "06:37", "07:02", "07:33", "08:04", "08:34", "08:58", "09:27", "09:53", "10:28", "11:08", "11:48", "12:28", "13:08", "13:33", "14:03", "14:34", "14:59", "15:27", "15:58", "16:24", "16:53", "17:23", "17:57", "18:27", "18:57", "19:27", "19:57", "20:27", "20:57", "21:33", "22:18" ]
-      } ]
-    }, {
       "lineId" : 69,
       "routeAndSchedules" : [ {
         "direction" : "Jadranska - Gosposvetska - Prlek - Pobrežje - Ptujska",
         "departures" : [ "05:11", "05:31", "05:56", "06:17", "06:42", "07:05", "07:33", "07:53", "08:18", "08:38", "09:00", "09:17", "09:45", "10:15", "10:45", "11:15", "11:45", "12:15", "12:35", "13:00", "13:25", "13:50", "14:15", "14:40", "15:05", "15:30", "15:55", "16:20", "16:40", "17:10", "17:40", "18:10", "18:40", "19:10", "19:37", "20:07", "20:37", "21:07", "21:37", "22:07", "22:37" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:44", "06:49", "08:04", "09:19", "10:34", "11:49", "13:04", "14:19", "15:34", "16:49", "18:04", "19:34", "21:04", "22:34" ]
       } ]
     }, {
       "lineId" : 73,
@@ -7469,6 +7451,24 @@
       }, {
         "direction" : "Rošpoh - Avtobusna postaja",
         "departures" : [ "05:18", "14:33" ]
+      } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Bresternica - Avtobusna postaja",
+        "departures" : [ "05:11", "05:51", "06:16", "06:56", "07:31", "08:11", "08:51", "09:31", "10:11", "10:51", "11:26", "12:06", "12:41", "13:21", "13:56", "14:36", "15:11", "15:51", "16:26", "17:06", "17:41", "18:21", "18:56", "19:36", "20:11", "20:51", "21:26", "22:06" ]
+      } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Turnerjeva - Pekre",
+        "departures" : [ "05:40", "06:05", "06:37", "07:02", "07:33", "08:04", "08:34", "08:58", "09:27", "09:53", "10:28", "11:08", "11:48", "12:28", "13:08", "13:33", "14:03", "14:34", "14:59", "15:27", "15:58", "16:24", "16:53", "17:23", "17:57", "18:27", "18:57", "19:27", "19:57", "20:27", "20:57", "21:33", "22:18" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:44", "06:49", "08:04", "09:19", "10:34", "11:49", "13:04", "14:19", "15:34", "16:49", "18:04", "19:34", "21:04", "22:34" ]
       } ]
     } ]
   },
@@ -7744,12 +7744,6 @@
     "name" : "Šarhova",
     "address" : "Šarhova ulica 86",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:31", "06:36", "07:51", "09:06", "10:21", "11:36", "12:51", "14:06", "15:21", "16:36", "17:51", "19:21", "20:51", "22:21" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -7757,6 +7751,12 @@
       }, {
         "direction" : "Limbuš - Pekre - Studenci - Avtobusna postaja",
         "departures" : [ "05:39", "06:09", "06:39", "07:04", "08:09", "08:34", "08:54", "09:19", "09:39", "10:39", "11:09", "11:39", "12:09", "12:39", "15:44", "16:09", "16:34", "16:54", "17:44", "18:04", "18:29", "18:59", "19:29", "19:59", "20:29", "20:59", "21:59", "22:29" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:31", "06:36", "07:51", "09:06", "10:21", "11:36", "12:51", "14:06", "15:21", "16:36", "17:51", "19:21", "20:51", "22:21" ]
       } ]
     } ]
   },
@@ -7909,12 +7909,6 @@
     "name" : "Dom pod gorco",
     "address" : "",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:14", "07:29", "08:44", "09:59", "11:14", "12:29", "13:44", "14:59", "16:14", "17:29", "18:59", "20:29", "21:59" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja -  Pekre - Limbuš",
@@ -7923,6 +7917,12 @@
         "direction" : "Avtobusna postaja - Lesarska šola - Pekre - Limbuš",
         "departures" : [ "06:45", "07:05", "07:30", "07:50", "08:35", "09:20", "11:20", "13:30", "14:40", "18:40", "19:40", "20:40", "21:40", "22:40" ]
       } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:14", "07:29", "08:44", "09:59", "11:14", "12:29", "13:44", "14:59", "16:14", "17:29", "18:59", "20:29", "21:59" ]
+      } ]
     } ]
   },
   "647" : {
@@ -7930,12 +7930,6 @@
     "name" : "Dom pod gorco",
     "address" : "",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:29", "06:34", "07:49", "09:04", "10:19", "11:34", "12:49", "14:04", "15:19", "16:34", "17:49", "19:19", "20:49", "22:19" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Limbuš - Pekre - Lesarska šola - Avtobusna postaja",
@@ -7944,6 +7938,12 @@
         "direction" : "Limbuš - Pekre - Studenci - Avtobusna postaja",
         "departures" : [ "05:37", "06:07", "06:37", "07:02", "08:07", "08:32", "08:52", "09:17", "09:37", "10:37", "11:07", "11:37", "12:07", "12:37", "15:42", "16:07", "16:32", "16:52", "17:42", "18:02", "18:27", "18:57", "19:27", "19:57", "20:27", "20:57", "21:57", "22:27" ]
       } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:29", "06:34", "07:49", "09:04", "10:19", "11:34", "12:49", "14:04", "15:19", "16:34", "17:49", "19:19", "20:49", "22:19" ]
+      } ]
     } ]
   },
   "648" : {
@@ -7951,18 +7951,6 @@
     "name" : "Maribox",
     "address" : "",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
-        "departures" : [ "05:39", "06:19", "06:49", "07:24", "08:04", "08:44", "09:29", "10:09", "10:44", "11:24", "11:59", "12:39", "13:14", "13:54", "14:29", "15:09", "15:44", "16:24", "16:59", "17:39", "18:14", "18:54", "19:29", "20:09", "20:44", "21:24", "21:59", "22:39" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "05:57", "07:12", "08:27", "09:42", "10:57", "12:12", "13:27", "14:42", "15:57", "17:12", "18:42", "20:12", "21:42" ]
-      } ]
-    }, {
       "lineId" : 73,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Kamnica",
@@ -7974,6 +7962,18 @@
         "direction" : "Avtobusna postaja - Rošpoh",
         "departures" : [ "13:52" ]
       } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Koš. dol - Bresternica",
+        "departures" : [ "05:39", "06:19", "06:49", "07:24", "08:04", "08:44", "09:29", "10:09", "10:44", "11:24", "11:59", "12:39", "13:14", "13:54", "14:29", "15:09", "15:44", "16:24", "16:59", "17:39", "18:14", "18:54", "19:29", "20:09", "20:44", "21:24", "21:59", "22:39" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "05:57", "07:12", "08:27", "09:42", "10:57", "12:12", "13:27", "14:42", "15:57", "17:12", "18:42", "20:12", "21:42" ]
+      } ]
     } ]
   },
   "649" : {
@@ -7981,12 +7981,6 @@
     "name" : "Turnerjeva",
     "address" : "",
     "scheduleForLine" : [ {
-      "lineId" : 84,
-      "routeAndSchedules" : [ {
-        "direction" : "Turnerjeva - Pekre",
-        "departures" : [ "05:35", "06:00", "06:30", "06:55", "07:25", "07:55", "08:25", "08:50", "09:20", "09:45", "10:20", "11:00", "11:40", "12:20", "13:00", "13:25", "13:55", "14:25", "14:50", "15:20", "15:50", "16:15", "16:45", "17:15", "17:50", "18:20", "18:50", "19:20", "19:50", "20:20", "20:50", "21:25", "22:10" ]
-      } ]
-    }, {
       "lineId" : 73,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja - Kamnica",
@@ -7998,6 +7992,12 @@
         "direction" : "Avtobusna postaja - Rošpoh",
         "departures" : [ "14:02" ]
       } ]
+    }, {
+      "lineId" : 84,
+      "routeAndSchedules" : [ {
+        "direction" : "Turnerjeva - Pekre",
+        "departures" : [ "05:35", "06:00", "06:30", "06:55", "07:25", "07:55", "08:25", "08:50", "09:20", "09:45", "10:20", "11:00", "11:40", "12:20", "13:00", "13:25", "13:55", "14:25", "14:50", "15:20", "15:50", "16:15", "16:45", "17:15", "17:50", "18:20", "18:50", "19:20", "19:50", "20:20", "20:50", "21:25", "22:10" ]
+      } ]
     } ]
   },
   "650" : {
@@ -8005,6 +8005,18 @@
     "name" : "Cankarjeva",
     "address" : "",
     "scheduleForLine" : [ {
+      "lineId" : 73,
+      "routeAndSchedules" : [ {
+        "direction" : "Kamnica - Avtobusna postaja",
+        "departures" : [ "08:39", "10:09", "11:34", "13:24", "17:39", "18:19", "20:19", "21:44" ]
+      }, {
+        "direction" : "Morski jarek - Avtobusna postaja",
+        "departures" : [ "06:45", "07:25", "08:05", "09:30", "10:50", "12:50", "14:10", "15:30", "16:10", "16:50", "19:30", "21:30" ]
+      }, {
+        "direction" : "Rošpoh - Avtobusna postaja",
+        "departures" : [ "05:20", "14:35" ]
+      } ]
+    }, {
       "lineId" : 81,
       "routeAndSchedules" : [ {
         "direction" : "Bresternica - Avtobusna postaja",
@@ -8022,18 +8034,6 @@
         "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
         "departures" : [ "05:46", "06:51", "08:06", "09:21", "10:36", "11:51", "13:06", "14:21", "15:36", "16:51", "18:06", "19:36", "21:06", "22:36" ]
       } ]
-    }, {
-      "lineId" : 73,
-      "routeAndSchedules" : [ {
-        "direction" : "Kamnica - Avtobusna postaja",
-        "departures" : [ "08:39", "10:09", "11:34", "13:24", "17:39", "18:19", "20:19", "21:44" ]
-      }, {
-        "direction" : "Morski jarek - Avtobusna postaja",
-        "departures" : [ "06:45", "07:25", "08:05", "09:30", "10:50", "12:50", "14:10", "15:30", "16:10", "16:50", "19:30", "21:30" ]
-      }, {
-        "direction" : "Rošpoh - Avtobusna postaja",
-        "departures" : [ "05:20", "14:35" ]
-      } ]
     } ]
   },
   "651" : {
@@ -8041,18 +8041,6 @@
     "name" : "Maribox",
     "address" : "",
     "scheduleForLine" : [ {
-      "lineId" : 81,
-      "routeAndSchedules" : [ {
-        "direction" : "Bresternica - Avtobusna postaja",
-        "departures" : [ "05:16", "05:56", "06:21", "07:01", "07:36", "08:16", "08:56", "09:36", "10:16", "10:56", "11:31", "12:11", "12:46", "13:26", "14:01", "14:41", "15:16", "15:56", "16:31", "17:11", "17:46", "18:26", "19:01", "19:41", "20:16", "20:56", "21:31", "22:11" ]
-      } ]
-    }, {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:49", "06:54", "08:09", "09:24", "10:39", "11:54", "13:09", "14:24", "15:39", "16:54", "18:09", "19:39", "21:09", "22:39" ]
-      } ]
-    }, {
       "lineId" : 73,
       "routeAndSchedules" : [ {
         "direction" : "Kamnica - Avtobusna postaja",
@@ -8063,6 +8051,18 @@
       }, {
         "direction" : "Rošpoh - Avtobusna postaja",
         "departures" : [ "05:23", "14:38" ]
+      } ]
+    }, {
+      "lineId" : 81,
+      "routeAndSchedules" : [ {
+        "direction" : "Bresternica - Avtobusna postaja",
+        "departures" : [ "05:16", "05:56", "06:21", "07:01", "07:36", "08:16", "08:56", "09:36", "10:16", "10:56", "11:31", "12:11", "12:46", "13:26", "14:01", "14:41", "15:16", "15:56", "16:31", "17:11", "17:46", "18:26", "19:01", "19:41", "20:16", "20:56", "21:31", "22:11" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:49", "06:54", "08:09", "09:24", "10:39", "11:54", "13:09", "14:24", "15:39", "16:54", "18:09", "19:39", "21:09", "22:39" ]
       } ]
     } ]
   },
@@ -8170,15 +8170,6 @@
     "name" : "Limubška - Lesarska šola",
     "address" : "Limbuška - Lesarska šola",
     "scheduleForLine" : [ {
-      "lineId" : 85,
-      "routeAndSchedules" : [ {
-        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
-        "departures" : [ "06:16", "07:31", "08:46", "10:01", "11:16", "12:31", "13:46", "15:01", "16:16", "17:31", "19:01", "20:31", "22:01" ]
-      }, {
-        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
-        "departures" : [ "05:23", "06:28", "07:43", "08:58", "10:13", "11:28", "12:43", "13:58", "15:13", "16:28", "17:43", "19:13", "20:43", "22:13" ]
-      } ]
-    }, {
       "lineId" : 70,
       "routeAndSchedules" : [ {
         "direction" : "Avtobusna postaja -  Pekre - Limbuš",
@@ -8186,6 +8177,15 @@
       }, {
         "direction" : "Avtobusna postaja - Lesarska šola - Pekre - Limbuš",
         "departures" : [ "06:50", "07:10", "07:35", "07:55", "08:40", "09:25", "11:25", "13:35", "14:45", "18:45", "19:45", "20:45", "21:45", "22:45" ]
+      } ]
+    }, {
+      "lineId" : 85,
+      "routeAndSchedules" : [ {
+        "direction" : "Avtobusna postaja - Dom pod gorco - Supernova",
+        "departures" : [ "06:16", "07:31", "08:46", "10:01", "11:16", "12:31", "13:46", "15:01", "16:16", "17:31", "19:01", "20:31", "22:01" ]
+      }, {
+        "direction" : "Supernova - Dom pod gorco - Avtobusna postaja",
+        "departures" : [ "05:23", "06:28", "07:43", "08:58", "10:13", "11:28", "12:43", "13:58", "15:13", "16:28", "17:43", "19:13", "20:43", "22:13" ]
       } ]
     } ]
   },

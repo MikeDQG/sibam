@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -145,7 +146,7 @@ class MarpromDtoToVaoMapperTest {
 
     @Test
     void mapSchedulesReturnsEmptyMapWhenLinesIsNull() {
-        when(transitDataService.getLines()).thenReturn(null);
+        when(transitDataService.getLines(anyString())).thenReturn(null);
 
         Map<Integer, StopScheduleVao> result = mapper.mapSchedules();
 
@@ -161,10 +162,10 @@ class MarpromDtoToVaoMapperTest {
         MarpromLineScheduleDto lsd = new MarpromLineScheduleDto(6, List.of(rsd));
         MarpromStopScheduleDto ssd = new MarpromStopScheduleDto(stopDto, List.of(lsd));
 
-        when(transitDataService.getLines()).thenReturn(List.of(line6));
-        when(transitDataService.getStopScheduleForLine(6)).thenReturn(List.of(ssd));
+        when(transitDataService.getLines(anyString())).thenReturn(List.of(line6));
+        when(transitDataService.getStopScheduleForLine(6, "2026-06-02")).thenReturn(List.of(ssd));
 
-        Map<Integer, StopScheduleVao> result = mapper.mapSchedules();
+        Map<Integer, StopScheduleVao> result = mapper.mapSchedules("2026-06-02");
 
         assertThat(result).containsKey(100);
         StopScheduleVao vao = result.get(100);
@@ -190,11 +191,11 @@ class MarpromDtoToVaoMapperTest {
         MarpromLineScheduleDto lsd9 = new MarpromLineScheduleDto(9, List.of(rsd9));
         MarpromStopScheduleDto ssd9 = new MarpromStopScheduleDto(stopDto, List.of(lsd9));
 
-        when(transitDataService.getLines()).thenReturn(List.of(line6, line9));
-        when(transitDataService.getStopScheduleForLine(6)).thenReturn(List.of(ssd6));
-        when(transitDataService.getStopScheduleForLine(9)).thenReturn(List.of(ssd9));
+        when(transitDataService.getLines(anyString())).thenReturn(List.of(line6, line9));
+        when(transitDataService.getStopScheduleForLine(6, "2026-06-02")).thenReturn(List.of(ssd6));
+        when(transitDataService.getStopScheduleForLine(9, "2026-06-02")).thenReturn(List.of(ssd9));
 
-        Map<Integer, StopScheduleVao> result = mapper.mapSchedules();
+        Map<Integer, StopScheduleVao> result = mapper.mapSchedules("2026-06-02");
 
         assertThat(result).containsKey(100);
         StopScheduleVao vao = result.get(100);
@@ -208,11 +209,33 @@ class MarpromDtoToVaoMapperTest {
     void mapSchedulesSkipsLineWhenStopScheduleIsNull() {
         MarpromLineDto line6 = new MarpromLineDto(6, "6", "Pekrska cesta", "#FF0000", List.of());
 
-        when(transitDataService.getLines()).thenReturn(List.of(line6));
-        when(transitDataService.getStopScheduleForLine(6)).thenReturn(null);
+        when(transitDataService.getLines(anyString())).thenReturn(List.of(line6));
+        when(transitDataService.getStopScheduleForLine(6, "2026-06-02")).thenReturn(null);
 
-        Map<Integer, StopScheduleVao> result = mapper.mapSchedules();
+        Map<Integer, StopScheduleVao> result = mapper.mapSchedules("2026-06-02");
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void mapWeeklySchedulesDeduplicatesIdenticalDays() {
+        MarpromStopDto stopDto = new MarpromStopDto(100, "Slomskov trg", "Slomskov trg 1", 46.556, 15.646);
+        MarpromLineDto line6 = new MarpromLineDto(6, "6", "Pekrska cesta", "#FF0000", List.of());
+        MarpromRouteScheduleDto rsd = new MarpromRouteScheduleDto("A->B", List.of("08:00", "09:00"));
+        MarpromLineScheduleDto lsd = new MarpromLineScheduleDto(6, List.of(rsd));
+        MarpromStopScheduleDto ssd = new MarpromStopScheduleDto(stopDto, List.of(lsd));
+
+        when(transitDataService.getLines(anyString())).thenReturn(List.of(line6));
+        when(transitDataService.getStopScheduleForLine(6, "2026-06-02")).thenReturn(List.of(ssd));
+        when(transitDataService.getStopScheduleForLine(6, "2026-06-03")).thenReturn(List.of(ssd));
+
+        var result = mapper.mapWeeklySchedules(List.of(
+                java.time.LocalDate.parse("2026-06-02"),
+                java.time.LocalDate.parse("2026-06-03")
+        ));
+
+        assertThat(result.dates()).containsExactly("2026-06-02", "2026-06-03");
+        assertThat(result.dateToScheduleKey()).hasSize(2);
+        assertThat(result.uniqueSchedules()).hasSize(1);
     }
 }

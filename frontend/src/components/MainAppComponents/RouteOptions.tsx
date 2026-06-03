@@ -21,6 +21,7 @@ type RouteOptionProps = {
   canSaveRoute?: boolean;
   hasFetchedRoute?: boolean;
   isSavedRoute?: boolean;
+  activeStepIndex?: number | null;
   onSaveRoute?: (name: string) => Promise<void>;
 };
 
@@ -31,6 +32,7 @@ export const RouteOptions = ({
   canSaveRoute = true,
   hasFetchedRoute = true,
   isSavedRoute = false,
+  activeStepIndex = null,
   onSaveRoute,
 }: RouteOptionProps) => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -255,23 +257,46 @@ export const RouteOptions = ({
                 <h2 className='text-xl font-semibold'>Navodila za pot</h2>
                 {routeSteps.length > 0 ? (
                   <ol className='mt-4 space-y-3'>
-                    {routeSteps.map((step, index) => (
-                      <li
-                        key={`${step.legIndex}-${index}-${step.instruction}`}
-                        className='grid grid-cols-[2rem_1fr] gap-3 text-sm leading-snug'>
-                        <span className='flex h-8 w-8 items-center justify-center rounded-full bg-red-700 text-xs font-semibold text-white'>
-                          {index + 1}
-                        </span>
-                        <div className='min-w-0 rounded-lg bg-card px-3 py-2 shadow-sm dark:bg-[#292927]'>
-                          <span className='mb-1 inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground dark:bg-neutral-700 dark:text-neutral-300'>
-                            {getModeLabel(step.mode)}
+                    {routeSteps.map((step, index) => {
+                      const hasActiveStep =
+                        typeof activeStepIndex === "number" &&
+                        activeStepIndex >= 0;
+                      const isPastStep = hasActiveStep && index < activeStepIndex;
+                      const isCurrentStep =
+                        hasActiveStep && index === activeStepIndex;
+
+                      return (
+                        <li
+                          key={`${step.legIndex}-${index}-${step.instruction}`}
+                          className={`grid grid-cols-[2rem_1fr] gap-3 text-sm leading-snug transition-transform duration-200 ${
+                            isCurrentStep ? "scale-[1.02]" : ""
+                          }`}>
+                          <span
+                            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white transition-all duration-200 ${
+                              isCurrentStep
+                                ? "scale-110 bg-red-700 shadow-lg shadow-red-700/30 ring-2 ring-red-200 dark:ring-red-500/40"
+                                : isPastStep
+                                  ? "bg-neutral-400 dark:bg-neutral-600"
+                                  : "bg-red-700"
+                            }`}>
+                            {index + 1}
                           </span>
-                          <p className='wrap-break-words text-card-foreground'>
-                            {step.instruction}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
+                          <div
+                            className={`min-w-0 rounded-lg bg-card px-3 py-2 shadow-sm transition-all duration-200 dark:bg-[#292927] ${
+                              isCurrentStep
+                                ? "shadow-lg ring-2 ring-red-200 dark:ring-red-500/40"
+                                : ""
+                            }`}>
+                            <span className='mb-1 inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground dark:bg-neutral-700 dark:text-neutral-300'>
+                              {getModeLabel(step.mode)}
+                            </span>
+                            <p className='wrap-break-words text-card-foreground'>
+                              {step.instruction}
+                            </p>
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ol>
                 ) : (
                   <p className='mt-4 rounded-lg bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm dark:bg-[#292927] dark:text-neutral-300'>

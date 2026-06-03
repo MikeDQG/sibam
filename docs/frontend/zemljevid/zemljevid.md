@@ -140,6 +140,8 @@ function handleZoomOut() {
 }
 
 function handleLocate() {
+  if (isFollowingRoute) return;
+
   locateUser({ zoomToUser: true, showOutOfCoverageToast: true });
 }
 ```
@@ -147,6 +149,8 @@ function handleLocate() {
 `handleZoomIn` in `handleZoomOut` spremenita `zoom` state, ki se nato posreduje v `MainMap` in naprej v `Map`. Zoom je omejen med `3` in `20`.
 
 `handleLocate` poklice `locateUser`, ki prek Geolocation API-ja pridobi trenutno lokacijo uporabnika. Ce je uporabnik znotraj podprtega obmocja, se `center` nastavi na uporabnikovo lokacijo in zoom se pri rocni lokaciji nastavi na `16`. Ce je uporabnik izven obmocja, aplikacija prikaze Maribor in po potrebi toast sporocilo.
+
+Med aktivnim sledenjem poti je gumb `Moja lokacija` onemogocen. Takrat aplikacija ze samodejno centrira zemljevid na uporabnika, dodatni rocni geolocation klici pa lahko povzrocijo nepotrebno preskakovanje kamere oziroma obcutek glitchanja.
 
 V istem desnem overlay panelu sta tudi `ThemeToggle` in profil oziroma prijava/odjava. `ThemeToggle` ne premika zemljevida, vpliva pa na `theme`, ki ga `MainMap` prebere prek `useTheme` in pretvori v `colorScheme='DARK'` ali `colorScheme='LIGHT'` za komponento `Map`.
 

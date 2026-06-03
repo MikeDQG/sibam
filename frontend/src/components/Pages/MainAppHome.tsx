@@ -637,6 +637,8 @@ export const MainAppHome = () => {
   }
 
   function handleLocate() {
+    if (isFollowingRoute) return;
+
     locateUser({ zoomToUser: true, showOutOfCoverageToast: true });
   }
 

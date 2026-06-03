@@ -901,7 +901,13 @@ export const MainAppControlOverlay = ({
               <Button
                 type='button'
                 onClick={onLocate}
-                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+                disabled={isRouteActive}
+                title={
+                  isRouteActive
+                    ? "Med sledenjem poti se zemljevid centrira samodejno."
+                    : undefined
+                }
+                className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
                 aria-label='Moja lokacija'>
                 <LocateFixed size={20} />
               </Button>
@@ -935,7 +941,13 @@ export const MainAppControlOverlay = ({
             <Button
               type='button'
               onClick={onLocate}
-              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
+              disabled={isRouteActive}
+              title={
+                isRouteActive
+                  ? "Med sledenjem poti se zemljevid centrira samodejno."
+                  : undefined
+              }
+              className='flex h-10 w-10 items-center justify-center rounded-md bg-white/85 text-neutral-900 shadow-lg hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-700 dark:text-white dark:hover:text-red-200'
               aria-label='Moja lokacija'>
               <LocateFixed size={20} />
             </Button>

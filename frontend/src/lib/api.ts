@@ -15,7 +15,12 @@ export function parseUuid(value: unknown, fieldName = "id"): UuidString {
 
 export function buildApiUrl(...segments: string[]) {
   const url = new URL(apiBaseUrl);
-  const basePath = url.pathname.replace(/\/+$/, "");
+  let basePath = url.pathname;
+
+  while (basePath.endsWith("/")) {
+    basePath = basePath.slice(0, -1);
+  }
+
   const encodedSegments = segments.map((segment) =>
     encodeURIComponent(segment),
   );

@@ -3,6 +3,7 @@ import { RouteErrorBox } from "./RouteErrorBox";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import type { RouteLeg } from "./RoutePolyline";
+import { getInstructionText } from "../../lib/text";
 
 type route = {
   title: string;
@@ -132,7 +133,13 @@ export const RouteOptions = ({
   };
 
   const getButtonClassName = (className: string) =>
-    className.replace(/\bring-\S+/g, "").trim();
+    className
+      .split(" ")
+      .filter(
+        (classNamePart) =>
+          classNamePart && !classNamePart.startsWith("ring-"),
+      )
+      .join(" ");
 
   const routeSteps =
     legs?.flatMap((leg, legIndex) =>
@@ -311,20 +318,6 @@ export const RouteOptions = ({
     </section>
   );
 };
-
-function getInstructionText(instruction?: string | null) {
-  if (!instruction) return "";
-
-  if (typeof DOMParser === "undefined") {
-    return instruction
-      .replace(/<[^>]*>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  const document = new DOMParser().parseFromString(instruction, "text/html");
-  return (document.body.textContent ?? "").replace(/\s+/g, " ").trim();
-}
 
 function getModeLabel(mode: string) {
   switch (mode) {

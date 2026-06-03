@@ -20,6 +20,7 @@ import type {
 import { useUserSession } from "../Authorization/UserSessionProvider";
 import { MARIBOR_BOUNDS } from "../../hooks/usePlacesAutocomplete";
 import { buildApiUrl, parseUuid } from "../../lib/api";
+import { getInstructionText } from "../../lib/text";
 import type { SavedAccountRoute } from "./AccountPageComponents/SavedRouteMapCard";
 
 const routeOptions = [
@@ -177,20 +178,6 @@ function getRouteEndpoints(path: RoutePath) {
         path.destination as Parameters<typeof getJourneyPoint>[0],
       ) ?? getJourneyPoint(lastLeg?.polyline.at(-1)),
   };
-}
-
-function getInstructionText(instruction?: string | null) {
-  if (!instruction) return "";
-
-  if (typeof DOMParser === "undefined") {
-    return instruction
-      .replace(/<[^>]*>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  const document = new DOMParser().parseFromString(instruction, "text/html");
-  return (document.body.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
 function getModeLabel(mode: string) {

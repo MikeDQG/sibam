@@ -301,10 +301,6 @@ Ce backend vrne napako, se response prebere v `RouteComputeError`, `routePath` s
 7. `RouteOptions` prejme `activeStepIndex` in posodobi videz krogcev v seznamu navodil.
 8. Klik na `Koncaj` ustavi aktivno sledenje in ponovno prilagodi pogled poti.
 
-### Shranjevanje in brisanje
-
-Podrobni tokovi za shranjevanje lokacij, shranjevanje poti in brisanje shranjenih podatkov so opisani v `../shranjevanje-poti-in-lokacij/shranjevanje-poti-in-lokacij.md`.
-
 ### Nalaganje shranjenih podatkov
 
 Ob odprtju glavne strani `MainAppHome` nalozi:

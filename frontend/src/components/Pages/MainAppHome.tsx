@@ -337,8 +337,8 @@ export const MainAppHome = () => {
   const applyUserLocation = useCallback(
     (position: GeolocationPosition, source: "watch" | "poll" = "watch") => {
       const userPosition = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
+        lat: position.coords.latitude, //46.5545008
+        lng: position.coords.longitude, //15.64980425
       };
 
       if (import.meta.env.DEV) {

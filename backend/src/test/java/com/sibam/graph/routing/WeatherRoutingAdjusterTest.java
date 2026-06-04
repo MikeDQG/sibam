@@ -5,6 +5,8 @@ import com.sibam.persistence.WeatherSnapshot;
 import com.sibam.repository.WeatherSnapshotRepository;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.dao.DataAccessResourceFailureException;
+
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
@@ -60,6 +62,72 @@ class WeatherRoutingAdjusterTest {
         adjuster.isEdgeAllowed(EdgeType.WALK, 400, weather);
 
         verify(repository, times(1)).findFirstByOrderByRecordedAtDesc();
+    }
+
+    @Test
+    void coolWeatherPenalizesWalkAndBike() {
+        WeatherRoutingAdjuster adjuster = adjusterFor(snapshot(5.0, null, "Clear"));
+
+        assertThat(adjuster.adjustedEdgeCost(EdgeType.WALK, 100)).isEqualTo(120); // 1.2x
+        assertThat(adjuster.adjustedEdgeCost(EdgeType.BIKE, 100)).isEqualTo(130); // 1.3x
+    }
+
+    @Test
+    void busEdgeIsUnaffectedByAnyWeather() {
+        WeatherRoutingAdjuster rainAdjuster = adjusterFor(snapshot(12.0, 2.0, "Rain"));
+        WeatherRoutingAdjuster freezingAdjuster = adjusterFor(snapshot(-5.0, null, "Clear"));
+
+        assertThat(rainAdjuster.adjustedEdgeCost(EdgeType.BUS, 100)).isEqualTo(100);
+        assertThat(freezingAdjuster.adjustedEdgeCost(EdgeType.BUS, 100)).isEqualTo(100);
+    }
+
+    @Test
+    void drizzleConditionIsDetectedAsRain() {
+        WeatherRoutingAdjuster adjuster = adjusterFor(snapshot(15.0, null, "Drizzle"));
+
+        assertThat(adjuster.adjustedEdgeCost(EdgeType.WALK, 100)).isEqualTo(200); // 2.0x rain penalty
+    }
+
+    @Test
+    void thunderstormConditionIsDetectedAsRain() {
+        WeatherRoutingAdjuster adjuster = adjusterFor(snapshot(18.0, null, "Thunderstorm"));
+
+        assertThat(adjuster.adjustedEdgeCost(EdgeType.WALK, 100)).isEqualTo(200);
+    }
+
+    @Test
+    void noRainTransferPenaltyIsUnchanged() {
+        WeatherRoutingAdjuster adjuster = adjusterFor(snapshot(15.0, null, "Clear"));
+
+        assertThat(adjuster.adjustedTransferPenaltySeconds(300)).isEqualTo(300);
+    }
+
+    @Test
+    void notRainingWalkEdgeIsAlwaysAllowed() {
+        WeatherRoutingAdjuster adjuster = adjusterFor(snapshot(15.0, null, "Clear"));
+
+        assertThat(adjuster.isEdgeAllowed(EdgeType.WALK, 9999)).isTrue();
+    }
+
+    @Test
+    void rainingBikeEdgeIsAlwaysAllowed() {
+        WeatherRoutingAdjuster adjuster = adjusterFor(snapshot(12.0, 1.0, "Rain"));
+
+        assertThat(adjuster.isEdgeAllowed(EdgeType.BIKE, 9999)).isTrue();
+    }
+
+    @Test
+    void databaseExceptionFallsBackToNeutralRouting() {
+        WeatherSnapshotRepository repository = mock(WeatherSnapshotRepository.class);
+        when(repository.findFirstByOrderByRecordedAtDesc())
+                .thenThrow(new DataAccessResourceFailureException("DB down"));
+        WeatherRoutingAdjuster adjuster = new WeatherRoutingAdjuster(
+                new RoutingConfig(300, 1000, 5.0, 3.0, 1.5), repository
+        );
+
+        assertThat(adjuster.adjustedEdgeCost(EdgeType.WALK, 100)).isEqualTo(100);
+        assertThat(adjuster.adjustedEdgeCost(EdgeType.BIKE, 100)).isEqualTo(100);
+        assertThat(adjuster.adjustedTransferPenaltySeconds(300)).isEqualTo(300);
     }
 
     private WeatherRoutingAdjuster adjusterFor(WeatherSnapshot snapshot) {

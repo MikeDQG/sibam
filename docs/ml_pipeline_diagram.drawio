@@ -1,0 +1,356 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- ============================================================ -->
+    <!-- SECTION BACKGROUNDS (drawn first = behind everything)        -->
+    <!-- ============================================================ -->
+
+    <mxCell id="bg1" value="1 · DATA SOURCES" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;opacity=60;verticalAlign=top;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="15" y="10" width="1270" height="100" as="geometry" />
+    </mxCell>
+
+    <mxCell id="bg2" value="2 · INGESTION  (Spring Boot Scheduler, every 5 min)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=60;verticalAlign=top;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="15" y="130" width="1270" height="100" as="geometry" />
+    </mxCell>
+
+    <mxCell id="bg3" value="3 · STAGING DB  (PostgreSQL / Supabase — rolling 3-day window)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=60;verticalAlign=top;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="15" y="250" width="1270" height="130" as="geometry" />
+    </mxCell>
+
+    <mxCell id="bg4" value="4 · BRONZE LAYER  (Supabase Storage — raw Parquet, partitioned by date)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0e6d3;strokeColor=#c8a97f;opacity=60;verticalAlign=top;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="15" y="465" width="1270" height="115" as="geometry" />
+    </mxCell>
+
+    <mxCell id="bg5" value="5 · SILVER LAYER  (Supabase Storage — joined, timezone-fixed, weather-enriched)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e6e6e6;strokeColor=#888888;opacity=60;verticalAlign=top;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="15" y="660" width="1270" height="100" as="geometry" />
+    </mxCell>
+
+    <mxCell id="bg6" value="6 · TRAINING  (scikit-learn → ONNX export)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=60;verticalAlign=top;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="15" y="800" width="1270" height="140" as="geometry" />
+    </mxCell>
+
+    <mxCell id="bg7" value="7 · GOLD LAYER  (Supabase Storage — ONNX models)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;opacity=60;verticalAlign=top;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="15" y="975" width="1270" height="155" as="geometry" />
+    </mxCell>
+
+    <mxCell id="bg8" value="8 · MODEL SERVING  (Spring Boot Backend)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;opacity=60;verticalAlign=top;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="15" y="1160" width="1270" height="130" as="geometry" />
+    </mxCell>
+
+    <mxCell id="bg9" value="9 · ROUTE COMPUTATION" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=60;verticalAlign=top;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="15" y="1320" width="1270" height="90" as="geometry" />
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- DATA SOURCE NODES                                            -->
+    <!-- ============================================================ -->
+
+    <mxCell id="src_mbajk" value="&lt;b&gt;MBajk API&lt;/b&gt;&#xa;(bike station snapshots)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="100" y="28" width="185" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="src_weather" value="&lt;b&gt;Weather API&lt;/b&gt;&#xa;(temp, rain, wind)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="543" y="28" width="210" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="src_gtfs" value="&lt;b&gt;GTFS-RT&lt;/b&gt;&#xa;(Marprom live feed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="28" width="195" height="60" as="geometry" />
+
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- INGESTION                                                     -->
+    <!-- ============================================================ -->
+
+    <mxCell id="sched" value="&lt;b&gt;SchedulerService&lt;/b&gt;  (every 5 min)&#xa;MBajkDataService · WeatherDataService · GTFSRTDataService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6c8ebf;strokeColor=#4a6fa5;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="375" y="152" width="550" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- STAGING DB NODES                                             -->
+    <!-- ============================================================ -->
+
+    <mxCell id="db_stations" value="bike_stations&#xa;(static)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#9673a6;strokeColor=#6b4fa0;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="28" y="268" width="148" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="db_bikesnap" value="bike_station_snapshots" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#9673a6;strokeColor=#6b4fa0;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="198" y="268" width="188" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="db_weather" value="weather_snapshots" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#9673a6;strokeColor=#6b4fa0;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="505" y="268" width="188" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="db_trips" value="trip_snapshots" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#9673a6;strokeColor=#6b4fa0;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="810" y="268" width="165" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="db_delays" value="stop_delay_snapshots" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#9673a6;strokeColor=#6b4fa0;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="998" y="268" width="192" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- export_to_lake.py process box (between staging and bronze) -->
+    <mxCell id="script_export" value="&lt;i&gt;export_to_lake.py&lt;/i&gt;  — reads all staging tables → Parquet → bronze bucket, then cleans up rows older than 3 days" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8a97f;strokeColor=#9a7050;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="408" width="680" height="48" as="geometry" />
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- BRONZE LAYER                                                  -->
+    <!-- ============================================================ -->
+
+    <mxCell id="br_bikes" value="bronze/bikes/&#xa;stations.parquet&#xa;snapshots_{date}.parquet" style="shape=note;whiteSpace=wrap;html=1;fillColor=#c8a97f;strokeColor=#9a7050;fontSize=11;size=15;" vertex="1" parent="1">
+      <mxGeometry x="50" y="480" width="295" height="72" as="geometry" />
+    </mxCell>
+
+    <mxCell id="br_weather" value="bronze/weather/&#xa;weather_{date}.parquet" style="shape=note;whiteSpace=wrap;html=1;fillColor=#c8a97f;strokeColor=#9a7050;fontSize=11;size=15;" vertex="1" parent="1">
+      <mxGeometry x="493" y="480" width="310" height="72" as="geometry" />
+    </mxCell>
+
+    <mxCell id="br_buses" value="bronze/buses/&#xa;trips_{date}.parquet&#xa;delays_{date}.parquet" style="shape=note;whiteSpace=wrap;html=1;fillColor=#c8a97f;strokeColor=#9a7050;fontSize=11;size=15;" vertex="1" parent="1">
+      <mxGeometry x="940" y="480" width="295" height="72" as="geometry" />
+    </mxCell>
+
+    <!-- transform_to_silver.py process box (between bronze and silver) -->
+    <mxCell id="script_transform" value="&lt;i&gt;transform_to_silver.py&lt;/i&gt;  — bikes: join station metadata + asof-merge weather  |  buses: join trips+delays + asof-merge weather  →  upload silver/bikes/ and silver/buses/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#888888;strokeColor=#555555;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="150" y="606" width="1000" height="48" as="geometry" />
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- SILVER LAYER                                                  -->
+    <!-- ============================================================ -->
+
+    <mxCell id="sv_bikes" value="silver/bikes/latest.parquet&#xa;(station + availability + weather)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#aaaaaa;strokeColor=#666666;fontColor=#000000;fontSize=12;size=15;" vertex="1" parent="1">
+      <mxGeometry x="75" y="673" width="330" height="68" as="geometry" />
+    </mxCell>
+
+    <mxCell id="sv_buses" value="silver/buses/latest.parquet&#xa;(delays + trips + weather)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#aaaaaa;strokeColor=#666666;fontColor=#000000;fontSize=12;size=15;" vertex="1" parent="1">
+      <mxGeometry x="870" y="673" width="330" height="68" as="geometry" />
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- TRAINING                                                      -->
+    <!-- ============================================================ -->
+
+    <!-- generate_synthetic.py — bus-side only, feeds train_buses -->
+    <mxCell id="script_synth" value="&lt;i&gt;generate_synthetic.py&lt;/i&gt;&#xa;Learns delay distributions from silver,&#xa;generates winter data (Oct–Apr) augmentation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="730" y="810" width="290" height="65" as="geometry" />
+    </mxCell>
+
+    <mxCell id="tr_bikes" value="&lt;b&gt;train_bikes.py&lt;/b&gt;&#xa;GradientBoosting (200 trees)&#xa;Features: station, hour, weekday, weather" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#5a8a40;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="848" width="290" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="tr_buses" value="&lt;b&gt;train_buses.py&lt;/b&gt;&#xa;Ridge Regression (time-based split)&#xa;Features: route, stop_seq, hour, dir, weather" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#5a8a40;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="930" y="848" width="310" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- GOLD LAYER — ONNX MODELS                                     -->
+    <!-- ============================================================ -->
+
+    <!-- Bikes: 2 regressors -->
+    <mxCell id="g_bikes" value="model_bikes.onnx&#xa;Regressor: # available bikes" style="shape=hexagon;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=11;fontStyle=1;perimeter=hexagonPerimeter2;" vertex="1" parent="1">
+      <mxGeometry x="28" y="990" width="215" height="62" as="geometry" />
+    </mxCell>
+
+    <mxCell id="g_stands" value="model_stands.onnx&#xa;Regressor: # available stands" style="shape=hexagon;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=11;fontStyle=1;perimeter=hexagonPerimeter2;" vertex="1" parent="1">
+      <mxGeometry x="260" y="990" width="230" height="62" as="geometry" />
+    </mxCell>
+
+    <!-- Bikes: 2 classifiers -->
+    <mxCell id="g_avbike" value="model_available_bike.onnx&#xa;Classifier: ≥2 bikes available?" style="shape=hexagon;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=11;fontStyle=1;perimeter=hexagonPerimeter2;" vertex="1" parent="1">
+      <mxGeometry x="28" y="1068" width="215" height="55" as="geometry" />
+    </mxCell>
+
+    <mxCell id="g_avstand" value="model_available_stand.onnx&#xa;Classifier: ≥2 stands available?" style="shape=hexagon;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=11;fontStyle=1;perimeter=hexagonPerimeter2;" vertex="1" parent="1">
+      <mxGeometry x="260" y="1068" width="230" height="55" as="geometry" />
+    </mxCell>
+
+    <!-- Bus model -->
+    <mxCell id="g_bus" value="model_bus_delay.onnx&#xa;Regressor: delay in seconds" style="shape=hexagon;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=11;fontStyle=1;perimeter=hexagonPerimeter2;" vertex="1" parent="1">
+      <mxGeometry x="865" y="1020" width="265" height="65" as="geometry" />
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- MODEL SERVING                                                 -->
+    <!-- ============================================================ -->
+
+    <mxCell id="svc_cache" value="&lt;b&gt;ArtifactCacheService&lt;/b&gt;&#xa;Downloads ONNX models from gold bucket on startup, caches in memory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b85450;strokeColor=#8a3030;fontColor=#ffffff;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="360" y="1173" width="580" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="svc_bike" value="&lt;b&gt;BikePredictionService&lt;/b&gt;&#xa;4 ONNX models (bikes / stands / availability)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b85450;strokeColor=#8a3030;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="1248" width="295" height="58" as="geometry" />
+    </mxCell>
+
+    <mxCell id="svc_bus" value="&lt;b&gt;BusDelayPredictionService&lt;/b&gt;&#xa;1 ONNX model (delay seconds)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b85450;strokeColor=#8a3030;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="890" y="1248" width="295" height="58" as="geometry" />
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- ROUTE COMPUTATION                                             -->
+    <!-- ============================================================ -->
+
+    <mxCell id="ctrl" value="&lt;b&gt;ComputePathController&lt;/b&gt;  →  Time-dependent A* routing&#xa;Predictions used to set edge weights (bike availability = ∞ cost if empty, bus delay added to wait time)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6c8ebf;strokeColor=#4a6fa5;fontColor=#ffffff;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="280" y="1335" width="740" height="65" as="geometry" />
+    </mxCell>
+
+    <!-- ============================================================ -->
+    <!-- ARROWS                                                        -->
+    <!-- ============================================================ -->
+
+    <!-- Data sources → Scheduler -->
+    <mxCell id="e1" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;strokeWidth=2;" edge="1" source="src_mbajk" target="sched" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;strokeWidth=2;" edge="1" source="src_weather" target="sched" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;strokeWidth=2;" edge="1" source="src_gtfs" target="sched" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Scheduler → Staging DBs -->
+    <mxCell id="e4" style="endArrow=block;endFill=1;html=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" source="sched" target="db_bikesnap" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="endArrow=block;endFill=1;html=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" source="sched" target="db_weather" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" style="endArrow=block;endFill=1;html=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" source="sched" target="db_trips" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="endArrow=block;endFill=1;html=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" source="sched" target="db_delays" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Staging DBs → export_to_lake.py -->
+    <mxCell id="e8" style="endArrow=block;endFill=1;html=1;strokeColor=#9673a6;" edge="1" source="db_stations" target="script_export" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" style="endArrow=block;endFill=1;html=1;strokeColor=#9673a6;" edge="1" source="db_bikesnap" target="script_export" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" style="endArrow=block;endFill=1;html=1;strokeColor=#9673a6;" edge="1" source="db_weather" target="script_export" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="endArrow=block;endFill=1;html=1;strokeColor=#9673a6;" edge="1" source="db_trips" target="script_export" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" style="endArrow=block;endFill=1;html=1;strokeColor=#9673a6;" edge="1" source="db_delays" target="script_export" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- export_to_lake.py → Bronze buckets -->
+    <mxCell id="e13" style="endArrow=block;endFill=1;html=1;strokeColor=#9a7050;strokeWidth=2;" edge="1" source="script_export" target="br_bikes" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e14" style="endArrow=block;endFill=1;html=1;strokeColor=#9a7050;strokeWidth=2;" edge="1" source="script_export" target="br_weather" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e15" style="endArrow=block;endFill=1;html=1;strokeColor=#9a7050;strokeWidth=2;" edge="1" source="script_export" target="br_buses" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- cleanup dashed arrow back to staging -->
+    <mxCell id="e_cleanup" value="cleanup &gt;3 days" style="endArrow=open;endFill=0;html=1;strokeColor=#9673a6;dashed=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" source="script_export" target="db_bikesnap" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="295" y="432" />
+          <mxPoint x="295" y="303" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Bronze → transform_to_silver.py -->
+    <mxCell id="e16" style="endArrow=block;endFill=1;html=1;strokeColor=#555555;strokeWidth=2;" edge="1" source="br_bikes" target="script_transform" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e17" style="endArrow=block;endFill=1;html=1;strokeColor=#555555;strokeWidth=2;" edge="1" source="br_weather" target="script_transform" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e18" style="endArrow=block;endFill=1;html=1;strokeColor=#555555;strokeWidth=2;" edge="1" source="br_buses" target="script_transform" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- transform_to_silver.py → Silver -->
+    <mxCell id="e19" style="endArrow=block;endFill=1;html=1;strokeColor=#555555;strokeWidth=2;" edge="1" source="script_transform" target="sv_bikes" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e20" style="endArrow=block;endFill=1;html=1;strokeColor=#555555;strokeWidth=2;" edge="1" source="script_transform" target="sv_buses" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- silver/buses → generate_synthetic (dashed = augmentation) -->
+    <mxCell id="e21" value="" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;dashed=1;strokeWidth=2;" edge="1" source="sv_buses" target="script_synth" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Silver → Training scripts -->
+    <mxCell id="e22" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="sv_bikes" target="tr_bikes" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e23" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="sv_buses" target="tr_buses" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- generate_synthetic → train_buses (dashed) -->
+    <mxCell id="e24" value="synthetic_buses.parquet" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;dashed=1;strokeWidth=2;fontSize=10;" edge="1" source="script_synth" target="tr_buses" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Training → Gold models -->
+    <mxCell id="e25" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="tr_bikes" target="g_bikes" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e26" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="tr_bikes" target="g_stands" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e27" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="tr_bikes" target="g_avbike" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e28" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="tr_bikes" target="g_avstand" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e29" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="tr_buses" target="g_bus" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Gold models → ArtifactCacheService -->
+    <mxCell id="e30" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;" edge="1" source="g_bikes" target="svc_cache" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e31" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;" edge="1" source="g_stands" target="svc_cache" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e32" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;" edge="1" source="g_avbike" target="svc_cache" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e33" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;" edge="1" source="g_avstand" target="svc_cache" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e34" style="endArrow=block;endFill=1;html=1;strokeColor=#a07c00;" edge="1" source="g_bus" target="svc_cache" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ArtifactCacheService → Prediction Services -->
+    <mxCell id="e35" style="endArrow=block;endFill=1;html=1;strokeColor=#b85450;strokeWidth=2;" edge="1" source="svc_cache" target="svc_bike" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e36" style="endArrow=block;endFill=1;html=1;strokeColor=#b85450;strokeWidth=2;" edge="1" source="svc_cache" target="svc_bus" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Prediction Services → ComputePathController -->
+    <mxCell id="e37" style="endArrow=block;endFill=1;html=1;strokeColor=#4a6fa5;strokeWidth=2;" edge="1" source="svc_bike" target="ctrl" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e38" style="endArrow=block;endFill=1;html=1;strokeColor=#4a6fa5;strokeWidth=2;" edge="1" source="svc_bus" target="ctrl" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

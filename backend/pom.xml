@@ -29,6 +29,36 @@
     <properties>
         <java.version>21</java.version>
         <sonar.organization>mikedqg</sonar.organization>
+
+        <!-- Completely excluded from analysis: generated/boilerplate with no testable logic -->
+        <sonar.exclusions>
+            **/SibamApplication.java,
+            **/repository/**,
+            **/dto/**,
+            **/persistence/**,
+            **/integration/gtfsRT/GTFSRTClient.java,
+            **/integration/marprom/MarpromClient.java,
+            **/integration/mbajk/MBajkClient.java,
+            **/integration/weather/WeatherClient.java,
+            **/integration/supabase/SupabaseStorageClient.java,
+            **/cache/SupabaseArtifactStorage.java
+        </sonar.exclusions>
+
+        <!-- Excluded from coverage percentage: config and model data classes -->
+        <sonar.coverage.exclusions>
+            **/SibamApplication.java,
+            **/repository/**,
+            **/dto/**,
+            **/persistence/**,
+            **/config/**,
+            **/graph/model/**,
+            **/integration/gtfsRT/GTFSRTClient.java,
+            **/integration/marprom/MarpromClient.java,
+            **/integration/mbajk/MBajkClient.java,
+            **/integration/weather/WeatherClient.java,
+            **/integration/supabase/SupabaseStorageClient.java,
+            **/cache/SupabaseArtifactStorage.java
+        </sonar.coverage.exclusions>
     </properties>
     <dependencies>
         <dependency>

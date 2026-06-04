@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bike, Bus, Footprints } from "lucide-react";
 import { toast } from "sonner";
 import {
   MainAppControlOverlay,
@@ -22,30 +21,6 @@ import { MARIBOR_BOUNDS } from "../../hooks/usePlacesAutocomplete";
 import { buildApiUrl, parseUuid } from "../../lib/api";
 import { getInstructionText } from "../../lib/text";
 import type { SavedAccountRoute } from "./AccountPageComponents/SavedRouteMapCard";
-
-const routeOptions = [
-  {
-    title: "Najhitrejša",
-    time: "18 min",
-    className:
-      "border-red-200 bg-red-50 text-red-950 ring-4 dark:bg-[#941d38] dark:text-white",
-    icons: [Bus, Footprints, Bike],
-  },
-  // {
-  //   title: "Najbolj zelena",
-  //   time: "24 min",
-  //   className:
-  //     "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-neutral-500 dark:bg-[#1d431b] dark:text-white",
-  //   icons: [Footprints, Bike],
-  // },
-  {
-    title: "Brez kolesa",
-    time: "22 min",
-    className:
-      "border-neutral-200 bg-white text-neutral-950 dark:border-neutral-600 dark:bg-[#2c2c2a] dark:text-white",
-    icons: [Bus, Footprints],
-  },
-];
 
 const fallbackCenter = {
   lat: 46.5547,
@@ -292,6 +267,8 @@ export const MainAppHome = () => {
   const [destinationMarkerPosition, setDestinationMarkerPosition] =
     useState<MapCenter | null>(null);
   const [routePath, setRoutePath] = useState<RoutePath | null>(null);
+  const [allFetchedRoutes, setAllFetchedRoutes] = useState<RoutePath[]>([]);
+  const [activeFetchedRouteIndex, setActiveFetchedRouteIndex] = useState(0);
   const [isShowingSavedRoute, setIsShowingSavedRoute] = useState(false);
   const [isFollowingRoute, setIsFollowingRoute] = useState(false);
   const [routeFitBoundsTrigger, setRouteFitBoundsTrigger] = useState(0);
@@ -661,6 +638,8 @@ export const MainAppHome = () => {
 
   function handlePlaceSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setAllFetchedRoutes([]);
+    setActiveFetchedRouteIndex(0);
     setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
@@ -679,6 +658,8 @@ export const MainAppHome = () => {
 
   function handleDestinationSelect(place: { lat: number; lng: number } | null) {
     setRoutePath(null);
+    setAllFetchedRoutes([]);
+    setActiveFetchedRouteIndex(0);
     setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
@@ -688,7 +669,15 @@ export const MainAppHome = () => {
   }
 
   function handlePathReceive(path: RoutePath) {
-    setRoutePath(path);
+    const fetchedRoutes =
+      Array.isArray(path.routes) && path.routes.length > 0
+        ? path.routes
+        : [path];
+    const firstRoute = fetchedRoutes[0] ?? path;
+
+    setAllFetchedRoutes(fetchedRoutes);
+    setActiveFetchedRouteIndex(0);
+    setRoutePath(firstRoute);
     setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
@@ -698,8 +687,14 @@ export const MainAppHome = () => {
 
   function handleSavedRouteSelect(route: SavedAccountRoute) {
     const endpoints = getRouteEndpoints(route.journey);
+    const savedRouteJourney = {
+      ...route.journey,
+      label: route.name,
+    };
 
-    setRoutePath(route.journey);
+    setRoutePath(savedRouteJourney);
+    setAllFetchedRoutes([savedRouteJourney]);
+    setActiveFetchedRouteIndex(0);
     setIsShowingSavedRoute(true);
     setIsFollowingRoute(false);
     setRouteComputeError(null);
@@ -707,6 +702,15 @@ export const MainAppHome = () => {
     setMapLocationDraft(null);
     setMarkerPosition(endpoints.origin);
     setDestinationMarkerPosition(endpoints.destination);
+    setRouteFitBoundsTrigger((currentTrigger) => currentTrigger + 1);
+  }
+
+  function handleRouteSelect(route: RoutePath, index: number) {
+    setRoutePath(route);
+    setActiveFetchedRouteIndex(index);
+    setIsFollowingRoute(false);
+    setSelectedLeg(null);
+    setMapLocationDraft(null);
     setRouteFitBoundsTrigger((currentTrigger) => currentTrigger + 1);
   }
 
@@ -721,6 +725,8 @@ export const MainAppHome = () => {
 
   function handlePathError(error: RouteComputeError) {
     setRoutePath(null);
+    setAllFetchedRoutes([]);
+    setActiveFetchedRouteIndex(0);
     setIsShowingSavedRoute(false);
     setIsFollowingRoute(false);
     setRouteComputeError(error);
@@ -858,7 +864,7 @@ export const MainAppHome = () => {
     }
   }
 
-  async function handleRouteSave(name: string) {
+  async function handleRouteSave(name: string, selectedRoute?: RoutePath) {
     try {
       const token = await getAuthToken();
 
@@ -867,7 +873,9 @@ export const MainAppHome = () => {
         return;
       }
 
-      if (!routePath) {
+      const routeToSave = selectedRoute ?? routePath;
+
+      if (!routeToSave) {
         toast.error("Najprej izračunaj pot.");
         return;
       }
@@ -883,7 +891,7 @@ export const MainAppHome = () => {
         body: JSON.stringify({
           userId: session.id,
           name,
-          journey: routePath,
+          journey: routeToSave,
         }),
       });
 
@@ -972,13 +980,15 @@ export const MainAppHome = () => {
 
       {/* route options */}
       <RouteOptions
-        routes={routeOptions}
+        routes={allFetchedRoutes}
         legs={routePath?.legs}
         computeError={routeComputeError}
         canSaveRoute={Boolean(routePath)}
-        hasFetchedRoute={Boolean(routePath)}
+        hasFetchedRoute={allFetchedRoutes.length > 0}
         isSavedRoute={isShowingSavedRoute}
         activeStepIndex={activeRouteStep?.stepIndex ?? null}
+        activeRouteIndex={activeFetchedRouteIndex}
+        onRouteSelect={handleRouteSelect}
         onSaveRoute={handleRouteSave}
       />
     </main>

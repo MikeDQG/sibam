@@ -22,7 +22,7 @@ describe("shranjevanje-poti", () => {
   it("uporabnik mora vnesti ime poti", () => {
     render(<RouteOptions routes={routeOptions} legs={routeLegs} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Shrani pot" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Shrani pot" })[0]);
     expect(screen.getByRole("button", { name: "Shrani" })).toBeDisabled();
   });
 

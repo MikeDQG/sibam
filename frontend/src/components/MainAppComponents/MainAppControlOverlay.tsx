@@ -782,13 +782,49 @@ export const MainAppControlOverlay = ({
     const response = data as {
       routes?: RoutePath[];
       status?: string;
+      origin?: unknown;
+      origin_address?: string | null;
+      originAddress?: string | null;
+      destination?: unknown;
+      destination_address?: string | null;
+      destinationAddress?: string | null;
     };
 
-    const firstRoute = response.routes?.[0];
-    if (firstRoute && Array.isArray(firstRoute.legs)) {
+    const normalizedRoutes =
+      response.routes
+        ?.filter((route) => Array.isArray(route.legs))
+        .map((route) => ({
+          ...route,
+          status: route.status ?? response.status,
+          origin: route.origin ?? response.origin,
+          origin_address:
+            route.origin_address ??
+            route.originAddress ??
+            response.origin_address ??
+            response.originAddress,
+          destination: route.destination ?? response.destination,
+          destination_address:
+            route.destination_address ??
+            route.destinationAddress ??
+            response.destination_address ??
+            response.destinationAddress,
+          duration:
+            route.duration ??
+            (typeof route.totalDurationSeconds === "number"
+              ? String(route.totalDurationSeconds * 1000)
+              : undefined),
+          distance:
+            route.distance ??
+            (typeof route.totalDistanceMeters === "number"
+              ? String(route.totalDistanceMeters)
+              : undefined),
+        })) ?? [];
+
+    const firstRoute = normalizedRoutes[0];
+    if (firstRoute) {
       return {
         ...firstRoute,
-        routes: response.routes,
+        routes: normalizedRoutes,
       };
     }
 

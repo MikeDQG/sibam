@@ -78,7 +78,7 @@ describe("landing page", () => {
     expect(screen.getByRole("heading", { name: "Podatki za mestno mobilnost" })).toBeInTheDocument();
     expect(screen.getByText("izbira datuma v naslednjih 7 dneh")).toBeInTheDocument();
     expect(screen.getByText("prikaz aktualnega koraka med sledenjem")).toBeInTheDocument();
-    expect(screen.getByText("napovedi razpoložljivosti koles, stojal in zamud")).toBeInTheDocument();
+    expect(screen.getByText("napovedi števila prostih koles in stojal ter zamude avtobusov")).toBeInTheDocument();
   });
 
   it("HeroSection gumb odpre glavno aplikacijo", () => {

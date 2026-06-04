@@ -103,7 +103,7 @@ class GTFSRTMapperTest {
         Trip trip = mapper.gtfsRTToTrip(vehicle, tripUpdate);
 
         assertThat(trip.getStopUpdates()).hasSize(1);
-        assertThat(trip.getStopUpdates().get(0).getDelay()).isEqualTo(0);
+        assertThat(trip.getStopUpdates().get(0).getDelay()).isZero();
     }
 
     @Test
@@ -122,5 +122,87 @@ class GTFSRTMapperTest {
 
         assertThat(trip.getTripId()).isEqualTo("fallback-trip");
         assertThat(trip.getRouteId()).isEqualTo("9");
+    }
+
+    @Test
+    void nullVehiclePositionStillMapsTripUpdateFields() {
+        GtfsRealtime.TripUpdate tripUpdate = GtfsRealtime.TripUpdate.newBuilder()
+                .setTrip(GtfsRealtime.TripDescriptor.newBuilder()
+                        .setTripId("trip-null-vehicle")
+                        .setRouteId("7")
+                        .build())
+                .addStopTimeUpdate(GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
+                        .setStopSequence(1)
+                        .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setDelay(60).build())
+                        .build())
+                .build();
+
+        Trip trip = mapper.gtfsRTToTrip(null, tripUpdate);
+
+        assertThat(trip.getTripId()).isEqualTo("trip-null-vehicle");
+        assertThat(trip.getRouteId()).isEqualTo("7");
+        assertThat(trip.getStopUpdates()).hasSize(1);
+        assertThat(trip.getStopUpdates().get(0).getDelay()).isEqualTo(60);
+        assertThat(trip.getLat()).isEqualTo(0.0);
+        assertThat(trip.getBearing()).isNull();
+    }
+
+    @Test
+    void vehiclePositionWithNoBearingLeavesItNull() {
+        GtfsRealtime.VehiclePosition vehicle = GtfsRealtime.VehiclePosition.newBuilder()
+                .setPosition(GtfsRealtime.Position.newBuilder()
+                        .setLatitude(46.5f)
+                        .setLongitude(15.6f)
+                        // no bearing set
+                        .build())
+                .build();
+
+        Trip trip = mapper.gtfsRTToTrip(vehicle, null);
+
+        assertThat(trip.getBearing()).isNull();
+    }
+
+    @Test
+    void vehiclePositionWithoutOptionalFieldsLeavesThemAtDefaults() {
+        GtfsRealtime.VehiclePosition vehicle = GtfsRealtime.VehiclePosition.newBuilder()
+                // no currentStopSequence, no stopId, no timestamp
+                .build();
+
+        Trip trip = mapper.gtfsRTToTrip(vehicle, null);
+
+        assertThat(trip.getCurrent_stop_sequence()).isZero();
+        assertThat(trip.getStop_id()).isNull();
+        assertThat(trip.getTimestamp()).isNull();
+    }
+
+    @Test
+    void vehiclePositionTripIdTakesPriorityOverTripUpdateFallback() {
+        GtfsRealtime.VehiclePosition vehicle = GtfsRealtime.VehiclePosition.newBuilder()
+                .setTrip(GtfsRealtime.TripDescriptor.newBuilder()
+                        .setTripId("vehicle-trip")
+                        .setRouteId("vehicle-route")
+                        .build())
+                .build();
+
+        GtfsRealtime.TripUpdate tripUpdate = GtfsRealtime.TripUpdate.newBuilder()
+                .setTrip(GtfsRealtime.TripDescriptor.newBuilder()
+                        .setTripId("update-trip")
+                        .setRouteId("update-route")
+                        .build())
+                .build();
+
+        Trip trip = mapper.gtfsRTToTrip(vehicle, tripUpdate);
+
+        assertThat(trip.getTripId()).isEqualTo("vehicle-trip");
+        assertThat(trip.getRouteId()).isEqualTo("vehicle-route");
+    }
+
+    @Test
+    void bothInputsNullReturnsEmptyTrip() {
+        Trip trip = mapper.gtfsRTToTrip(null, null);
+
+        assertThat(trip).isNotNull();
+        assertThat(trip.getTripId()).isNull();
+        assertThat(trip.getStopUpdates()).isNull();
     }
 }

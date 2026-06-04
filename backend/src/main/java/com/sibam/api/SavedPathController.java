@@ -1,6 +1,5 @@
 package com.sibam.api;
 
-import com.sibam.dto.location.SavedLocationRequest;
 import com.sibam.dto.savedPath.SavedPathRequest;
 import com.sibam.persistence.SavedPath;
 import com.sibam.service.SavedPathService;

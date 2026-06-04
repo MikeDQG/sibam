@@ -54,7 +54,7 @@ Klik na avtobusno ikono odpre popup z informacijami o avtobusu:
 - cas odhoda avtobusa, ce je podan v `leg.departure`.
 - pricakovana zamuda v minutah, ce je podana v `leg.busDelayPrediction.predictedBoardingDelaySeconds`.
 
-Zamuda avtobusa je v podatkih podana v sekundah. `RoutePopup` jo pri prikazu pretvori v minute z `Math.round(predictedBoardingDelaySeconds / 60)` in vrstico prikaze z labelom `Pricakovana zamuda (min)`. Ce `busDelayPrediction` manjka, ce `predictedBoardingDelaySeconds` ni stevilo ali vrednost ni koncna, se vrstica za zamudo ne prikaze.
+Zamuda avtobusa je v podatkih podana v sekundah. `RoutePopup` jo pri prikazu pretvori v minute z `Math.floor(predictedBoardingDelaySeconds / 60)`, zato se vrednosti pod polno minuto prikazejo kot `0`. Vrstica se prikaze z labelom `Pricakovana zamuda (min)`. Ce `busDelayPrediction` manjka, ce `predictedBoardingDelaySeconds` ni stevilo ali vrednost ni koncna, se vrstica za zamudo ne prikaze.
 
 Ce je avtobusni leg neposredno po kolesarskem leg-u, popup lahko prikaze tudi stevilo prostih stojal za oddajo kolesa iz prejsnjega kolesarskega leg-a.
 

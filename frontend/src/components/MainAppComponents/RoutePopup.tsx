@@ -55,6 +55,14 @@ const formatTime = (timestamp?: string) => {
   });
 };
 
+const formatBusDelay = (delaySeconds?: number) => {
+  if (typeof delaySeconds !== "number" || !Number.isFinite(delaySeconds)) {
+    return null;
+  }
+
+  return Math.floor(delaySeconds / 60).toString();
+};
+
 const formatCount = (count?: number) => {
   if (typeof count !== "number" || !Number.isFinite(count)) return null;
 
@@ -142,18 +150,11 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
           <RoutePopupRow
             label='Pričakovana zamuda (min)'
             value={
-              showBusIconDetails &&
-              selectedLeg.leg.mode === "BUS" &&
-              typeof selectedLeg.leg.busDelayPrediction
-                ?.predictedBoardingDelaySeconds === "number" &&
-              Number.isFinite(
-                selectedLeg.leg.busDelayPrediction
-                  .predictedBoardingDelaySeconds,
-              )
-                ? Math.round(
+              showBusIconDetails && selectedLeg.leg.mode === "BUS"
+                ? formatBusDelay(
                     selectedLeg.leg.busDelayPrediction
-                      .predictedBoardingDelaySeconds / 60,
-                  ).toString()
+                      ?.predictedBoardingDelaySeconds,
+                  )
                 : null
             }
           />

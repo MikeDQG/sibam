@@ -36,6 +36,24 @@ describe("route-popup", () => {
     expect(screen.getByText("3")).toBeInTheDocument();
   });
 
+  it("avtobusno zamudo pod polno minuto zaokrozi navzdol", () => {
+    render(
+      <RoutePopup
+        selectedLeg={{
+          leg: {
+            ...routeLegs[1],
+            busDelayPrediction: { predictedBoardingDelaySeconds: 59 },
+          },
+          position: { lat: 1, lng: 1 },
+          source: "busIcon",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Pričakovana zamuda (min)")).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
+
   it("MBajk popup prikaze prosta kolesa ali stojala", () => {
     render(<RoutePopup selectedLeg={{ leg: routeLegs[2], position: { lat: 1, lng: 1 }, source: "bikePickupIcon" }} />);
 

@@ -215,4 +215,104 @@ class GoogleRoutesServiceTest {
         assertThat(result.steps().get(0).durationSeconds()).isZero();
         assertThat(result.steps().get(0).instruction()).isEqualTo("Go straight");
     }
+
+    @Test
+    void parseRouteDetailsWithDecimalDuration() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        String response = """
+                {"routes":[{
+                  "polyline":{"geoJsonLinestring":{"coordinates":[[15.64,46.55],[15.65,46.56]]}},
+                  "legs":[{"steps":[{
+                    "distanceMeters": 50,
+                    "duration": "7.5s",
+                    "polyline":{"geoJsonLinestring":{"coordinates":[[15.64,46.55],[15.65,46.56]]}},
+                    "navigationInstruction":{"maneuver":"DEPART","instructions":"Walk"}
+                  }]}]
+                }]}
+                """;
+
+        GoogleRoutesService.RouteDetails result = service.parseRouteDetails(
+                response, new GeoPoint(46.55, 15.64), new GeoPoint(46.56, 15.65)
+        );
+
+        assertThat(result.steps().get(0).durationSeconds()).isEqualTo(8);
+    }
+
+    @Test
+    void parseRouteDetailsWithStepHavingNoPolylineUsesClosestFallbackRange() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        String response = """
+                {"routes":[{
+                  "polyline":{"geoJsonLinestring":{"coordinates":[[15.64,46.55],[15.65,46.56],[15.66,46.57]]}},
+                  "legs":[{"steps":[{
+                    "distanceMeters": 100,
+                    "duration": "10s",
+                    "navigationInstruction":{"maneuver":"DEPART","instructions":"Walk forward"}
+                  }]}]
+                }]}
+                """;
+
+        GoogleRoutesService.RouteDetails result = service.parseRouteDetails(
+                response, new GeoPoint(46.55, 15.64), new GeoPoint(46.57, 15.66)
+        );
+
+        assertThat(result.steps()).hasSize(1);
+        assertThat(result.steps().get(0).startPolylineIndex()).isGreaterThanOrEqualTo(0);
+    }
+
+    @Test
+    void parseRouteDetailsWithEncodedPolylineAndStepPolyline() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "ENCODED_POLYLINE");
+
+        String response = """
+                {"routes":[{
+                  "polyline":{"encodedPolyline":"_p~iF~ps|U_ulLnnqC_mqNvxq`@"},
+                  "legs":[{"steps":[{
+                    "distanceMeters": 200,
+                    "duration": "30s",
+                    "polyline":{"encodedPolyline":"_p~iF~ps|U_ulLnnqC"},
+                    "navigationInstruction":{"maneuver":"DEPART","instructions":"Go north"}
+                  }]}]
+                }]}
+                """;
+
+        GeoPoint origin = new GeoPoint(38.5, -120.2);
+        GeoPoint dest   = new GeoPoint(40.7, -120.95);
+        GoogleRoutesService.RouteDetails result = service.parseRouteDetails(response, origin, dest);
+
+        assertThat(result.polyline()).hasSizeGreaterThan(1);
+        assertThat(result.steps()).hasSize(1);
+        assertThat(result.steps().get(0).instruction()).isEqualTo("Go north");
+    }
+
+    @Test
+    void parseRouteDetailsWithStepPolylineNotMatchingAnyRoutePointFallsBack() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        String response = """
+                {"routes":[{
+                  "polyline":{"geoJsonLinestring":{"coordinates":[[15.64,46.55],[15.65,46.56]]}},
+                  "legs":[{"steps":[{
+                    "distanceMeters": 100,
+                    "duration": "15s",
+                    "polyline":{"geoJsonLinestring":{"coordinates":[[99.0,99.0],[99.1,99.1]]}},
+                    "navigationInstruction":{"maneuver":"DEPART","instructions":"Somewhere"}
+                  }]}]
+                }]}
+                """;
+
+        GoogleRoutesService.RouteDetails result = service.parseRouteDetails(
+                response, new GeoPoint(46.55, 15.64), new GeoPoint(46.56, 15.65)
+        );
+
+        assertThat(result.steps()).hasSize(1);
+        assertThat(result.steps().get(0).startPolylineIndex()).isGreaterThanOrEqualTo(0);
+        assertThat(result.steps().get(0).endPolylineIndex()).isGreaterThanOrEqualTo(0);
+    }
 }

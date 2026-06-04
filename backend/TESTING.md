@@ -4,12 +4,6 @@
 
 Backend uporablja **JUnit 5 + Mockito + AssertJ** za unit teste in **Testcontainers + Spring Boot Test** za integracijske teste. Pokritost se meri z JaCoCo in preverja SonarCloud ob vsakem pushu na `main`.
 
-| Metrika | Vrednost |
-|---|---|
-| Skupno testov | ~340 |
-| Pokritost vrstic (JaCoCo, lokalno) | ~75 % |
-| Pokritost vrstic (SonarCloud, s konfiguriranimi izključitvami) | višja — izključeni so boilerplate paketi |
-| Izhodišče (pred testiranjem) | 56 % |
 
 ---
 
@@ -72,9 +66,16 @@ SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... ./mvnw test
 
 **Kaj testiramo:** `WalkingEdgeBuilder` (tip robov `WALK`, pozitivna razdalja, vsaj 1 sekunda hoje, polilinja s 2 točkama), `BikeEdgeBuilder` (tip `BIKE`, polja shranjena), `BusEdgeBuilder` (tip `BUS`, `RouteInfo`, polilinija, `scheduleStopPointId`).
 
-**Zakaj tako:** Gradniki robov so majhni in tesno zasnovani, a jih `StaticGraphBuilder` kliče tisočkrat. Napaka pri izračunu razdalje ali napačen tip roba bi pokvarila ves usmerjevalni graf.
+`StaticGraphBuilder` (99 % pokritost):
+- Ustvarjanje vozlišč: `BusNode` za vsako postajališče iz `VaoSerializer`, `BikeNode` za vsako postajo iz `MBajkDataService`
+- `fetchData()` se pokliče ko je `busStopsMap` null ali prazen; se **ne** pokliče ko je seznam že napolnjen
+- Postajališče z `null` koordinatami je preskočeno
+- `BikeNode` z `null` razpoložljivostjo privzeto dobi `freeBikes=0` in `freeStands=0`
+- Kolesarski robovi: preskočeni, če izvorno postajališče nima prostih koles ali ciljno nima prostih stojal
+- Avtobusni robovi: zgodnji izhod pri prazni/null karti tras; preskočene trase z null/praznimi točkami oblike; za rob potrebujeta dve zaporedni vozliščni postajališči v zapisu oblike
+- Robovi hoje: vozlišča v dosegu 500 m so dvosmerno povezana; oddaljeni pari so preskočeni
 
-**Kaj ne testiramo:** `StaticGraphBuilder` — zahteva polno VMock postavitev `VaoSerializer` in `MBajkDataService` z desetinami metod. Logika je posredno pokrita prek `AStarRouterTest`, ki zgradi pravi graf.
+**Zakaj tako:** Gradniki robov so majhni in tesno zasnovani, a jih `StaticGraphBuilder` kliče tisočkrat. Napaka pri izračunu razdalje ali napačen tip roba bi pokvarila ves usmerjevalni graf. `StaticGraphBuilder` testiramo z mockiranim `VaoSerializer` in `MBajkDataService` ter resničnim `HelperService` (samo matematika).
 
 ---
 
@@ -116,6 +117,22 @@ SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... ./mvnw test
 
 ---
 
+### Zaganjalnik VAO / engine (`com.sibam.engine`)
+
+**Kaj testiramo:** `VaoSerializer` — kompleksna logika tedenskega predpomnjenja urnikov:
+- `dateWindow` — vrne seznam od danes do N dni naprej; izjema pri negativnem `daysAhead`; en datum pri `daysAhead=0`
+- `refreshWeeklyScheduleCache` — generira manjkajoče datume, obdrži obstoječe; odstrani včerajšnji datum; deduplikacija identičnih urnikov (en variantni fajl za isti razpored)
+- `getSchedulesMap(date)` — vrne pravilno varianto za dani datum; pade nazaj na trenutni urnik, ko ključ ni v predpomnilniku
+- `isRouteActiveOnDate` — vrne `true` ko je linija v aktivnem seznamu; `false` ko ni; `true` ko ni predpomnilnika (konzervativna privzeta vrednost)
+- `getScheduleDates` — vrne urejene datume iz tedenskega predpomnilnika; prazen seznam brez predpomnilnika
+- `refreshWeeklyScheduleCacheNightly` — ne naredi ničesar ko je `scheduledRefreshEnabled=false`
+
+`MarpromDtoToVaoMapper` — preslikava DTO → VAO, hashiranje urnikov (posredno pokrito z integracijskim testom).
+
+**Zakaj tako:** `VaoSerializer` vsebuje zapleten potek dela (lokalni disk → Supabase → Marprom API). Vse odvisnosti so zamenjane z mocki ali `@TempDir`, kar omogoča hitro in deterministično testiranje vsake veje.
+
+---
+
 ### Storitve (`com.sibam.service`)
 
 **Kaj testiramo:**
@@ -126,7 +143,7 @@ SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... ./mvnw test
 - **`MBajkDataService`** — `getBikeStationVaos` z in brez posnetka; `ingestBikesData` ustvari novo postajo in posnetek, ali pa znova uporabi obstoječo (CountDownLatch za asinhroni subscribe).
 - **`WeatherDataService`** — `ingestWeatherData` shrani posnetek s pravilnimi polji: brez dežja, z dežjem, prazen seznam vremena, null seznam vremena, ohrani `recordedAt` (CountDownLatch).
 - **`GTFSRTDataService`** — TripEntity s pravilnimi polji, StopDelayEntity s FK, prazen feed, podvojen ključ.
-- **`GoogleRoutesService`** — `parseRouteDetails` z GeoJSON poliliniijo in navigacijskimi koraki, prazno polje tras, encoded polyline format, brez nog, brez `Authorization` → null, `fetchPolyline` pade nazaj na origin+dest.
+- **`GoogleRoutesService`** — `parseRouteDetails` z GeoJSON polilinijo in navigacijskimi koraki, prazno polje tras, encoded polyline format, brez nog, brez `Authorization` → null, `fetchPolyline` pade nazaj na origin+dest. Dodatno: decimalna vrednost trajanja (`"7.5s"`), korak brez polilinije (rezervni doseg), točka polilinijskega koraka izven tolerance ujemanja (najbližja točka kot rezervna vrednost), encoded polyline z ločenimi koraknimi polilinjami.
 - **`BusDelayPredictionService`** (unit) — zgodnja vrnitev 0, ko ključ ni v preslikavi smeri (brez ONNX).
 
 **Zakaj CountDownLatch za asinhrono:** `MBajkDataService` in `WeatherDataService` uporabljata `.publishOn(Schedulers.boundedElastic()).subscribe(...)`, kar callback prenese na drug nitni bazen. `CountDownLatch` blokira test, dokler se subscriber ne izvede — zanesljivo brez `Thread.sleep`.
@@ -218,6 +235,10 @@ Vse zgornje + dodatno:
 |---|---|
 | `**/config/**` | Spring konfiguracijska koda — težko testirati brez polnega contexta |
 | `**/graph/model/**` | Podatkovne strukture (vozlišča, robovi, modeli) — visoko pokritost dosegajo posredno prek višjih testov |
+| `**/api/dataObjects/**` | Zapisi za ovijanje odgovorov brez logike — enakovredno `dto/**` |
+| `**/graph/routing/CostFunction.java` | Vmesnik brez implementacije |
+| `**/service/BikePredictionService.java` | Naloži ONNX modele iz Supabase pri `@PostConstruct` — ni unit testabilno brez pravih binarnih modelov |
+| `**/service/BusDelayPredictionService.java` | Enako kot zgoraj; poslovni del (iskanje v preslikavi smeri) je pokrit z unit testom |
 
 **Zakaj dve ločeni listi:** `sonar.exclusions` odstranji datoteke, kjer ni smiselne kode za analizo (generirano, boilerplate). `sonar.coverage.exclusions` ohrani datoteke v analizi za zaznavanje težav, jih pa ne kaznuje v skupnem odstotku pokritosti.
 
@@ -228,7 +249,7 @@ Vse zgornje + dodatno:
 | Komponenta | Razlog |
 |---|---|
 | `BikePredictionService` (unit) | Vse poti gredo skozi `OrtEnvironment.getEnvironment()` — statična metoda na končnem razredu. Ni mokabilno brez PowerMock. Pokrita z `BikePredictionServiceIT`. |
-| `StaticGraphBuilder` | Zahteva polno postavitev `VaoSerializer` z ~20 metodami. Logika je posredno pokrita z `AStarRouterTest`. |
+| `BusDelayPredictionService` — `@PostConstruct` pot | Prenos ONNX modela in JSON preslikave iz Supabase zahteva žive poverilnice. Pokrita z `BusDelayPredictionServiceIT`. |
 | `FirebaseAuthFilter` (veljavni žeton) | `FirebaseAuth.getInstance()` ni mokabilen s standardnim Mockitom. |
 | JPA repozitoriji | Spring Data vmesniki brez lastne logike; posredno preverjeni z vsakim DB IT testom. |
 | `SupabaseArtifactStorage` | HTTP odjemalec brez poslovne logike. |

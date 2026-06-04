@@ -159,7 +159,7 @@ class RouteAlternativeServiceTest {
     }
 
     @Test
-    void responseIncludesOriginAndDestinationCoordinates() {
+    void returnsNotFoundStatusWithEmptyRoutesWhenNoCandidate() {
         AStarRouter router = mock(AStarRouter.class);
         RouteAlternativeService service = service(router);
         when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
@@ -168,10 +168,8 @@ class RouteAlternativeServiceTest {
 
         RouteAlternativesResponse response = service.findAlternatives(46.55, 15.64, 46.56, 15.65, "Origin", "Dest", LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
 
-        assertThat(response.origin().lat()).isEqualTo(46.55);
-        assertThat(response.destination().lat()).isEqualTo(46.56);
-        assertThat(response.originAddress()).isEqualTo("Origin");
-        assertThat(response.destinationAddress()).isEqualTo("Dest");
+        assertThat(response.status()).isEqualTo("not_found");
+        assertThat(response.routes()).isEmpty();
     }
 
     private RouteAlternativeService service(AStarRouter router) {

@@ -74,12 +74,10 @@ class RouteAlternativeServiceTest {
                 .containsExactly(1000L, 1200L, 1500L);
         assertThat(response.routes().stream().flatMap(route -> route.modes().stream()).toList())
                 .contains("BUS", "BIKE");
-        assertThat(response.routes().get(2).labels())
-                .contains(RouteAlternativeLabel.BIKE_FRIENDLY.displayName());
     }
 
     @Test
-    void fastestBikeRouteKeepsBothLabels() {
+    void fastestBikeRouteUsesFastestLabel() {
         AStarRouter router = mock(AStarRouter.class);
         RouteAlternativeService service = service(router);
         when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
@@ -92,11 +90,6 @@ class RouteAlternativeServiceTest {
         assertThat(response.routes()).hasSize(1);
         assertThat(response.routes().getFirst().rank()).isEqualTo(1);
         assertThat(response.routes().getFirst().label()).isEqualTo(RouteAlternativeLabel.FASTEST.displayName());
-        assertThat(response.routes().getFirst().labels())
-                .containsExactly(
-                        RouteAlternativeLabel.FASTEST.displayName(),
-                        RouteAlternativeLabel.BIKE_FRIENDLY.displayName()
-                );
     }
 
     @Test

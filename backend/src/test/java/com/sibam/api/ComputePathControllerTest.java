@@ -44,7 +44,6 @@ class ComputePathControllerTest {
                 new GeoPoint(2, 2),
                 null,
                 RouteAlternativeLabel.FASTEST.displayName(),
-                List.of(RouteAlternativeLabel.FASTEST.displayName()),
                 100,
                 500,
                 List.of("WALK"),
@@ -82,8 +81,8 @@ class ComputePathControllerTest {
                 .andExpect(jsonPath("$.routes[0].origin.lon").value(1))
                 .andExpect(jsonPath("$.routes[0].destination.lat").value(2))
                 .andExpect(jsonPath("$.routes[0].destination.lon").value(2))
-                .andExpect(jsonPath("$.routes[0].labels[0]").value(RouteAlternativeLabel.FASTEST.displayName()))
                 .andExpect(jsonPath("$.routes[0].label").value(RouteAlternativeLabel.FASTEST.displayName()))
+                .andExpect(jsonPath("$.routes[0].labels").doesNotExist())
                 .andExpect(jsonPath("$.origin").doesNotExist())
                 .andExpect(jsonPath("$.destination").doesNotExist())
                 .andExpect(jsonPath("$.route").doesNotExist())

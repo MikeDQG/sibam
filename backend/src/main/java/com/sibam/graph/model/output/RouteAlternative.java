@@ -14,7 +14,6 @@ public record RouteAlternative(
         @JsonProperty("destination_address")
         String destinationAddress,
         String label,
-        List<String> labels,
         long totalDurationSeconds,
         int totalDistanceMeters,
         List<String> modes,

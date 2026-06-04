@@ -43,7 +43,10 @@ export const testnaPodrocja = [
       "preklop avtobus/kolo",
       "preklop Odhod ob/Prihod do",
       "izbira casa",
+      "izbira datuma za izracun poti",
       "odpiranje shranjenih poti",
+      "prazno stanje dropdowna shranjenih poti",
+      "izbira shranjene poti iz dropdowna",
       "navigacija na profil ali prijavo",
       "zoom in, zoom out in locate akcije",
     ],
@@ -54,7 +57,9 @@ export const testnaPodrocja = [
     komponente: ["usePlacesAutocomplete", "DestinationSearch", "SearchInputRow"],
     kajTestirati: [
       "vpis besedila sprozi autocomplete",
+      "nova sprememba vnosa preklice prejsnji debounce timer",
       "prazno besedilo zapre dropdown",
+      "response brez suggestions zapre dropdown brez predlogov",
       "izbira predloga nastavi labelo in koordinate",
       "clear gumb pocisti vrednost in koordinate",
       "Escape zapre dropdown",
@@ -68,11 +73,15 @@ export const testnaPodrocja = [
     komponente: ["MainAppControlOverlay", "RouteControls", "MainAppHome"],
     kajTestirati: [
       "GET /compute se poklice s pravilnimi query parametri",
+      "GET /compute vsebuje izbrani date parameter",
+      "depart nacin poslje leaveAt",
+      "arrive nacin poslje arriveBy",
       "gumb Najdi pot je disabled brez izhodisca ali cilja",
       "gumb Najdi pot je enabled, ko sta znani obe koordinati",
       "loading overlay se prikaze med racunanjem poti",
       "uspesen response nastavi routePath",
       "napacen response prikaze napako poti",
+      "network napaka pri izracunu poti prikaze napako poti",
       "ze izracunana pot preklopi gumb v Zacni",
       "aktivna pot preklopi gumb v Koncaj",
     ],
@@ -109,8 +118,11 @@ export const testnaPodrocja = [
     kajTestirati: [
       "uspesna pridobitev lokacije nastavi userLocationPosition",
       "lokacija izven podrocja Maribora se ne uporabi kot trenutna lokacija",
+      "toast za lokacijo izven podrocja se ne ponavlja ob zaporednih locate klikih",
+      "aplikacija deluje tudi brez navigator.geolocation",
       "gumb locate centrira zemljevid na uporabnika",
       "med aktivnim sledenjem se zemljevid samodejno centrira",
+      "locate gumb med aktivnim sledenjem ne sprozi dodatnega lociranja",
       "napaka geolokacije se obravnava brez sesutja aplikacije",
     ],
   },
@@ -137,6 +149,7 @@ export const testnaPodrocja = [
       "MBajk popup prikaze prosta kolesa ali stojala",
       "verjetnosti napovedi so pravilno formatirane in obarvane",
       "popup se zapre na close akcijo",
+      "zapiranje route popup-a pocisti izbrani route selection",
     ],
   },
   {
@@ -151,6 +164,9 @@ export const testnaPodrocja = [
       "po uspesnem shranjevanju se lokacija doda v state",
       "nova lokacija se prikaze na zemljevidu in v profilu",
       "napaka pri shranjevanju prikaze uporabniku sporocilo",
+      "brisanje brez auth tokena prikaze uporabniku sporocilo",
+      "napaka pri brisanju prikaze uporabniku sporocilo",
+      "sprememba barve ali ikone brez odprtega drafta ne spremeni UI-ja",
     ],
   },
   {
@@ -165,6 +181,10 @@ export const testnaPodrocja = [
       "po uspehu se shranjena pot doda v savedRoutes",
       "shranjena pot se prikaze v profilu in dropdownu shranjenih poti",
       "napaka pri shranjevanju prikaze uporabniku sporocilo",
+      "shranjevanje brez izracunane poti prikaze uporabniku sporocilo",
+      "neveljaven response pri shranjevanju poti se ne doda v savedRoutes",
+      "shranjena pot brez eksplicitnih endpointov uporabi fallback iz polyline",
+      "manjkajoca seja se pred shranjevanjem pridobi prek fetchUserSession",
     ],
   },
   {
@@ -181,8 +201,10 @@ export const testnaPodrocja = [
       "nalaganje shranjenih lokacij",
       "nalaganje shranjenih poti",
       "prikaz praznih stanj",
+      "filtriranje neveljavnih shranjenih lokacij in poti",
       "brisanje shranjene lokacije",
       "brisanje shranjene poti",
+      "napaka pri nalaganju shranjenih podatkov prikaze uporabniku sporocilo",
       "odjava uporabnika",
       "preusmeritev neprijavljenega uporabnika na login",
     ],
@@ -230,7 +252,7 @@ export const testnaPodrocja = [
   },
   {
     id: "header",
-    naziv: "Header in navigacija",
+    naziv: "Header, tema in navigacija",
     komponente: ["Header", "ThemeToggle"],
     kajTestirati: [
       "klik na logo vodi na zacetno stran",
@@ -239,6 +261,9 @@ export const testnaPodrocja = [
       "gumb Prijava/Odjava ima pravilno stanje",
       "header spremeni stil po scrollu",
       "preklop teme deluje na vseh glavnih straneh",
+      "ThemeProvider uporabi shranjeno temo iz localStorage",
+      "ThemeProvider uporabi sistemsko temo, ce shranjena vrednost ni veljavna",
+      "useTheme zunaj ThemeProvider vrze jasno napako",
     ],
   },
   {
@@ -291,8 +316,9 @@ Za datoteke, ki so bile prej prikazane kot 0% pokrite, obstajajo naslednji namen
 - `header.test.tsx` testira dejanski `Header` z router in Firebase mocki.
 - `landing-page.test.tsx` testira `App`, `LandingPage`, `FeaturesSection`, `Footer` in hero navigacijo.
 - `sonner.test.tsx` testira konfiguracijo `Toaster`.
-- `use-places-autocomplete.test.tsx` testira hook za Google Places autocomplete.
-- `main-app-home.test.tsx` testira orkestracijo `MainAppHome` prek mockanih mej sistema.
+- `theme-provider.test.tsx` testira inicializacijo, preklop in guard za `ThemeProvider`.
+- `use-places-autocomplete.test.tsx` testira hook za Google Places autocomplete, debounce, preklic prejsnjega timerja, prazne response in napake.
+- `main-app-home.test.tsx` testira orkestracijo `MainAppHome` prek mockanih mej sistema, vkljucno z geolokacijo, aktivnim sledenjem, shranjevanjem in napakami API klicev.
 - `auth-forms.test.tsx`, `user-session-provider.test.tsx`, `account-page.test.tsx` in `main-app-control-overlay.test.tsx` testirajo dodatne uspesne ter neuspesne integracijske tokove, ki dvignejo pokritost auth, profila in glavnega overlaya.
 - `text.test.ts`, `vreme.test.tsx`, `route-popup.test.tsx`, `route-options.test.tsx`, `zemljevid.test.tsx`, `route-polyline.test.tsx` in `responsive-ui.test.tsx` testirajo dodatne veje manjsih komponent in helperjev.
 
@@ -307,6 +333,8 @@ Pri interakcijah moramo preveriti klik na polyline, klik na MBajk in avtobusne i
 Overlay je glavni kontrolni del aplikacije, zato ga je treba testirati kot uporabniski tok. Preveriti moramo enojni search bar, preklop v navodila, dva inputa za izhodisce in cilj, swap smeri, clear gumbe, shranjene poti, cas odhoda/prihoda in izbiro transportnih nacinov.
 
 Pri search baru je kljucno, da input tekst ni dovolj za iskanje poti. Test mora preveriti, da je `Najdi pot` enabled sele po izbiri predloga oziroma po nastavitvi koordinat. Pri swapu mora test pokriti primer, kjer je izbran samo cilj, uporabnik zamenja inputa in nato vnese se manjkajoco drugo lokacijo.
+
+Pri shranjenih poteh mora test pokriti tako izbiro obstojece poti kot prazno stanje dropdowna. Pri casovnih kontrolah mora test potrditi `depart`, `arrive` in izbrani datum, ker vsi trije vplivajo na query parametre za izracun poti.
 
 ### Iskanje poti
 
@@ -328,6 +356,8 @@ Preveriti je treba tudi vizualno stanje seznama: pretekli stepi, trenutni step i
 
 Testirati moramo uspesno geolokacijo, manjkajoco geolokacijo, napako browser API-ja in lokacijo izven dovoljenega obmocja. Pri aktivnem sledenju mora test potrditi, da se zemljevid centrira na uporabnika, navaden locate gumb pa mora delovati tudi brez aktivne poti.
 
+Pri aktivnem sledenju mora test potrditi tudi, da ponovni locate klik ne sprozi dodatnega `getCurrentPosition`, ker center upravlja sledenje poti. Za lokacijo izven Maribora mora biti pokrito, da se informativni toast ne ponavlja ob vec zaporednih klikih.
+
 ### Shranjevanje nove lokacije
 
 Testirati moramo celoten tok od desnega klika do prikaza nove lokacije. Obrazec mora zahtevati ime, barvo in ikono. API payload mora vsebovati uporabnika, ime, naslov, koordinate, barvo in ikono. Po uspehu se mora lokacija pojaviti brez osvezitve strani, po napaki pa mora uporabnik dobiti sporocilo.
@@ -335,6 +365,8 @@ Testirati moramo celoten tok od desnega klika do prikaza nove lokacije. Obrazec 
 ### Shranjevanje poti
 
 Testirati moramo, da poti ni mogoce shraniti brez izracunane poti in brez imena. Payload mora vsebovati `userId`, `name` in `journey`, kjer je `journey` celoten `routePath`. Po uspehu se mora nova pot prikazati v profilu in v dropdownu shranjenih poti.
+
+Pri shranjenih poteh mora biti pokrita normalizacija backend response-a: neveljavna pot se ne doda v state, pot brez eksplicitnih endpointov pa lahko uporabi fallback iz prve in zadnje `polyline` tocke.
 
 ### Uporabniski racun
 

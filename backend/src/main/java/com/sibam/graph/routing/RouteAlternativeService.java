@@ -111,16 +111,21 @@ public class RouteAlternativeService {
                 .toList();
         List<Candidate> qualityFiltered = filterQuality(sorted);
         List<RouteAlternative> alternatives = new ArrayList<>();
+        GeoPoint origin = new GeoPoint(originLat, originLon);
+        GeoPoint destination = new GeoPoint(destinationLat, destinationLon);
         for (int i = 0; i < qualityFiltered.size(); i++) {
-            alternatives.add(toAlternative(i + 1, qualityFiltered.get(i)));
+            alternatives.add(toAlternative(
+                    i + 1,
+                    qualityFiltered.get(i),
+                    origin,
+                    originAddress,
+                    destination,
+                    destinationAddress
+            ));
         }
 
         return new RouteAlternativesResponse(
                 alternatives.isEmpty() ? "not_found" : "success",
-                new GeoPoint(originLat, originLon),
-                originAddress,
-                new GeoPoint(destinationLat, destinationLon),
-                destinationAddress,
                 alternatives
         );
     }
@@ -172,14 +177,23 @@ public class RouteAlternativeService {
         return false;
     }
 
-    private RouteAlternative toAlternative(int rank, Candidate candidate) {
+    private RouteAlternative toAlternative(
+            int rank,
+            Candidate candidate,
+            GeoPoint origin,
+            String originAddress,
+            GeoPoint destination,
+            String destinationAddress
+    ) {
         Journey journey = candidate.routeCandidate().journey();
         List<String> modes = journey.legs().stream().map(Leg::mode).toList();
-        List<String> labels = labelsFor(rank, candidate, modes);
         return new RouteAlternative(
                 rank,
-                labels.getFirst(),
-                labels,
+                origin,
+                originAddress,
+                destination,
+                destinationAddress,
+                labelFor(rank, candidate),
                 candidate.durationSeconds(),
                 parseInt(journey.distance()),
                 modes,
@@ -187,24 +201,12 @@ public class RouteAlternativeService {
         );
     }
 
-    private List<String> labelsFor(int rank, Candidate candidate, List<String> modes) {
-        LinkedHashSet<RouteAlternativeLabel> labels = new LinkedHashSet<>();
+    private String labelFor(int rank, Candidate candidate) {
         if (rank == 1) {
-            labels.add(RouteAlternativeLabel.FASTEST);
+            return RouteAlternativeLabel.FASTEST.displayName();
         }
-        labels.add(candidate.label());
-        if (modes.contains(EdgeType.BIKE.name())) {
-            labels.add(RouteAlternativeLabel.BIKE_FRIENDLY);
-        }
-        if (modes.contains(EdgeType.BUS.name())) {
-            labels.add(RouteAlternativeLabel.TRANSIT_FRIENDLY);
-        }
-        if (labels.isEmpty()) {
-            labels.add(RouteAlternativeLabel.ALTERNATIVE);
-        }
-        return labels.stream()
-                .map(RouteAlternativeLabel::displayName)
-                .toList();
+
+        return candidate.label().displayName();
     }
 
     private int parseInt(String value) {

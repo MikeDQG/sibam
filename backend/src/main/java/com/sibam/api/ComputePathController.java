@@ -3,7 +3,6 @@ package com.sibam.api;
 import com.sibam.engine.VaoSerializer;
 import com.sibam.dto.ApiErrorResponse;
 import com.sibam.graph.bootstrap.GraphBootstrap;
-import com.sibam.graph.model.GeoPoint;
 import com.sibam.graph.model.output.RouteAlternativesResponse;
 import com.sibam.graph.routing.RouteAlternativeService;
 import com.sibam.graph.routing.RouteAccessDistanceException;
@@ -98,10 +97,6 @@ public class ComputePathController {
         if (response == null) {
             return ResponseEntity.ok(new RouteAlternativesResponse(
                     "not_found",
-                    new GeoPoint(originLat, originLon),
-                    resolvedOriginAddress,
-                    new GeoPoint(destinationLat, destinationLon),
-                    resolvedDestinationAddress,
                     java.util.List.of()
             ));
         }

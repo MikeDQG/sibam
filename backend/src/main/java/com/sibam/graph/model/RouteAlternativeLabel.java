@@ -1,10 +1,10 @@
 package com.sibam.graph.model;
 
 public enum RouteAlternativeLabel {
-    FASTEST("Fastest"),
-    BIKE_FRIENDLY("Bike friendly"),
-    TRANSIT_FRIENDLY("Transit friendly"),
-    ALTERNATIVE("Alternative");
+    FASTEST("Najhitrejša pot"),
+    BIKE_FRIENDLY("Zelena pot"),
+    TRANSIT_FRIENDLY("Avtobusna pot"),
+    ALTERNATIVE("Alternativa");
 
     private final String displayName;
 

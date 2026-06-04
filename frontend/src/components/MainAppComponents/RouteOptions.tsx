@@ -22,6 +22,17 @@ type RouteOptionProps = {
   onSaveRoute?: (name: string, route: RoutePath) => Promise<void>;
 };
 
+function getViewportBottomInset() {
+  const visualViewport = window.visualViewport;
+
+  if (!visualViewport) return 0;
+
+  return Math.max(
+    window.innerHeight - visualViewport.height - visualViewport.offsetTop,
+    0,
+  );
+}
+
 export const RouteOptions = ({
   routes,
   legs,
@@ -40,6 +51,7 @@ export const RouteOptions = ({
   const didDrag = useRef(false);
   const [offsetY, setOffsetY] = useState(44);
   const [maxOffsetY, setMaxOffsetY] = useState(0);
+  const [viewportBottomInset, setViewportBottomInset] = useState(0);
   const [editingRouteIndex, setEditingRouteIndex] = useState<number | null>(
     null,
   );
@@ -51,20 +63,29 @@ export const RouteOptions = ({
     const updateSheetHeight = () => {
       if (!sectionRef.current) return;
 
-      const handleHeight = 40; // toliko je visok handle za section
+      const handleHeight = 44; // h-11: v zaprtem stanju ostane vidna samo ročica
+      const sheetHeight =
+        sectionRef.current.offsetHeight || window.innerHeight * 0.8;
       const nextMaxOffset = Math.max(
-        window.innerHeight * 0.8 - handleHeight, // 0.8 ker je section visok 80vh
+        sheetHeight - handleHeight,
         0,
       );
 
+      setViewportBottomInset(getViewportBottomInset());
       setMaxOffsetY(nextMaxOffset);
       setOffsetY(computeError ? 0 : nextMaxOffset); // ob prvi renderju naj bo sheet zaprt (offset enak maxOffsetu)
     };
 
     updateSheetHeight();
     window.addEventListener("resize", updateSheetHeight);
+    window.visualViewport?.addEventListener("resize", updateSheetHeight);
+    window.visualViewport?.addEventListener("scroll", updateSheetHeight);
 
-    return () => window.removeEventListener("resize", updateSheetHeight);
+    return () => {
+      window.removeEventListener("resize", updateSheetHeight);
+      window.visualViewport?.removeEventListener("resize", updateSheetHeight);
+      window.visualViewport?.removeEventListener("scroll", updateSheetHeight);
+    };
   }, [computeError]);
 
   useEffect(() => {
@@ -147,7 +168,10 @@ export const RouteOptions = ({
     <section
       ref={sectionRef}
       className='fixed bottom-0 left-0 right-0 z-30 h-[80vh] overflow-hidden rounded-t-[18px] bg-card text-card-foreground shadow-2xl transition-transform duration-200 ease-out dark:bg-[#292927]'
-      style={{ transform: `translateY(${offsetY}px)` }}>
+      style={{
+        bottom: viewportBottomInset,
+        transform: `translateY(${offsetY}px)`,
+      }}>
       <button
         type='button'
         className='absolute left-0 right-0 top-0 z-20 flex h-11 cursor-grab touch-none items-start justify-center bg-card pt-4 active:cursor-grabbing dark:bg-[#292927]'

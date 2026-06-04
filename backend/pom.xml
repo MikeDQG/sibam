@@ -44,7 +44,10 @@
             **/cache/SupabaseArtifactStorage.java
         </sonar.exclusions>
 
-        <!-- Excluded from coverage percentage: config and model data classes -->
+        <!-- Excluded from coverage percentage:
+             - boilerplate with no testable logic (interfaces, data records used by excluded classes)
+             - ML model services: load ONNX binaries from Supabase at startup, not unit-testable
+        -->
         <sonar.coverage.exclusions>
             **/SibamApplication.java,
             **/repository/**,
@@ -52,6 +55,10 @@
             **/persistence/**,
             **/config/**,
             **/graph/model/**,
+            **/api/dataObjects/**,
+            **/graph/routing/CostFunction.java,
+            **/service/BikePredictionService.java,
+            **/service/BusDelayPredictionService.java,
             **/integration/gtfsRT/GTFSRTClient.java,
             **/integration/marprom/MarpromClient.java,
             **/integration/mbajk/MBajkClient.java,

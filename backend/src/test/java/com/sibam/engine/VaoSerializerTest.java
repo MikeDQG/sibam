@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -134,6 +136,137 @@ class VaoSerializerTest {
 
     private static Path scheduleFile(Path cacheDir, LocalDate date) {
         return cacheDir.resolve("marprom").resolve("schedules").resolve("days").resolve(date + ".json");
+    }
+
+    @Test
+    void getSchedulesMapForDateReturnsVariantMatchingDateKey() throws Exception {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+
+        Map<Integer, StopScheduleVao> mondaySchedule = schedule(10);
+        Map<Integer, StopScheduleVao> tuesdaySchedule = schedule(20);
+        writeCachedSchedule(tempDir, TODAY, "mon-key", mondaySchedule, List.of(10));
+        writeCachedSchedule(tempDir, TODAY.plusDays(1), "tue-key", tuesdaySchedule, List.of(20));
+
+        for (int i = 2; i <= 6; i++) {
+            writeCachedSchedule(tempDir, TODAY.plusDays(i), "mon-key", mondaySchedule, List.of(10));
+        }
+
+        serializer.refreshWeeklyScheduleCache();
+
+        assertThat(serializer.getSchedulesMap(TODAY)).isEqualTo(mondaySchedule);
+        assertThat(serializer.getSchedulesMap(TODAY.plusDays(1))).isEqualTo(tuesdaySchedule);
+    }
+
+    @Test
+    void getSchedulesMapForDateFallsBackToCurrentScheduleWhenKeyMissing() throws Exception {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+
+        Map<Integer, StopScheduleVao> s = schedule(5);
+        when(mapper.mapSchedules(any(LocalDate.class))).thenReturn(s);
+        when(mapper.hashSchedule(s)).thenReturn("k");
+        when(mapper.mapActiveRouteIds(any(LocalDate.class))).thenReturn(List.of(5));
+
+        serializer.refreshWeeklyScheduleCache();
+
+        LocalDate farFuture = TODAY.plusDays(100);
+        assertThat(serializer.getSchedulesMap(farFuture)).isNotNull();
+    }
+
+    @Test
+    void isRouteActiveOnDateReturnsTrueWhenRouteIsInActiveList() {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+
+        Map<Integer, StopScheduleVao> s = schedule(1);
+        when(mapper.mapSchedules(any(LocalDate.class))).thenReturn(s);
+        when(mapper.hashSchedule(s)).thenReturn("k");
+        when(mapper.mapActiveRouteIds(any(LocalDate.class))).thenReturn(List.of(42, 99));
+
+        serializer.refreshWeeklyScheduleCache();
+
+        assertThat(serializer.isRouteActiveOnDate(42, TODAY)).isTrue();
+        assertThat(serializer.isRouteActiveOnDate(99, TODAY)).isTrue();
+    }
+
+    @Test
+    void isRouteActiveOnDateReturnsFalseWhenRouteNotInActiveList() {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+
+        Map<Integer, StopScheduleVao> s = schedule(1);
+        when(mapper.mapSchedules(any(LocalDate.class))).thenReturn(s);
+        when(mapper.hashSchedule(s)).thenReturn("k");
+        when(mapper.mapActiveRouteIds(any(LocalDate.class))).thenReturn(List.of(42));
+
+        serializer.refreshWeeklyScheduleCache();
+
+        assertThat(serializer.isRouteActiveOnDate(7, TODAY)).isFalse();
+    }
+
+    @Test
+    void isRouteActiveOnDateReturnsTrueWhenNoCacheIsPresent() {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+        ReflectionTestUtils.setField(serializer, "refreshDaysAhead", 0);
+
+        Map<Integer, StopScheduleVao> s = schedule(1);
+        when(mapper.mapSchedules(any(LocalDate.class))).thenReturn(s);
+        when(mapper.hashSchedule(s)).thenReturn("k");
+        when(mapper.mapActiveRouteIds(any(LocalDate.class))).thenReturn(null);
+
+        serializer.refreshWeeklyScheduleCache();
+
+        assertThat(serializer.isRouteActiveOnDate(999, TODAY)).isTrue();
+    }
+
+    @Test
+    void getScheduleDatesReturnsSortedDates() throws Exception {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+
+        for (int i = 0; i <= 6; i++) {
+            LocalDate date = TODAY.plusDays(i);
+            writeCachedSchedule(tempDir, date, "key-" + date, schedule(i), List.of(i));
+        }
+
+        serializer.refreshWeeklyScheduleCache();
+
+        List<LocalDate> dates = serializer.getScheduleDates();
+        assertThat(dates).hasSize(7).isSorted();
+        assertThat(dates.getFirst()).isEqualTo(TODAY);
+    }
+
+    @Test
+    void getScheduleDatesReturnsEmptyWhenCacheIsEmpty() {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+
+        assertThat(serializer.getScheduleDates()).isEmpty();
+    }
+
+    @Test
+    void dateWindowThrowsForNegativeDaysAhead() {
+        assertThatThrownBy(() -> VaoSerializer.dateWindow(TODAY, -1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void dateWindowForZeroDaysAheadReturnsOnlyToday() {
+        List<LocalDate> dates = VaoSerializer.dateWindow(TODAY, 0);
+        assertThat(dates).containsExactly(TODAY);
+    }
+
+    @Test
+    void refreshWeeklyScheduleNightlyDoesNothingWhenDisabled() {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+        ReflectionTestUtils.setField(serializer, "scheduledRefreshEnabled", false);
+
+        serializer.refreshWeeklyScheduleCacheNightly();
+
+        verify(mapper, never()).mapSchedules(any(LocalDate.class));
     }
 
     private Map<Integer, StopScheduleVao> schedule(int stopId) {

@@ -80,6 +80,8 @@ export const testnaPodrocja = [
       "gumb Najdi pot je enabled, ko sta znani obe koordinati",
       "loading overlay se prikaze med racunanjem poti",
       "uspesen response nastavi routePath",
+      "response z vec routes[] normalizira vse alternative v celotne RoutePath objekte",
+      "prva fetchana alternativa postane aktivni routePath",
       "napacen response prikaze napako poti",
       "network napaka pri izracunu poti prikaze napako poti",
       "ze izracunana pot preklopi gumb v Zacni",
@@ -135,10 +137,14 @@ export const testnaPodrocja = [
     komponente: ["RouteOptions"],
     kajTestirati: [
       "route sheet se odpre po izracunu poti",
-      "prikaz trajanja, razdalje in navodil",
+      "za vsako fetchano alternativo se prikaze route card",
+      "prikaz labela, minut in unikatnih mode ikon na kartici",
+      "prva kartica je privzeto aktivna",
+      "klik na kartico nastavi aktivno pot",
+      "prikaz navodil aktivne poti",
       "zapiranje in odpiranje sheeta",
       "gumb Shrani pot je na voljo za izracunano pot",
-      "pri shranjeni poti brez variant se prikaze ustrezno sporocilo",
+      "pri shranjeni poti se prikaze ena kartica brez gumba Shrani pot",
     ],
   },
   {
@@ -180,7 +186,9 @@ export const testnaPodrocja = [
       "shrani pot se prikaze sele po izracunu poti",
       "uporabnik mora vnesti ime poti",
       "POST /api/paths se poklice s pravilnim payloadom",
-      "journey se shrani kot celoten routePath objekt",
+      "journey se shrani kot izbrani routePath objekt",
+      "pri vec alternativah se shrani pot iz kartice, pod katero je odprt save flow",
+      "celoten allFetchedRoutes seznam se ne shrani kot journey",
       "po uspehu se shranjena pot doda v savedRoutes",
       "shranjena pot se prikaze v profilu in dropdownu shranjenih poti",
       "napaka pri shranjevanju prikaze uporabniku sporocilo",
@@ -345,6 +353,8 @@ Testirati moramo, da frontend na `GET /compute` poslje pravilne koordinate, nasl
 
 Pri response-u moramo preveriti uspesen scenarij, napako backend-a, loading stanje in zakljucek loadinga v `finally`. Pomembno je tudi preveriti prehode gumbov: `Najdi pot`, `Zacni` in `Koncaj`.
 
+Backend lahko vrne vec alternativ v `routes[]`. Test mora potrditi, da `MainAppControlOverlay` normalizira vsako alternativo v poln `RoutePath` z `origin`, `destination`, naslovoma, `duration`, `distance`, `label`, `modes` in `legs`, nato pa `MainAppHome` shrani seznam v `allFetchedRoutes` in prvo pot nastavi kot aktivni `routePath`.
+
 Po uspesnem izracunu poti si overlay zapomni signature parametrov izracuna. Ce uporabnik spremeni katerikoli parameter, ki vpliva na `/compute` zahtevo, mora test potrditi, da se gumb `Zacni` spremeni nazaj v `Najdi pot`. To velja za izhodisce, cilj, `Bus`, `Kolo`, `Odhod ob`/`Prihod do`, uro in datum. Klik na `Najdi pot` pri taksni zastareli poti mora ponovno poslati `GET /compute`, ne pa sproziti `onStartRoute`.
 
 ### Prebrani stepi poti
@@ -369,7 +379,7 @@ Testirati moramo celoten tok od desnega klika do prikaza nove lokacije. Obrazec 
 
 ### Shranjevanje poti
 
-Testirati moramo, da poti ni mogoce shraniti brez izracunane poti in brez imena. Payload mora vsebovati `userId`, `name` in `journey`, kjer je `journey` celoten `routePath`. Po uspehu se mora nova pot prikazati v profilu in v dropdownu shranjenih poti.
+Testirati moramo, da poti ni mogoce shraniti brez izracunane poti in brez imena. Payload mora vsebovati `userId`, `name` in `journey`, kjer je `journey` tocno tista alternativa, za katero je uporabnik odprl save flow. Pri vec fetchanih alternativah mora test potrditi, da se ne shrani celoten `allFetchedRoutes` seznam. Po uspehu se mora nova pot prikazati v profilu in v dropdownu shranjenih poti.
 
 Pri shranjenih poteh mora biti pokrita normalizacija backend response-a: neveljavna pot se ne doda v state, pot brez eksplicitnih endpointov pa lahko uporabi fallback iz prve in zadnje `polyline` tocke.
 

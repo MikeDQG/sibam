@@ -6,18 +6,22 @@ type Props = {
 
 export const RouteLoadingOverlay = ({ onDismiss }: Props) => {
     return (
-        <div onClick={onDismiss} className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm overflow-hidden cursor-pointer">
-            <div className="relative w-full h-20 mb-8">
-                <div className="absolute top-0 left-0 animate-ride-bike">
+        <button
+            type="button"
+            onClick={onDismiss}
+            aria-label="Prekliči iskanje poti"
+            className="fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-center overflow-hidden border-0 bg-black/60 p-0 backdrop-blur-sm">
+            <span className="relative mb-8 block h-20 w-full">
+                <span className="absolute left-0 top-0 animate-ride-bike">
                     <Bike size={56} className="text-white drop-shadow-lg" />
-                </div>
-                <div className="absolute top-0 left-0 animate-ride-bus">
+                </span>
+                <span className="absolute left-0 top-0 animate-ride-bus">
                     <Bus size={48} className="text-white/80 drop-shadow-lg" />
-                </div>
-            </div>
-            <p className="text-sm font-medium tracking-widest text-white/80 uppercase">
+                </span>
+            </span>
+            <span className="text-sm font-medium uppercase tracking-widest text-white/80">
                 Iščem pot...
-            </p>
-        </div>
+            </span>
+        </button>
     );
 };

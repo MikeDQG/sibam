@@ -132,12 +132,17 @@ Testi za ta sklop pokrivajo:
 - `GET /compute` vsebuje `originLat`, `originLon`, `destinationLat`, `destinationLon`, naslove, `bike`, `bus` in čas,
 - pri `depart` se pošlje `leaveAt`,
 - pri `arrive` se pošlje `arriveBy`,
+- izbira datuma v dropdownu doda `date` parameter v `/compute` zahtevo,
 - če je uporabnik prijavljen, se pošlje `userId`,
 - uspešen response pokliče `onPathReceive`,
+- response z vec `routes[]` normalizira vse alternative v celotne `RoutePath` objekte,
 - napaka response-a pokliče `onPathError`,
 - network napaka pokliče `onPathError` s kodo `ROUTE_REQUEST_FAILED`,
 - loading overlay se pokaže in izgine v `finally`,
-- shranjena pot iz dropdowna nastavi route in zapre dropdown.
+- shranjena pot iz dropdowna nastavi route in zapre dropdown,
+- sprememba parametra ze izbrane ali izracunane poti gumb spremeni iz `Zacni` nazaj v `Najdi pot`,
+- klik na `Najdi pot` pri zastareli poti ponovno poslje `/compute` in ne poklice `onStartRoute`,
+- prazen dropdown shranjenih poti prikaže prazno stanje.
 
 ### 4. `MainAppHome`
 
@@ -147,19 +152,32 @@ Testi za ta sklop pokrivajo:
 
 - začetni `getCurrentPosition` nastavi center in uporabnikovo lokacijo,
 - lokacija izven Maribora nastavi fallback center in pokaže toast,
+- toast za lokacijo izven Maribora se ne ponavlja ob vec zaporednih locate klicih,
+- aplikacija deluje tudi, ko `navigator.geolocation` ni na voljo,
 - napaka geolokacije ne podre aplikacije,
 - `watchPosition` se registrira in ob unmountu počisti z `clearWatch`,
 - med aktivnim sledenjem nova lokacija centrira zemljevid in poveča zoom,
+- locate gumb med aktivnim sledenjem ne sprozi novega lociranja,
 - `handlePathReceive` prikaže pot in route sheet,
+- `handlePathReceive` shrani vse fetchane alternative v `allFetchedRoutes` in prvo nastavi kot aktivno,
+- klik na drugo route kartico nastavi drugo alternativo kot `routePath`,
 - `handlePathError` odstrani pot in prikaže napako,
 - klik na polyline nastavi `RoutePopup`,
 - klik na bus ikono nastavi bus popup,
 - klik na bike pickup/return ikono nastavi MBajk popup,
+- zapiranje route popup-a pocisti selection,
 - desni klik na zemljevid odpre obrazec za novo lokacijo,
+- sprememba barve ali ikone brez odprtega drafta ne spremeni UI-ja,
 - uspešen `POST /api/locations` doda novo lokacijo v UI,
 - neuspešen `POST /api/locations` prikaže toast,
 - uspešen `DELETE /api/locations/:id` odstrani lokacijo iz UI,
+- brisanje lokacije brez tokena prikaže toast,
+- neuspešen `DELETE /api/locations/:id` prikaže toast,
 - uspešen `POST /api/paths` doda shranjeno pot v dropdown/profilni state,
+- shranjevanje poti pri vec alternativah poslje samo izbrano alternativo kot `journey`,
+- neveljaven response pri shranjevanju poti se ne doda med shranjene poti,
+- manjkajoca seja se pred nalaganjem ali shranjevanjem pridobi prek `fetchUserSession`,
+- shranjena pot brez eksplicitnih endpointov uporabi fallback iz `polyline`,
 - poskus shranjevanja poti brez prijave prikaže toast,
 - poskus shranjevanja poti brez izračunane poti prikaže toast.
 
@@ -201,9 +219,12 @@ Trenutno stanje integracijskih testov:
 - Skupni `renderIntegration` helper obstaja v `frontend/src/test/renderIntegrationTest.tsx`.
 - `UserSessionProvider` ima integracijske teste za token, nalaganje seje, sinhronizacijo in odjavljeno stanje.
 - `AccountPage` ima integracijske teste za zascito strani, nalaganje profila, shranjenih lokacij in shranjenih poti.
-- `MainAppControlOverlay` ima integracijske teste za Places autocomplete, izbiro lokacij, `/compute`, loading, napake in preklop stanja poti.
-- `MainAppHome` ima integracijske teste za geolokacijo, callbacke zemljevida, izracunano pot, napako poti, shranjevanje in brisanje lokacij, shranjevanje poti, izbiro shranjene poti ter aktivno sledenje.
+- `MainAppControlOverlay` ima integracijske teste za Places autocomplete, izbiro lokacij, `/compute`, normalizacijo vec alternativ, loading, napake in preklop stanja poti.
+- `MainAppHome` ima integracijske teste za geolokacijo, callbacke zemljevida, izracunano pot, vec alternativ poti, napako poti, shranjevanje in brisanje lokacij, shranjevanje poti, izbiro shranjene poti ter aktivno sledenje.
 - `Login` in `Register` imata teste za osnovne auth tokove in validacijo obrazcev.
+- `AccountPage` dodatno pokriva no-token stanje, napake nalaganja, filtriranje neveljavnih shranjenih podatkov, uspesno in neuspesno brisanje lokacij/poti ter odjavo.
+- `MainAppControlOverlay` dodatno pokriva shranjene poti, prazno stanje shranjenih poti, shranjene lokacije, trenutno lokacijo kot izhodisce/cilj, izbiro datuma, swap, clear, Places API napake, fallback compute response, network napake, profile/logout, transport toggles in ponovno iskanje poti po spremembi parametrov.
+- `MainAppHome` dodatno pokriva manjkajoco geolokacijo, out-of-coverage toast brez ponavljanja, route popup callbacke, fallback endpointov shranjene poti, no-token/delete error stanja, obnovitev seje prek `fetchUserSession`, shranjevanje izbrane alternative in neveljaven saved-route response.
 
 ## Pravila za nove integracijske teste
 
@@ -224,8 +245,12 @@ Poleg prioritetnih integracijskih scenarijev so dodani tudi ciljni unit testi za
 - `frontend/src/test/unit-testi/landing-page.test.tsx` renderja `App` in landing page sklope ter preveri navigacijo hero gumba.
 - `frontend/src/test/unit-testi/header.test.tsx` renderja `Header` in preveri navigacijo, stanje prijave, odjavo, scroll stil ter theme toggle.
 - `frontend/src/test/unit-testi/sonner.test.tsx` preveri props, ki jih lokalni `Toaster` poda knjiznici `sonner`.
-- `frontend/src/test/unit-testi/use-places-autocomplete.test.tsx` preveri debounce, Places API request, normalizacijo predlogov in fallback ob napaki.
+- `frontend/src/test/unit-testi/theme-provider.test.tsx` preveri inicializacijo teme, fallback na sistemsko temo, preklop, rocno nastavitev teme in guard za `useTheme`.
+- `frontend/src/test/unit-testi/use-places-autocomplete.test.tsx` preveri debounce, preklic prejsnjega timerja, Places API request, normalizacijo predlogov, prazen response in fallback ob napaki.
 - `frontend/src/test/integracijski-testi/main-app-home.test.tsx` z mockanimi `MainMap`, `MainAppControlOverlay` in `RouteOptions` preveri stanje `MainAppHome` brez odvisnosti od realnega Google zemljevida.
+- `frontend/src/lib/text.test.ts` preveri normalizacijo besedila navodil, vkljucno s fallbackom brez `DOMParser`.
+- `frontend/src/test/unit-testi/vreme.test.tsx`, `route-popup.test.tsx`, `route-options.test.tsx`, `zemljevid.test.tsx`, `route-polyline.test.tsx` in `responsive-ui.test.tsx` pokrijejo dodatne veje manjsih komponent, ki jih SonarQube meri kot pogoje.
+- `frontend/src/test/integracijski-testi/auth-forms.test.tsx`, `user-session-provider.test.tsx`, `account-page.test.tsx` in `main-app-control-overlay.test.tsx` pokrijejo vecje auth, profilne in overlay tokove z uspesnimi ter neuspesnimi scenariji.
 
 Za pravila izkljucitve testnih helperjev in entrypoint datotek glej `pokritost-sonarqube.md`.
 
@@ -252,6 +277,7 @@ Integracijski test je uporaben, če bi padel ob realni regresiji. Primeri regres
 
 - `GET /compute` pošlje `lng` namesto `lon`,
 - `arriveBy` se ne pošlje pri načinu `Prihod do`,
+- po spremembi `Bus`, `Kolo`, ure, datuma ali lokacij gumb ostane `Zacni` in zažene staro pot,
 - shranjena pot se ne doda v `savedRoutes`,
 - neprijavljen uporabnik lahko pride do profila,
 - backend session sync ne pošlje `Authorization`,

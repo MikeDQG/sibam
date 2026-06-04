@@ -18,19 +18,38 @@ import com.sibam.service.BikePredictionService;
 import com.sibam.service.BusDelayPredictionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest(properties = {
-        "spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration",
-        "supabase.url=http://localhost",
-        "supabase.service-key=test",
-        "supabase.service-role-key=test",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "supabase.url=http://dummy",
+        "supabase.service-key=dummy",
+        "supabase.service-role-key=dummy",
         "supabase.cache.enabled=false",
-        "spring.task.scheduling.enabled=false"
+        "mbajk.api.key=dummy",
+        "openweathermap.api.key=dummy",
+        "spring.task.scheduling.enabled=false",
+        "schedulers.fetch-bike-ingestion.on=false",
+        "schedulers.fetch-weather-ingestion.on=false",
+        "schedulers.fetch-bus-ingestion.on=false"
 })
-@ActiveProfiles("ci")
 class SibamApplicationTests {
+
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16");
+
+    static {
+        POSTGRES.start();
+    }
+
+    @DynamicPropertySource
+    static void datasourceProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+    }
 
     @MockitoBean
     VaoSerializer vaoSerializer;
@@ -83,5 +102,4 @@ class SibamApplicationTests {
     @Test
     void contextLoads() {
     }
-
 }

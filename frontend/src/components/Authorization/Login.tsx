@@ -73,10 +73,9 @@ export const Login = () => {
         aria-label='Domov'>
         <img src='logo.svg' className='h-full w-auto' alt='Logo' />
       </button>
-      <img
-        className='absolute left-0 top-0 h-full w-[80%] max-w-[80%] object-cover max-[699px]:hidden'
-        src='/LandingPage/background.jpeg'
-        alt='Background'
+      <div
+        className="absolute left-0 top-0 h-full w-[80%] max-w-[80%] bg-[url('/LandingPage/background_light.jpg')] bg-cover bg-center max-[699px]:hidden dark:bg-[url('/LandingPage/background.jpeg')]"
+        aria-hidden='true'
       />
       <ThemeToggle className='absolute right-7 top-6 z-20' />
       <div className='z-10 flex min-h-screen w-lg max-w-137.5 py-5 pr-5 max-[699px]:w-full max-[699px]:max-w-none max-[699px]:p-0 lg:w-full lg:max-w-[50%]'>

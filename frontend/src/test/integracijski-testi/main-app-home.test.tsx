@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThemeProvider } from "../../components/ThemeProvider";
 
@@ -6,6 +6,11 @@ const integrationData = vi.hoisted(() => ({
   routePath: {
     origin: { lat: 46.5547, lng: 15.6459 },
     destination: { lat: 46.562, lng: 15.65 },
+    label: "Prva alternativa",
+    rank: 1,
+    totalDurationSeconds: 300,
+    totalDistanceMeters: 350,
+    modes: ["WALK"],
     legs: [
       {
         mode: "WALK",
@@ -29,6 +34,33 @@ const integrationData = vi.hoisted(() => ({
     id: "123e4567-e89b-12d3-a456-426614174000",
     email: "session@example.com",
     name: "Test User",
+  },
+  savedRouteWithoutEndpoints: {
+    id: "123e4567-e89b-12d3-a456-426614174204",
+    name: "Pot brez endpointov",
+    journey: {
+      duration: "900000",
+      distance: "1800",
+      legs: [
+        {
+          mode: "BUS",
+          duration: "900000",
+          distance: "1800",
+          polyline: [
+            { lat: 46.5547, lon: 15.6459 },
+            { lat: 46.562, lon: 15.65 },
+          ],
+          steps: [
+            {
+              instruction: "Pelji se brez endpointov",
+              startPolylineIndex: "0",
+              endPolylineIndex: "1",
+            },
+          ],
+        },
+      ],
+    },
+    createdAt: "2026-05-21T12:00:00.000Z",
   },
   savedRoute: {
     id: "123e4567-e89b-12d3-a456-426614174203",
@@ -93,8 +125,25 @@ vi.mock("../../components/MainAppComponents/MainMap", () => ({
       icon: "home";
     } | null;
     savedLocations?: { id: string; name: string }[];
+    legs?: typeof integrationData.routePath.legs;
+    selectedLeg?: unknown;
     onCameraChanged?: (center: { lat: number; lng: number }, zoom: number) => void;
     onMapContextSelect?: (position: { lat: number; lng: number }) => void;
+    onLegClick?: (
+      leg: typeof integrationData.routePath.legs[number],
+      position: { lat: number; lon: number },
+    ) => void;
+    onBusIconClick?: (
+      leg: typeof integrationData.routePath.legs[number],
+      position: { lat: number; lon: number },
+      previousLeg?: typeof integrationData.routePath.legs[number],
+    ) => void;
+    onBikeIconClick?: (
+      leg: typeof integrationData.routePath.legs[number],
+      position: { lat: number; lon: number },
+      source: "bikePickupIcon",
+    ) => void;
+    onRoutePopupClose?: () => void;
     onMapLocationColorChange?: (color: string) => void;
     onMapLocationIconChange?: (icon: "school") => void;
     onMapLocationSave?: (draft: {
@@ -121,6 +170,40 @@ vi.mock("../../components/MainAppComponents/MainMap", () => ({
         onClick={() => props.onMapContextSelect?.({ lat: 46.5547, lng: 15.6459 })}>
         Desni klik zemljevida
       </button>
+      <button type='button' onClick={() => props.onMapLocationColorChange?.("#16a34a")}>
+        Spremeni barvo brez drafta
+      </button>
+      <button type='button' onClick={() => props.onMapLocationIconChange?.("school")}>
+        Spremeni ikono brez drafta
+      </button>
+      {props.legs?.[0] && (
+        <>
+          <button
+            type='button'
+            onClick={() => props.onLegClick?.(props.legs![0], { lat: 46.5547, lon: 15.6459 })}>
+            Klikni leg
+          </button>
+          <button
+            type='button'
+            onClick={() =>
+              props.onBusIconClick?.(props.legs![0], { lat: 46.5547, lon: 15.6459 })
+            }>
+            Klikni bus ikono
+          </button>
+          <button
+            type='button'
+            onClick={() =>
+              props.onBikeIconClick?.(props.legs![0], { lat: 46.5547, lon: 15.6459 }, "bikePickupIcon")
+            }>
+            Klikni kolo ikono
+          </button>
+        </>
+      )}
+      {Boolean(props.selectedLeg) && (
+        <button type='button' onClick={props.onRoutePopupClose}>
+          Zapri route popup
+        </button>
+      )}
       {props.mapLocationDraft && (
         <>
           <span data-testid='draft-location'>
@@ -163,7 +246,11 @@ vi.mock("../../components/MainAppComponents/MainAppControlOverlay", () => ({
   MainAppControlOverlay: (props: {
     hasRoute?: boolean;
     isRouteActive?: boolean;
-    onPathReceive?: (path: typeof integrationData.routePath) => void;
+    onPathReceive?: (
+      path: typeof integrationData.routePath & {
+        routes?: Array<typeof integrationData.routePath>;
+      },
+    ) => void;
     onPathError?: (error: { code: string; message?: string }) => void;
     onZoomIn?: () => void;
     onZoomOut?: () => void;
@@ -172,8 +259,10 @@ vi.mock("../../components/MainAppComponents/MainAppControlOverlay", () => ({
     onDestinationSelect?: (place: { lat: number; lng: number } | null) => void;
     onStartRoute?: () => void;
     onEndRoute?: () => void;
-    savedRoutes?: typeof integrationData.savedRoute[];
-    onSavedRouteSelect?: (route: typeof integrationData.savedRoute) => void;
+    savedRoutes?: Array<typeof integrationData.savedRoute | typeof integrationData.savedRouteWithoutEndpoints>;
+    onSavedRouteSelect?: (
+      route: typeof integrationData.savedRoute | typeof integrationData.savedRouteWithoutEndpoints,
+    ) => void;
   }) => (
     <div>
       <span data-testid='overlay-route-state'>
@@ -207,6 +296,86 @@ vi.mock("../../components/MainAppComponents/MainAppControlOverlay", () => ({
       </button>
       <button
         type='button'
+        onClick={() =>
+          props.onPathReceive?.({
+            ...integrationData.routePath,
+            routes: [
+              {
+                ...integrationData.routePath,
+                label: "Prva alternativa",
+                rank: 1,
+                totalDurationSeconds: 300,
+              },
+              {
+                ...integrationData.routePath,
+                label: "Druga alternativa",
+                rank: 2,
+                totalDurationSeconds: 600,
+                legs: [
+                  {
+                    ...integrationData.routePath.legs[0],
+                    mode: "BUS",
+                    steps: [
+                      {
+                        instruction: "Druga pot z busom",
+                        startPolylineIndex: 0,
+                        endPolylineIndex: 1,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          })
+        }>
+        Vrni alternativne poti
+      </button>
+      <button
+        type='button'
+        onClick={() =>
+          props.onPathReceive?.({
+            ...integrationData.routePath,
+            legs: [
+              {
+                ...integrationData.routePath.legs[0],
+                mode: "BIKE",
+                steps: [
+                  {
+                    instruction: "Pelji s kolesom",
+                    startPolylineIndex: 0,
+                    endPolylineIndex: 1,
+                  },
+                ],
+              },
+            ],
+          })
+        }>
+        Vrni kolesarsko pot
+      </button>
+      <button
+        type='button'
+        onClick={() =>
+          props.onPathReceive?.({
+            ...integrationData.routePath,
+            legs: [
+              {
+                ...integrationData.routePath.legs[0],
+                mode: "SCOOTER",
+                steps: [
+                  {
+                    instruction: "Pelji drugace",
+                    startPolylineIndex: 0,
+                    endPolylineIndex: 1,
+                  },
+                ],
+              },
+            ],
+          })
+        }>
+        Vrni neznano pot
+      </button>
+      <button
+        type='button'
         onClick={() => props.onPathError?.({ code: "NO_ROUTE", message: "Ni poti." })}>
         Vrni napako poti
       </button>
@@ -233,14 +402,22 @@ vi.mock("../../components/MainAppComponents/RouteOptions", () => ({
     hasFetchedRoute?: boolean;
     isSavedRoute?: boolean;
     activeStepIndex?: number | null;
-    onSaveRoute?: (name: string) => Promise<void>;
+    onSaveRoute?: (
+      name: string,
+      route?: typeof integrationData.routePath,
+    ) => Promise<void>;
+    routes?: Array<typeof integrationData.routePath>;
+    activeRouteIndex?: number;
+    onRouteSelect?: (route: typeof integrationData.routePath, index: number) => void;
   }) => (
     <div>
       <span data-testid='route-options-state'>
         {props.canSaveRoute ? "can-save" : "cannot-save"}{" "}
         {props.hasFetchedRoute ? "fetched" : "not-fetched"}{" "}
         {props.isSavedRoute ? "saved-route" : "computed-route"} active:
-        {props.activeStepIndex ?? "none"}
+        {props.activeStepIndex ?? "none"} route-index:
+        {props.activeRouteIndex ?? "none"} routes:
+        {props.routes?.length ?? 0}
       </span>
       {props.computeError && (
         <div role='alert'>
@@ -252,6 +429,20 @@ vi.mock("../../components/MainAppComponents/RouteOptions", () => ({
       )}
       <button type='button' onClick={() => props.onSaveRoute?.("Pot domov")}>
         Shrani trenutno pot
+      </button>
+      <button
+        type='button'
+        onClick={() =>
+          props.routes?.[1] && props.onRouteSelect?.(props.routes[1], 1)
+        }>
+        Izberi drugo alternativo
+      </button>
+      <button
+        type='button'
+        onClick={() =>
+          props.routes?.[1] && props.onSaveRoute?.("Druga pot", props.routes[1])
+        }>
+        Shrani drugo pot
       </button>
     </div>
   ),
@@ -300,16 +491,22 @@ function mockHomeFetch({
   token = "id-token",
   savedLocations = [],
   savedRoutes = [],
+  fetchLocationsOk = true,
+  fetchRoutesOk = true,
   postLocationOk = true,
   deleteLocationOk = true,
   postPathOk = true,
+  postPathJourney = integrationData.routePath,
 }: {
   token?: string | null;
   savedLocations?: unknown[];
   savedRoutes?: unknown[];
+  fetchLocationsOk?: boolean;
+  fetchRoutesOk?: boolean;
   postLocationOk?: boolean;
   deleteLocationOk?: boolean;
   postPathOk?: boolean;
+  postPathJourney?: unknown;
 } = {}) {
   sessionMock.getAuthToken.mockResolvedValue(token);
   vi.stubGlobal(
@@ -338,11 +535,19 @@ function mockHomeFetch({
       }
 
       if (url.includes("/api/locations/")) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(savedLocations) });
+        return Promise.resolve({
+          ok: fetchLocationsOk,
+          status: fetchLocationsOk ? 200 : 500,
+          json: () => Promise.resolve(savedLocations),
+        });
       }
 
       if (url.includes("/api/paths/")) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(savedRoutes) });
+        return Promise.resolve({
+          ok: fetchRoutesOk,
+          status: fetchRoutesOk ? 200 : 500,
+          json: () => Promise.resolve(savedRoutes),
+        });
       }
 
       if (url.endsWith("/api/paths")) {
@@ -356,7 +561,7 @@ function mockHomeFetch({
             Promise.resolve({
               id: "123e4567-e89b-12d3-a456-426614174202",
               name: "Pot domov",
-              journey: integrationData.routePath,
+              journey: postPathJourney,
             }),
         });
       }
@@ -376,7 +581,9 @@ function renderHome() {
 
 describe("integracijski MainAppHome", () => {
   afterEach(() => {
+    sessionMock.userSession = integrationData.session;
     sessionMock.getAuthToken.mockResolvedValue("id-token");
+    sessionMock.fetchUserSession.mockResolvedValue(integrationData.session);
   });
 
   it("geolokacija nastavi uporabnikovo lokacijo v zemljevid", async () => {
@@ -391,6 +598,60 @@ describe("integracijski MainAppHome", () => {
         JSON.stringify({ lat: 46.5547, lng: 15.6459 }),
       ),
     );
+  });
+
+  it("geolokacija izven obmocja pri lociranju prikaze Maribor in toast samo enkrat", async () => {
+    const { getCurrentPosition } = mockGeolocation({
+      latitude: 46.7,
+      longitude: 15.9,
+    });
+    mockHomeFetch();
+
+    renderHome();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("main-map")).toHaveAttribute(
+        "data-center",
+        JSON.stringify({ lat: 46.5547, lng: 15.6459 }),
+      ),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Najdi mojo lokacijo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Najdi mojo lokacijo" }));
+
+    await waitFor(() =>
+      expect(toast.info).toHaveBeenCalledWith(
+        "Trenutno si izven območja pokritosti. Prikazujemo Maribor.",
+      ),
+    );
+    expect(toast.info).toHaveBeenCalledTimes(1);
+    expect(getCurrentPosition).toHaveBeenCalledTimes(3);
+  });
+
+  it("napaka geolokacije pusti fallback center", async () => {
+    const getCurrentPosition = vi.fn((_success: PositionCallback, error: PositionErrorCallback) =>
+      error({} as GeolocationPositionError),
+    );
+    const watchPosition = vi.fn(() => 77);
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition,
+        watchPosition,
+        clearWatch: vi.fn(),
+      },
+    });
+    mockHomeFetch();
+
+    renderHome();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("main-map")).toHaveAttribute(
+        "data-center",
+        JSON.stringify({ lat: 46.5547, lng: 15.6459 }),
+      ),
+    );
+    expect(getCurrentPosition).toHaveBeenCalled();
   });
 
   it("onPathReceive iz overlaya prikaže navodila in spremeni stanje overlayja", async () => {
@@ -460,6 +721,32 @@ describe("integracijski MainAppHome", () => {
     expect(fetch).toHaveBeenCalledWith(
       `https://api.test/api/locations/${locationId}`,
       expect.objectContaining({ method: "DELETE" }),
+    );
+  });
+
+  it("neprijavljenemu uporabniku zavrne brisanje lokacije", async () => {
+    mockGeolocation();
+    mockHomeFetch({
+      token: "id-token",
+      savedLocations: [
+        {
+          id: locationId,
+          name: "Dom",
+          latitude: 46.5547,
+          longitude: 15.6459,
+          color: "#b91c1c",
+          logo: "home",
+        },
+      ],
+    });
+    renderHome();
+    await screen.findByRole("button", { name: "Izbriši Dom" });
+    sessionMock.getAuthToken.mockResolvedValue(null);
+
+    fireEvent.click(screen.getByRole("button", { name: "Izbriši Dom" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Za brisanje lokacije moraš biti prijavljen."),
     );
   });
 
@@ -533,6 +820,88 @@ describe("integracijski MainAppHome", () => {
     expect(screen.getByTestId("overlay-route-state")).toHaveTextContent("inactive");
   });
 
+  it("med sledenjem GPS update centrira zemljevid, locate gumb pa ne sprozi novega lociranja", async () => {
+    let watchSuccess: PositionCallback | null = null;
+    const getCurrentPosition = vi.fn((success: PositionCallback) =>
+      success({
+        coords: {
+          latitude: 46.5547,
+          longitude: 15.6459,
+          accuracy: 5,
+        },
+      } as GeolocationPosition),
+    );
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition,
+        watchPosition: vi.fn((success: PositionCallback) => {
+          watchSuccess = success;
+          return 77;
+        }),
+        clearWatch: vi.fn(),
+      },
+    });
+    mockHomeFetch();
+    renderHome();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vrni izračunano pot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Začni sledenje" }));
+    const callsBeforeLocate = getCurrentPosition.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: "Najdi mojo lokacijo" }));
+    expect(getCurrentPosition).toHaveBeenCalledTimes(callsBeforeLocate);
+
+    act(() => {
+      watchSuccess?.({
+        coords: {
+          latitude: 46.555,
+          longitude: 15.646,
+          accuracy: 5,
+        },
+      } as GeolocationPosition);
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("main-map")).toHaveAttribute(
+        "data-center",
+        JSON.stringify({ lat: 46.555, lng: 15.646 }),
+      ),
+    );
+    expect(screen.getByTestId("main-map")).toHaveAttribute("data-zoom", "17");
+  });
+
+  it("podpira razlicne mode labele pri aktivnem koraku", async () => {
+    mockGeolocation();
+    mockHomeFetch();
+    renderHome();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vrni kolesarsko pot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Začni sledenje" }));
+    expect(await screen.findByText("Kolo")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vrni neznano pot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Začni sledenje" }));
+    expect(await screen.findByText("SCOOTER")).toBeInTheDocument();
+  });
+
+  it("kliki na elemente poti odprejo in zaprejo route popup selection", async () => {
+    mockGeolocation();
+    mockHomeFetch();
+    renderHome();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vrni izračunano pot" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Klikni leg" }));
+    expect(screen.getByRole("button", { name: "Zapri route popup" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Zapri route popup" }));
+    expect(screen.queryByRole("button", { name: "Zapri route popup" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Klikni bus ikono" }));
+    expect(screen.getByRole("button", { name: "Zapri route popup" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Klikni kolo ikono" }));
+    expect(screen.getByRole("button", { name: "Zapri route popup" })).toBeInTheDocument();
+  });
+
   it("izbira shranjene poti nastavi stanje shranjene poti", async () => {
     mockGeolocation();
     mockHomeFetch({ savedRoutes: [integrationData.savedRoute] });
@@ -545,6 +914,36 @@ describe("integracijski MainAppHome", () => {
     expect(screen.getByText("Pelji se do Tabora")).toBeInTheDocument();
     expect(screen.getByTestId("route-options-state")).toHaveTextContent("saved-route");
     expect(screen.getByTestId("overlay-route-state")).toHaveTextContent("has-route");
+  });
+
+  it("shranjena pot brez endpointov uporabi fallback iz polyline in bus labelo", async () => {
+    mockGeolocation();
+    mockHomeFetch({ savedRoutes: [integrationData.savedRouteWithoutEndpoints] });
+    renderHome();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Izberi shranjeno pot Pot brez endpointov" }),
+    );
+
+    expect(screen.getByTestId("route-options-state")).toHaveTextContent("saved-route");
+    fireEvent.click(screen.getByRole("button", { name: "Začni sledenje" }));
+    expect(await screen.findByText("Bus")).toBeInTheDocument();
+    expect(screen.getAllByText("Pelji se brez endpointov")).toHaveLength(2);
+  });
+
+  it("zacetek sledenja deluje tudi brez znane uporabnikove lokacije", async () => {
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: undefined,
+    });
+    mockHomeFetch();
+    renderHome();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vrni izračunano pot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Začni sledenje" }));
+
+    expect(screen.getByTestId("overlay-route-state")).toHaveTextContent("active");
+    expect(screen.getByTestId("main-map")).toHaveAttribute("data-zoom", "14");
   });
 
   it("shranjevanje poti pošlje POST in doda shranjeno pot", async () => {
@@ -566,6 +965,76 @@ describe("integracijski MainAppHome", () => {
         }),
       }),
     );
+  });
+
+  it("vec fetchanih poti shrani vse alternative, klik nastavi aktivno in shrani izbrano", async () => {
+    mockGeolocation();
+    mockHomeFetch();
+    renderHome();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vrni alternativne poti" }));
+
+    expect(screen.getByTestId("route-options-state")).toHaveTextContent("routes:2");
+    expect(screen.getByTestId("route-options-state")).toHaveTextContent("route-index:0");
+    expect(screen.getByText("Pojdi proti postaji")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Izberi drugo alternativo" }));
+
+    expect(screen.getByTestId("route-options-state")).toHaveTextContent("route-index:1");
+    expect(screen.getByText("Druga pot z busom")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Shrani drugo pot" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Pot je shranjena."));
+    const postPathCall = vi
+      .mocked(fetch)
+      .mock.calls.find(([url]) => String(url).endsWith("/api/paths"));
+    const body = JSON.parse(String(postPathCall?.[1]?.body));
+
+    expect(body.name).toBe("Druga pot");
+    expect(body.journey.label).toBe("Druga alternativa");
+    expect(body.journey.legs[0].steps[0].instruction).toBe("Druga pot z busom");
+    expect(body.journey.routes).toBeUndefined();
+  });
+
+  it("pri manjkajoci seji jo pridobi pred nalaganjem in shranjevanjem", async () => {
+    sessionMock.userSession = null as never;
+    mockGeolocation();
+    mockHomeFetch();
+    renderHome();
+
+    await waitFor(() => expect(sessionMock.fetchUserSession).toHaveBeenCalledWith("id-token"));
+    fireEvent.click(screen.getByRole("button", { name: "Desni klik zemljevida" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Shrani draft lokacijo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Vrni izračunano pot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Shrani trenutno pot" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Pot je shranjena."));
+    expect(sessionMock.fetchUserSession).toHaveBeenCalled();
+  });
+
+  it("ne doda poti, ce POST vrne neveljaven journey", async () => {
+    mockGeolocation();
+    mockHomeFetch({ postPathJourney: { legs: [{ mode: "WALK", polyline: [] }] } });
+    renderHome();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vrni izračunano pot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Shrani trenutno pot" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Pot je shranjena."));
+    expect(
+      screen.queryByRole("button", { name: "Izberi shranjeno pot Pot domov" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shranjevanje poti brez izracunane poti prikaze napako", async () => {
+    mockGeolocation();
+    mockHomeFetch();
+    renderHome();
+
+    fireEvent.click(screen.getByRole("button", { name: "Shrani trenutno pot" }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Najprej izračunaj pot."));
   });
 
   it("neprijavljenemu uporabniku zavrne shranjevanje lokacije in poti", async () => {
@@ -602,5 +1071,128 @@ describe("integracijski MainAppHome", () => {
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith("Poti ni bilo mogoče shraniti. Poskusite znova."),
     );
+  });
+
+  it("napaka pri brisanju shranjene lokacije prikaze toast", async () => {
+    mockGeolocation();
+    mockHomeFetch({
+      deleteLocationOk: false,
+      savedLocations: [
+        {
+          id: locationId,
+          name: "Dom",
+          latitude: 46.5547,
+          longitude: 15.6459,
+          color: "#b91c1c",
+          logo: "home",
+        },
+      ],
+    });
+    renderHome();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Izbriši Dom" }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Lokacije ni bilo mogoče izbrisati."));
+  });
+
+  it("ignorira spremembo barve in ikone, ko draft lokacije ni odprt", async () => {
+    mockGeolocation();
+    mockHomeFetch();
+    renderHome();
+
+    fireEvent.click(screen.getByRole("button", { name: "Spremeni barvo brez drafta" }));
+    fireEvent.click(screen.getByRole("button", { name: "Spremeni ikono brez drafta" }));
+
+    expect(screen.queryByTestId("draft-location")).not.toBeInTheDocument();
+  });
+
+  it("napake pri nalaganju shranjenih lokacij in poti prikazejo toast sporocila", async () => {
+    mockGeolocation();
+    mockHomeFetch({ fetchLocationsOk: false, fetchRoutesOk: false });
+
+    renderHome();
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Shranjene lokacije niso bile naložene."),
+    );
+    expect(toast.error).toHaveBeenCalledWith("Shranjene poti niso bile naložene.");
+  });
+
+  it("deluje tudi, ko geolokacija v brskalniku ni na voljo", async () => {
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: undefined,
+    });
+    mockHomeFetch();
+
+    renderHome();
+
+    expect(screen.getByTestId("main-map")).toHaveAttribute(
+      "data-center",
+      JSON.stringify({ lat: 46.5547, lng: 15.6459 }),
+    );
+  });
+
+  it("filtrira neveljavne shranjene lokacije in poti", async () => {
+    mockGeolocation();
+    mockHomeFetch({
+      savedLocations: [
+        {
+          id: locationId,
+          name: "Dom",
+          latitude: 46.5547,
+          longitude: 15.6459,
+          color: null,
+          logo: "neznano",
+        },
+        {
+          id: "123e4567-e89b-12d3-a456-426614174299",
+          name: "Brez koordinat",
+          latitude: Number.NaN,
+          longitude: 15.6459,
+        },
+      ],
+      savedRoutes: [
+        {
+          id: "123e4567-e89b-12d3-a456-426614174206",
+          name: "Brez journey",
+        },
+        {
+          id: "123e4567-e89b-12d3-a456-426614174204",
+          name: "   ",
+          journey: {
+            ...integrationData.routePath,
+            duration: "900000",
+            distance: "1800",
+            originAddress: "Center",
+            destination_address: "Tabor",
+          },
+          createdAt: "2026-05-21T12:00:00.000Z",
+        },
+        {
+          id: "123e4567-e89b-12d3-a456-426614174205",
+          name: "Brez polyline",
+          journey: {
+            legs: [{ mode: "WALK", polyline: [] }],
+          },
+        },
+        {
+          id: "123e4567-e89b-12d3-a456-426614174207",
+          name: "Brez legs",
+          journey: {},
+        },
+      ],
+    });
+
+    renderHome();
+
+    expect(await screen.findByRole("button", { name: "Izbriši Dom" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Izbriši Brez koordinat" })).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Izberi shranjeno pot Shranjena pot" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Izberi shranjeno pot Brez polyline" }),
+    ).not.toBeInTheDocument();
   });
 });

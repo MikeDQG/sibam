@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ComponentType, ReactElement } from "react";
+import type { ReactElement } from "react";
 import { ThemeProvider } from "../components/ThemeProvider";
 import type { RouteLeg, RoutePath } from "../components/MainAppComponents/RoutePolyline";
 import type { PlacesAutocomplete } from "../components/MainAppComponents/MainAppControlOverlayComponents/types";
@@ -29,6 +29,8 @@ export const routeLegs: RouteLeg[] = [
     mode: "BUS",
     duration: "900000",
     distance: "1800",
+    code: "6",
+    headsignName: "Bresternica - Avtobusna postaja",
     departure: "1767355200000",
     busDelayPrediction: { predictedBoardingDelaySeconds: 180 },
     polyline: [
@@ -60,7 +62,26 @@ export const routeLegs: RouteLeg[] = [
 export const routePath: RoutePath = {
   origin: mariborCenter,
   destination: tabor,
+  label: "Najhitrejša pot",
+  rank: 1,
+  totalDurationSeconds: 1860,
+  totalDistanceMeters: 2450,
+  duration: "1860000",
+  distance: "2450",
+  modes: ["WALK", "BUS", "BIKE", "WALK"],
   legs: routeLegs,
+};
+
+export const alternativeRoutePath: RoutePath = {
+  ...routePath,
+  label: "Brez kolesa",
+  rank: 2,
+  totalDurationSeconds: 2100,
+  totalDistanceMeters: 3200,
+  duration: "2100000",
+  distance: "3200",
+  modes: ["WALK", "BUS"],
+  legs: [routeLegs[0], routeLegs[1]],
 };
 
 export const savedRoute = {
@@ -84,12 +105,8 @@ export const savedLocation = {
 };
 
 export const routeOptions = [
-  {
-    title: "Najhitrejša pot",
-    time: "31 min",
-    className: "bg-red-700 text-white ring-4",
-    icons: [(() => <span>Bus</span>) as ComponentType],
-  },
+  routePath,
+  alternativeRoutePath,
 ];
 
 export function renderWithTheme(ui: ReactElement) {

@@ -51,10 +51,11 @@ Klik na polyline odsek poti odpre popup s povzetkom tega odseka:
 Klik na avtobusno ikono odpre popup z informacijami o avtobusu:
 
 - naslov `Avtobus`;
+- linijo avtobusa iz `leg.code` na levi in smer/naziv linije iz `leg.headsignName` na desni, ce sta podana;
 - cas odhoda avtobusa, ce je podan v `leg.departure`.
 - pricakovana zamuda v minutah, ce je podana v `leg.busDelayPrediction.predictedBoardingDelaySeconds`.
 
-Zamuda avtobusa je v podatkih podana v sekundah. `RoutePopup` jo pri prikazu pretvori v minute z `Math.round(predictedBoardingDelaySeconds / 60)` in vrstico prikaze z labelom `Pricakovana zamuda (min)`. Ce `busDelayPrediction` manjka, ce `predictedBoardingDelaySeconds` ni stevilo ali vrednost ni koncna, se vrstica za zamudo ne prikaze.
+Zamuda avtobusa je v podatkih podana v sekundah. `RoutePopup` jo pri prikazu pretvori v minute z `Math.floor(predictedBoardingDelaySeconds / 60)`, zato se vrednosti pod polno minuto prikazejo kot `0`. Vrstica se prikaze z labelom `Pricakovana zamuda (min)`. Ce `busDelayPrediction` manjka, ce `predictedBoardingDelaySeconds` ni stevilo ali vrednost ni koncna, se vrstica za zamudo ne prikaze.
 
 Ce je avtobusni leg neposredno po kolesarskem leg-u, popup lahko prikaze tudi stevilo prostih stojal za oddajo kolesa iz prejsnjega kolesarskega leg-a.
 
@@ -162,7 +163,7 @@ Brisanje zahteva prijavljenega uporabnika in avtentikacijski token.
 
 Pot lahko uporabnik shrani po tem, ko je pot izracunana. V spodnjem route sheetu se pri route option karticah prikaze gumb `Shrani pot`. Ob kliku uporabnik vnese ime poti in potrdi shranjevanje.
 
-Frontend shrani celoten `routePath` objekt kot `journey`, skupaj z `userId` in imenom poti. To pomeni, da shranjena pot vsebuje ze izracunane `legs`, `polyline`, `steps`, trajanje, razdaljo in naslovne podatke, ce jih backend vrne.
+Frontend shrani izbrano route alternativo kot `journey`, skupaj z `userId` in imenom poti. Ce backend vrne vec poti v `routes[]`, se ne shrani celoten seznam alternativ, ampak samo pot iz kartice, pod katero je uporabnik odprl flow `Shrani pot`. To pomeni, da shranjena pot vsebuje ze izracunane `legs`, `polyline`, `steps`, trajanje, razdaljo in naslovne podatke za izbrano alternativo.
 
 Shranjene poti se prikazujejo:
 
@@ -184,11 +185,13 @@ Ko uporabnik klikne `Najdi pot`, frontend poklice endpoint `GET /compute` z quer
 - `leaveNow`: trenutno vedno `false`;
 - `bike`: `true` ali `false`, glede na toggle `Kolo`;
 - `bus`: `true` ali `false`, glede na toggle `Bus`;
+- `date`: izbrani datum iz date kontrol;
 - `leaveAt`: izbrana ura, kadar je izbran nacin `Odhod ob`;
 - `arriveBy`: izbrana ura, kadar je izbran nacin `Prihod do`;
+- `date`: izbrani datum v obliki `YYYY-MM-DD`; privzeto je danasnji datum;
 - `userId`: Firebase UID, ce je uporabnik prijavljen.
 
-Frontend poslje samo enega od parametrov `leaveAt` ali `arriveBy`, odvisno od izbranega time mode-a.
+Frontend poslje samo enega od parametrov `leaveAt` ali `arriveBy`, odvisno od izbranega time mode-a. Parameter `date` se vedno poslje skupaj z uro, ker backend potrebuje kombinacijo datuma in ure za iskanje ustreznih voznih redov.
 
 ### Izbira trenutne lokacije kot parameter poti
 
@@ -215,22 +218,19 @@ Shranjeno pot uporabnik izbere v dropdownu `Shranjene poti`. Ob izbiri se:
 - input izhodisca napolni z `originLabel` ali privzetim tekstom;
 - input cilja napolni z `destinationLabel` ali privzetim tekstom;
 - iz shranjene poti se dolocita zacetek in cilj;
-- `routePath` se nastavi neposredno na `route.journey`;
+- `routePath` se nastavi na `route.journey`;
+- `allFetchedRoutes` se nastavi na eno pot, ki predstavlja shranjeni `journey`;
 - zemljevid se prilagodi shranjeni poti.
 
-Ker je shranjena pot ze izracunan `journey`, za njo niso na voljo razlicni nacini poti oziroma route option alternative. V route sheetu se zato prikaze sporocilo:
+Ker je shranjena pot ze izracunan `journey`, se v route sheetu prikaze ena kartica z imenom shranjene poti. Gumb `Shrani pot` pri tej kartici ni prikazan, ker ni smiselno ponovno shranjevanje iste shranjene poti. Se vedno pa je mogoc prikaz poti na zemljevidu, prikaz navodil, klik na odseke poti in zagon sledenja poti.
 
-```text
-Razlicni nacini za shranjeno pot niso na voljo.
-```
-
-Za shranjeno pot prav tako ni smiselno ponovno shranjevanje iste poti prek route option kartic, ker route option kartice niso prikazane. Se vedno pa je mogoc prikaz poti na zemljevidu, prikaz navodil, klik na odseke poti in zagon sledenja poti.
+Ce uporabnik pri ze izbrani shranjeni poti spremeni parameter, ki vpliva na izracun poti, se pot obravnava kot zastarela. Gumb `Zacni` se zato spremeni nazaj v `Najdi pot`, naslednji klik pa ponovno poklice `/compute` z novimi parametri.
 
 ## Implementacija
 
 ### Glavne komponente
 
-`MainAppHome` je glavni state owner za zemljevid, trenutno pot, trenutno lokacijo uporabnika, shranjene lokacije, shranjene poti, popupe in aktivno sledenje poti.
+`MainAppHome` je glavni state owner za zemljevid, trenutno aktivno pot, vse fetchane route alternative, trenutno lokacijo uporabnika, shranjene lokacije, shranjene poti, popupe in aktivno sledenje poti.
 
 `MainAppControlOverlay` skrbi za:
 
@@ -240,6 +240,7 @@ Za shranjeno pot prav tako ni smiselno ponovno shranjevanje iste poti prek route
 - izbiro shranjene poti;
 - klic `/compute`;
 - hranjenje `originCoords`, `destinationCoords`, mode toggle stanja in time mode stanja;
+- hranjenje signature zadnjega uspesnega izracuna poti;
 - povezovanje overlay podkomponent s callbacki iz `MainAppHome`.
 
 Vizualni deli overlaya so razdeljeni v `MainAppControlOverlayComponents`:
@@ -247,7 +248,7 @@ Vizualni deli overlaya so razdeljeni v `MainAppControlOverlayComponents`:
 - `DestinationSearch` prikaze enovrsticni cilj pred odpiranjem navodil za pot.
 - `DirectionsInputs` prikaze inputa za izhodisce in cilj ter gumb za zamenjavo smeri.
 - `SearchInputRow` je skupna vrstica za Places autocomplete input.
-- `RouteControls` prikaze toggle `Bus`/`Kolo`, izbiro `Odhod ob` ali `Prihod do`, casovni input, gumb `Najdi pot`/`Zacni`/`Koncaj` in gumb za shranjene poti.
+- `RouteControls` prikaze toggle `Bus`/`Kolo`, izbiro `Odhod ob` ali `Prihod do`, casovni input (`HH:MM`), gumb za izbiro datuma, gumb `Najdi pot`/`Zacni`/`Koncaj` in gumb za shranjene poti. Gumb za datum odpre dropdown z naslednjimi 7 dnevi, formatiranimi v slovenskem kratkem zapisu (npr. *tor, 3. 6.*). Dropdown se rendira prek `createPortal` v `document.body`, da se izogne rezanju vsebine s strani starsevskih elementov z `overflow: hidden`.
 - `MapControls`, `MapZoomLocateButtons` in `ProfileButton` pokrivajo desni panel z map kontrolami, temo in profilom oziroma prijavo/odjavo.
 - `types.ts` hrani skupne tipe za overlay podkomponente.
 
@@ -268,7 +269,7 @@ Podkomponente ne izvajajo `/compute` in ne spreminjajo globalnega route state-a 
 
 `RoutePopup` skrbi za vsebino popupov, ki se odprejo ob kliku na pot ali route ikone.
 
-`RouteOptions` skrbi za spodnji route sheet, route option kartice, shranjevanje poti in seznam vseh stepov.
+`RouteOptions` skrbi za spodnji route sheet, kartice vseh fetchanih route alternativ, izbiro aktivne poti, shranjevanje izbrane poti in seznam stepov aktivne poti.
 
 `MapLocationPopup` skrbi za formo za ustvarjanje nove shranjene lokacije.
 
@@ -291,6 +292,7 @@ Vsak `RouteLeg` vsebuje:
 - `duration`;
 - `distance`;
 - podatke za bus ali bike, kot so `departure`, `freeBikes`, `freeStands`;
+- opcijska `code` in `headsignName` pri `BUS` legih;
 - opcijski `busDelayPrediction` pri `BUS` legih:
   - `predictedBoardingDelaySeconds`;
 - opcijski `bikePrediction` pri `BIKE` legih:
@@ -318,24 +320,33 @@ Vsak `RouteStep` vsebuje:
 2. `MainAppControlOverlay` hrani `originCoords`, `destinationCoords`, mode toggle in time mode.
 3. Klik na `Najdi pot` sestavi `URLSearchParams`.
 4. Frontend poklice `GET ${apiUrl}/compute?...`.
-5. Uspešen response se parse-a kot `RoutePath`.
-6. `onPathReceive` posreduje rezultat v `MainAppHome`.
-7. `MainAppHome` nastavi `routePath`.
-8. `MainMap` dobi `routePath.legs` in jih prikaze prek `RoutePolyline`.
-9. `RouteOptions` dobi iste `legs` in iz njih prikaze navodila.
+5. Uspešen response se normalizira v seznam `RoutePath` alternativ iz `routes[]`.
+6. `onPathReceive` posreduje prvo pot skupaj z normaliziranim `routes` seznamom v `MainAppHome`.
+7. `MainAppHome` shrani vse alternative v `allFetchedRoutes`, prvo alternativo nastavi kot `routePath` in `activeFetchedRouteIndex` nastavi na `0`.
+8. `MainMap` dobi `routePath.legs` aktivne poti in jih prikaze prek `RoutePolyline`.
+9. `RouteOptions` dobi `allFetchedRoutes`, prikaze kartico za vsako alternativo in iz `routePath.legs` prikaze navodila aktivne poti.
 
-Ce backend vrne napako, se response prebere v `RouteComputeError`, `routePath` se pocisti, route sheet pa prikaze `RouteErrorBox`.
+Ce uporabnik klikne drugo kartico v `RouteOptions`, `MainAppHome` to alternativo nastavi kot `routePath`, posodobi `activeFetchedRouteIndex`, prekine aktivno sledenje, zapre odprte route popupe in ponovno prilagodi zemljevid poti.
+
+Kartica poti prikaze `label`, trajanje iz `totalDurationSeconds` v minutah in unikatne ikone nacinov poti iz `modes` (`WALK`, `BIKE`, `BUS`) v vrstnem redu prve pojavitve. Aktivna kartica je rdeca, neaktivne kartice so svetlo sive z nevtralno obrobo.
+
+Ce backend vrne napako, se response prebere v `RouteComputeError`, `routePath` in `allFetchedRoutes` se pocistita, route sheet pa prikaze `RouteErrorBox`.
+
+Po uspesnem izracunu `MainAppControlOverlay` shrani signature parametrov, ki so bili uporabljeni za `/compute`: koordinati izhodisca in cilja, naslova, `Bus`, `Kolo`, nacin casa, uro in datum. Dokler se trenutni parametri ujemajo s tem signature-om, gumb po izracunu prikazuje `Zacni`.
+
+Ce se po izracunu spremeni katerikoli od teh parametrov, trenutna pot ni vec usklajena z nastavitvami v overlayu. `RouteControls` zato gumb preklopi nazaj na `Najdi pot`. Klik na tak gumb ponovno poslje `/compute`; `onStartRoute` se poklice samo, kadar pot obstaja in trenutni parametri niso zastareli.
 
 ### Tok aktivnega sledenja poti
 
 1. Ko obstaja `routePath`, gumb `Najdi pot` postane `Zacni`.
-2. Klik na `Zacni` nastavi `isFollowingRoute` na `true`.
-3. Med aktivnim sledenjem se uporabnikova lokacija polling-a in opazuje prek Geolocation API.
-4. Zemljevid se centrira na uporabnika in zoom se dvigne vsaj na `17`.
-5. `MainAppHome` z `getActiveRouteStep` izracuna aktualni step in njegov `stepIndex`.
-6. Ce obstaja aktualni step, se prikaze card z navodilom.
-7. `RouteOptions` prejme `activeStepIndex` in posodobi videz krogcev v seznamu navodil.
-8. Klik na `Koncaj` ustavi aktivno sledenje in ponovno prilagodi pogled poti.
+2. Ce uporabnik pred zacetkom sledenja spremeni parametre poti, se gumb vrne v `Najdi pot` in pot se mora najprej ponovno izracunati.
+3. Klik na `Zacni` nastavi `isFollowingRoute` na `true`.
+4. Med aktivnim sledenjem se uporabnikova lokacija polling-a in opazuje prek Geolocation API.
+5. Zemljevid se centrira na uporabnika in zoom se dvigne vsaj na `17`.
+6. `MainAppHome` z `getActiveRouteStep` izracuna aktualni step in njegov `stepIndex`.
+7. Ce obstaja aktualni step, se prikaze card z navodilom.
+8. `RouteOptions` prejme `activeStepIndex` in posodobi videz krogcev v seznamu navodil.
+9. Klik na `Koncaj` ustavi aktivno sledenje in ponovno prilagodi pogled poti.
 
 ### Nalaganje shranjenih podatkov
 

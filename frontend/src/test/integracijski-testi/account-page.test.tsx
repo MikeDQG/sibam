@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThemeProvider } from "../../components/ThemeProvider";
 
 const authMock = vi.hoisted(() => ({
@@ -27,7 +27,7 @@ const sessionMock = vi.hoisted(() => ({
     id: "123e4567-e89b-12d3-a456-426614174000",
     email: "session@example.com",
     name: "Test User",
-  },
+  } as null | { id: string; email: string; name: string },
   getAuthToken: vi.fn().mockResolvedValue("id-token"),
   fetchUserSession: vi.fn().mockResolvedValue({
     id: "123e4567-e89b-12d3-a456-426614174000",
@@ -91,6 +91,14 @@ function mockAccountFetch({
     },
   ],
   deleteOk = true,
+  locationsOk = true,
+  routesOk = true,
+}: {
+  locations?: unknown[];
+  routes?: unknown[];
+  deleteOk?: boolean;
+  locationsOk?: boolean;
+  routesOk?: boolean;
 } = {}) {
   vi.stubGlobal(
     "fetch",
@@ -100,11 +108,19 @@ function mockAccountFetch({
       }
 
       if (url.includes("/api/locations/")) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(locations) });
+        return Promise.resolve({
+          ok: locationsOk,
+          status: locationsOk ? 200 : 500,
+          json: () => Promise.resolve(locations),
+        });
       }
 
       if (url.includes("/api/paths/")) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(routes) });
+        return Promise.resolve({
+          ok: routesOk,
+          status: routesOk ? 200 : 500,
+          json: () => Promise.resolve(routes),
+        });
       }
 
       return Promise.reject(new Error(`Unexpected URL: ${url}`));
@@ -123,6 +139,21 @@ function renderAccountPage() {
 }
 
 describe("integracijski AccountPage", () => {
+  afterEach(() => {
+    authState.user = { email: "firebase@example.com", displayName: "Test User" };
+    sessionMock.userSession = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      email: "session@example.com",
+      name: "Test User",
+    };
+    sessionMock.getAuthToken.mockResolvedValue("id-token");
+    sessionMock.fetchUserSession.mockResolvedValue({
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      email: "session@example.com",
+      name: "Test User",
+    });
+  });
+
   it("prijavljen uporabnik vidi email in naložene shranjene podatke", async () => {
     authState.user = { email: "firebase@example.com", displayName: "Test User" };
     mockAccountFetch();
@@ -138,6 +169,25 @@ describe("integracijski AccountPage", () => {
     );
   });
 
+  it("uporabi fetchUserSession, ko session ni v contextu", async () => {
+    sessionMock.userSession = null;
+    mockAccountFetch();
+
+    renderAccountPage();
+
+    expect(await screen.findByText("Dom")).toBeInTheDocument();
+    expect(sessionMock.fetchUserSession).toHaveBeenCalledWith("id-token");
+  });
+
+  it("neprijavljen Firebase uporabnik sprozi preusmeritev brez sesutja", async () => {
+    authState.user = null;
+    mockAccountFetch({ locations: [], routes: [] });
+
+    renderAccountPage();
+
+    expect(await screen.findByText("Ni še shranjenih lokacij.")).toBeInTheDocument();
+  });
+
   it("prazni API seznami prikažejo prazna stanja", async () => {
     mockAccountFetch({ locations: [], routes: [] });
 
@@ -145,6 +195,61 @@ describe("integracijski AccountPage", () => {
 
     expect(await screen.findByText("Ni še shranjenih lokacij.")).toBeInTheDocument();
     expect(await screen.findByText("Ni še shranjenih poti.")).toBeInTheDocument();
+  });
+
+  it("brez auth tokena prikaze prazna stanja brez API klica za podatke", async () => {
+    sessionMock.getAuthToken.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    mockAccountFetch();
+
+    renderAccountPage();
+
+    expect(await screen.findByText("Ni še shranjenih lokacij.")).toBeInTheDocument();
+    expect(await screen.findByText("Ni še shranjenih poti.")).toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("napaki pri nalaganju lokacij in poti prikazeta toast", async () => {
+    mockAccountFetch({ locationsOk: false, routesOk: false });
+
+    renderAccountPage();
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Shranjene lokacije niso bile naložene."),
+    );
+    expect(toast.error).toHaveBeenCalledWith("Shranjene poti niso bile naložene.");
+  });
+
+  it("neveljavne lokacije in poti filtrira ter uporabi privzete vrednosti", async () => {
+    mockAccountFetch({
+      locations: [
+        { id: locationId, name: "  ", latitude: "46.5547", longitude: "15.6459", icon: "invalid" },
+        { id: "bad", name: "Neveljavna", latitude: "x", longitude: 15.6 },
+      ],
+      routes: [
+        {
+          id: routeId,
+          name: "  ",
+          journey: {
+            duration: "600000",
+            distance: "1200",
+            origin_address: "Center",
+            destination_address: "Tabor",
+            legs: [
+              { mode: "WALK", polyline: [{ lat: 46.5547, lon: 15.6459 }] },
+              { mode: "", polyline: [{ lat: 46.55, lon: 15.64 }] },
+            ],
+          },
+        },
+        { id: "ignored", name: "Brez poti" },
+      ],
+    });
+
+    renderAccountPage();
+
+    expect(await screen.findByText("Shranjena lokacija")).toBeInTheDocument();
+    expect(await screen.findByText("Shranjena pot")).toBeInTheDocument();
+    expect(screen.queryByText("Neveljavna")).not.toBeInTheDocument();
+    expect(screen.queryByText("Brez poti")).not.toBeInTheDocument();
   });
 
   it("brisanje shranjene lokacije po uspešnem DELETE odstrani kartico", async () => {
@@ -162,6 +267,43 @@ describe("integracijski AccountPage", () => {
     expect(toast.success).toHaveBeenCalledWith("Lokacija je izbrisana.");
   });
 
+  it("neuspešen DELETE lokacije prikaže toast in ohrani kartico", async () => {
+    mockAccountFetch({ deleteOk: false });
+    renderAccountPage();
+
+    await screen.findByText("Dom");
+    fireEvent.click(screen.getByRole("button", { name: "Izbriši lokacijo Dom" }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Lokacije ni bilo mogoče izbrisati."));
+    expect(screen.getByText("Dom")).toBeInTheDocument();
+  });
+
+  it("brisanje brez tokena prikaze ustrezna toast sporocila", async () => {
+    mockAccountFetch();
+    renderAccountPage();
+
+    await screen.findByText("Dom");
+    sessionMock.getAuthToken.mockResolvedValue(null);
+    fireEvent.click(screen.getByRole("button", { name: "Izbriši lokacijo Dom" }));
+    fireEvent.click(screen.getByRole("button", { name: "Izbriši pot Pot domov" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Za brisanje lokacije moraš biti prijavljen."),
+    );
+    expect(toast.error).toHaveBeenCalledWith("Za brisanje poti moraš biti prijavljen.");
+  });
+
+  it("uspešen DELETE poti odstrani kartico", async () => {
+    mockAccountFetch();
+    renderAccountPage();
+
+    await screen.findByText("Pot domov");
+    fireEvent.click(screen.getByRole("button", { name: "Izbriši pot Pot domov" }));
+
+    await waitFor(() => expect(screen.queryByText("Pot domov")).not.toBeInTheDocument());
+    expect(toast.success).toHaveBeenCalledWith("Pot je izbrisana.");
+  });
+
   it("neuspešen DELETE poti prikaže toast in ohrani kartico", async () => {
     mockAccountFetch({ deleteOk: false });
     renderAccountPage();
@@ -171,5 +313,15 @@ describe("integracijski AccountPage", () => {
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Poti ni bilo mogoče izbrisati."));
     expect(screen.getByText("Pot domov")).toBeInTheDocument();
+  });
+
+  it("odjava poklice Firebase signOut", async () => {
+    mockAccountFetch();
+    renderAccountPage();
+
+    await screen.findByText("firebase@example.com");
+    fireEvent.click(screen.getByRole("button", { name: "Odjava" }));
+
+    expect(authMock.signOut).toHaveBeenCalled();
   });
 });

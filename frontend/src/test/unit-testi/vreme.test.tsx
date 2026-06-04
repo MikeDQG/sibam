@@ -40,4 +40,27 @@ describe("vreme", () => {
 
     expect(await screen.findByText("20 °C")).toBeInTheDocument();
   });
+
+  it.each([
+    "Thunderstorm",
+    "Drizzle",
+    "Snow",
+    "Fog",
+    "Mist",
+    "Haze",
+    "Clouds",
+    "Windy",
+  ])("prikaze ikono za vreme %s", async (condition) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: () =>
+          Promise.resolve({ main: { temp: 12 }, weather: [{ main: condition }] }),
+      }),
+    );
+
+    render(<WeatherWidget />);
+
+    expect(await screen.findByText("12 °C")).toBeInTheDocument();
+  });
 });

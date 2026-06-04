@@ -7,7 +7,8 @@ Backend uporablja **JUnit 5 + Mockito + AssertJ** za unit teste in **Testcontain
 | Metrika | Vrednost |
 |---|---|
 | Skupno testov | ~340 |
-| Pokritost vrstic | ~73 % |
+| Pokritost vrstic (JaCoCo, lokalno) | ~75 % |
+| Pokritost vrstic (SonarCloud, s konfiguriranimi izključitvami) | višja — izključeni so boilerplate paketi |
 | Izhodišče (pred testiranjem) | 56 % |
 
 ---
@@ -195,13 +196,39 @@ SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... ./mvnw test
 
 ---
 
+## SonarQube izključitve (`pom.xml`)
+
+SonarQube bere dve ločeni konfiguraciji iz `<properties>` v `pom.xml`.
+
+**`sonar.exclusions`** — popolnoma izključeno iz analize (brez prijavljenih težav, brez pokritosti):
+
+| Vzorec | Razlog |
+|---|---|
+| `**/SibamApplication.java` | Vstopna točka — ena vrstica kode |
+| `**/repository/**` | Spring Data vmesniki — implementacijo generira Spring, ni naše kode |
+| `**/dto/**` | Čisti zapisi za prenos podatkov brez logike |
+| `**/persistence/**` | JPA entitete — samo getterji/setterji in anotacije |
+| `**/integration/**/GTFSRTClient.java` in ostali `*Client.java` | Tanki HTTP ovoji brez poslovne logike |
+
+**`sonar.coverage.exclusions`** — izključeno samo iz odstotka pokritosti, a SonarCloud še vedno analizira kodo za težave:
+
+Vse zgornje + dodatno:
+
+| Vzorec | Razlog |
+|---|---|
+| `**/config/**` | Spring konfiguracijska koda — težko testirati brez polnega contexta |
+| `**/graph/model/**` | Podatkovne strukture (vozlišča, robovi, modeli) — visoko pokritost dosegajo posredno prek višjih testov |
+
+**Zakaj dve ločeni listi:** `sonar.exclusions` odstranji datoteke, kjer ni smiselne kode za analizo (generirano, boilerplate). `sonar.coverage.exclusions` ohrani datoteke v analizi za zaznavanje težav, jih pa ne kaznuje v skupnem odstotku pokritosti.
+
+---
+
 ## Kaj ni pokrito in zakaj
 
 | Komponenta | Razlog |
 |---|---|
 | `BikePredictionService` (unit) | Vse poti gredo skozi `OrtEnvironment.getEnvironment()` — statična metoda na končnem razredu. Ni mokabilno brez PowerMock. Pokrita z `BikePredictionServiceIT`. |
 | `StaticGraphBuilder` | Zahteva polno postavitev `VaoSerializer` z ~20 metodami. Logika je posredno pokrita z `AStarRouterTest`. |
-| `WeatherDataService.ingestWeatherData` | Sedaj pokrito z unit testom (CountDownLatch). |
 | `FirebaseAuthFilter` (veljavni žeton) | `FirebaseAuth.getInstance()` ni mokabilen s standardnim Mockitom. |
 | JPA repozitoriji | Spring Data vmesniki brez lastne logike; posredno preverjeni z vsakim DB IT testom. |
 | `SupabaseArtifactStorage` | HTTP odjemalec brez poslovne logike. |

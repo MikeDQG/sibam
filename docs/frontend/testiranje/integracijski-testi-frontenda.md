@@ -139,6 +139,8 @@ Testi za ta sklop pokrivajo:
 - network napaka pokliče `onPathError` s kodo `ROUTE_REQUEST_FAILED`,
 - loading overlay se pokaže in izgine v `finally`,
 - shranjena pot iz dropdowna nastavi route in zapre dropdown,
+- sprememba parametra ze izbrane ali izracunane poti gumb spremeni iz `Zacni` nazaj v `Najdi pot`,
+- klik na `Najdi pot` pri zastareli poti ponovno poslje `/compute` in ne poklice `onStartRoute`,
 - prazen dropdown shranjenih poti prikaže prazno stanje.
 
 ### 4. `MainAppHome`
@@ -217,7 +219,7 @@ Trenutno stanje integracijskih testov:
 - `MainAppHome` ima integracijske teste za geolokacijo, callbacke zemljevida, izracunano pot, napako poti, shranjevanje in brisanje lokacij, shranjevanje poti, izbiro shranjene poti ter aktivno sledenje.
 - `Login` in `Register` imata teste za osnovne auth tokove in validacijo obrazcev.
 - `AccountPage` dodatno pokriva no-token stanje, napake nalaganja, filtriranje neveljavnih shranjenih podatkov, uspesno in neuspesno brisanje lokacij/poti ter odjavo.
-- `MainAppControlOverlay` dodatno pokriva shranjene poti, prazno stanje shranjenih poti, shranjene lokacije, trenutno lokacijo kot izhodisce/cilj, izbiro datuma, swap, clear, Places API napake, fallback compute response, network napake, profile/logout in transport toggles.
+- `MainAppControlOverlay` dodatno pokriva shranjene poti, prazno stanje shranjenih poti, shranjene lokacije, trenutno lokacijo kot izhodisce/cilj, izbiro datuma, swap, clear, Places API napake, fallback compute response, network napake, profile/logout, transport toggles in ponovno iskanje poti po spremembi parametrov.
 - `MainAppHome` dodatno pokriva manjkajoco geolokacijo, out-of-coverage toast brez ponavljanja, route popup callbacke, fallback endpointov shranjene poti, no-token/delete error stanja, obnovitev seje prek `fetchUserSession` in neveljaven saved-route response.
 
 ## Pravila za nove integracijske teste
@@ -271,6 +273,7 @@ Integracijski test je uporaben, če bi padel ob realni regresiji. Primeri regres
 
 - `GET /compute` pošlje `lng` namesto `lon`,
 - `arriveBy` se ne pošlje pri načinu `Prihod do`,
+- po spremembi `Bus`, `Kolo`, ure, datuma ali lokacij gumb ostane `Zacni` in zažene staro pot,
 - shranjena pot se ne doda v `savedRoutes`,
 - neprijavljen uporabnik lahko pride do profila,
 - backend session sync ne pošlje `Authorization`,

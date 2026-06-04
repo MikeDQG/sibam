@@ -152,6 +152,44 @@ function getRouteEndpoints(route: SavedAccountRoute) {
   };
 }
 
+function buildRouteRequestSignature({
+  originCoords,
+  destinationCoords,
+  originAddress,
+  destinationAddress,
+  useBike,
+  useBus,
+  timeMode,
+  selectedTime,
+  selectedDate,
+}: {
+  originCoords: Coordinates | null;
+  destinationCoords: Coordinates | null;
+  originAddress: string;
+  destinationAddress: string;
+  useBike: boolean;
+  useBus: boolean;
+  timeMode: TimeMode;
+  selectedTime: string;
+  selectedDate: string;
+}) {
+  if (!originCoords || !destinationCoords) return null;
+
+  return JSON.stringify({
+    originLat: originCoords.lat,
+    originLon: originCoords.lng,
+    destinationLat: destinationCoords.lat,
+    destinationLon: destinationCoords.lng,
+    originAddress,
+    destinationAddress,
+    bike: useBike,
+    bus: useBus,
+    timeMode,
+    selectedTime,
+    selectedDate,
+  });
+}
+
 export const MainAppControlOverlay = ({
   onZoomIn,
   onZoomOut,
@@ -185,6 +223,9 @@ export const MainAppControlOverlay = ({
   const [useBus, setUseBus] = useState(true);
   const [useBike, setUseBike] = useState(true);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [lastRouteRequestSignature, setLastRouteRequestSignature] = useState<
+    string | null
+  >(null);
   const [isSavedRoutesOpen, setIsSavedRoutesOpen] = useState(false);
   const [timeMode, setTimeMode] = useState<TimeMode>("depart");
   const [selectedTime, setSelectedTime] = useState(() => {
@@ -226,6 +267,21 @@ export const MainAppControlOverlay = ({
     isInsideMaribor(currentLocation);
   const hasSavedLocations = savedLocations.length > 0;
   const hasSavedRoutes = savedRoutes.length > 0;
+  const routeRequestSignature = buildRouteRequestSignature({
+    originCoords,
+    destinationCoords,
+    originAddress: origin.value,
+    destinationAddress: destination.value,
+    useBike,
+    useBus,
+    timeMode,
+    selectedTime,
+    selectedDate,
+  });
+  const isRouteStale =
+    hasRoute &&
+    lastRouteRequestSignature !== null &&
+    routeRequestSignature !== lastRouteRequestSignature;
 
   function getCurrentLocationCoords() {
     if (!currentLocation || !canUseCurrentLocation) return null;
@@ -242,6 +298,17 @@ export const MainAppControlOverlay = ({
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!hasRoute) {
+      setLastRouteRequestSignature(null);
+      return;
+    }
+
+    if (routeRequestSignature && lastRouteRequestSignature === null) {
+      setLastRouteRequestSignature(routeRequestSignature);
+    }
+  }, [hasRoute, lastRouteRequestSignature, routeRequestSignature]);
 
   function handleClear() {
     origin.clear();
@@ -351,6 +418,19 @@ export const MainAppControlOverlay = ({
     setOriginCoords(endpoints.origin);
     setDestinationCoords(endpoints.destination);
     setSelectedPlace(route.destinationLabel || route.name);
+    setLastRouteRequestSignature(
+      buildRouteRequestSignature({
+        originCoords: endpoints.origin,
+        destinationCoords: endpoints.destination,
+        originAddress: route.originLabel || "Začetek poti",
+        destinationAddress: route.destinationLabel || "Konec poti",
+        useBike,
+        useBus,
+        timeMode,
+        selectedTime,
+        selectedDate,
+      }),
+    );
     onSavedRouteSelect?.(route);
   }
 
@@ -641,12 +721,12 @@ export const MainAppControlOverlay = ({
       return;
     }
 
-    if (hasRoute) {
+    if (hasRoute && !isRouteStale) {
       onStartRoute?.();
       return;
     }
 
-    if (!originCoords || !destinationCoords) return;
+    if (!originCoords || !destinationCoords || !routeRequestSignature) return;
 
     setIsLoadingRoute(true);
     try {
@@ -683,6 +763,7 @@ export const MainAppControlOverlay = ({
       const journey = normalizeRouteResponse(await res.json());
 
       console.log("Received route path: ", journey);
+      setLastRouteRequestSignature(routeRequestSignature);
       onPathReceive?.(journey);
     } catch (error) {
       onPathError?.({
@@ -807,6 +888,7 @@ export const MainAppControlOverlay = ({
                   selectedDate={selectedDate}
                   dateButtonRef={dateBtnRef}
                   hasRoute={hasRoute}
+                  isRouteStale={isRouteStale}
                   isRouteActive={isRouteActive}
                   originCoords={originCoords}
                   destinationCoords={destinationCoords}

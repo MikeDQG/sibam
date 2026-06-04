@@ -369,6 +369,45 @@ describe("integracijski MainAppControlOverlay", () => {
     expect(screen.getByDisplayValue("Konec poti")).toBeInTheDocument();
   });
 
+  it("sprememba parametra pri izbrani poti ponovno poklice /compute namesto zacetka poti", async () => {
+    mockOverlayFetch();
+    const onStartRoute = vi.fn();
+    renderOverlay({
+      hasRoute: true,
+      onStartRoute,
+      savedRoutes: [
+        {
+          id: "route-1",
+          name: "Shranjena pot",
+          journey: routePath,
+          duration: "600000",
+          distance: "1000",
+          originLabel: "Glavni trg",
+          destinationLabel: "Tabor",
+          modes: ["WALK"],
+        },
+      ],
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Shranjene poti" }));
+    fireEvent.mouseDown(await screen.findByText("Shranjena pot"));
+
+    expect(screen.getByRole("button", { name: "Začni" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Bus" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Najdi pot" })).toBeEnabled(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Najdi pot" }));
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/compute?")),
+    );
+    expect(onStartRoute).not.toHaveBeenCalled();
+  });
+
   it("dropdown shranjenih poti formatira trajanje, razdaljo in relacijo", async () => {
     mockOverlayFetch();
     renderOverlay({

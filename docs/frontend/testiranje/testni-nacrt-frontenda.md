@@ -83,6 +83,9 @@ export const testnaPodrocja = [
       "napacen response prikaze napako poti",
       "network napaka pri izracunu poti prikaze napako poti",
       "ze izracunana pot preklopi gumb v Zacni",
+      "sprememba parametrov ze izracunane poti preklopi gumb nazaj v Najdi pot",
+      "klik na Najdi pot pri zastareli poti ponovno poklice GET /compute",
+      "zastarela pot brez veljavnih koordinat onemogoci ponovno iskanje",
       "aktivna pot preklopi gumb v Koncaj",
     ],
   },
@@ -341,6 +344,8 @@ Pri shranjenih poteh mora test pokriti tako izbiro obstojece poti kot prazno sta
 Testirati moramo, da frontend na `GET /compute` poslje pravilne koordinate, naslove, cas in izbiro transporta. Za `depart` mora poslati `leaveAt`, za `arrive` pa `arriveBy`. Ce je uporabnik prijavljen, mora biti zraven tudi `userId`.
 
 Pri response-u moramo preveriti uspesen scenarij, napako backend-a, loading stanje in zakljucek loadinga v `finally`. Pomembno je tudi preveriti prehode gumbov: `Najdi pot`, `Zacni` in `Koncaj`.
+
+Po uspesnem izracunu poti si overlay zapomni signature parametrov izracuna. Ce uporabnik spremeni katerikoli parameter, ki vpliva na `/compute` zahtevo, mora test potrditi, da se gumb `Zacni` spremeni nazaj v `Najdi pot`. To velja za izhodisce, cilj, `Bus`, `Kolo`, `Odhod ob`/`Prihod do`, uro in datum. Klik na `Najdi pot` pri taksni zastareli poti mora ponovno poslati `GET /compute`, ne pa sproziti `onStartRoute`.
 
 ### Prebrani stepi poti
 

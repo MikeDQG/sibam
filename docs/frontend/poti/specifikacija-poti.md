@@ -184,6 +184,7 @@ Ko uporabnik klikne `Najdi pot`, frontend poklice endpoint `GET /compute` z quer
 - `leaveNow`: trenutno vedno `false`;
 - `bike`: `true` ali `false`, glede na toggle `Kolo`;
 - `bus`: `true` ali `false`, glede na toggle `Bus`;
+- `date`: izbrani datum iz date kontrol;
 - `leaveAt`: izbrana ura, kadar je izbran nacin `Odhod ob`;
 - `arriveBy`: izbrana ura, kadar je izbran nacin `Prihod do`;
 - `userId`: Firebase UID, ce je uporabnik prijavljen.
@@ -226,6 +227,8 @@ Razlicni nacini za shranjeno pot niso na voljo.
 
 Za shranjeno pot prav tako ni smiselno ponovno shranjevanje iste poti prek route option kartic, ker route option kartice niso prikazane. Se vedno pa je mogoc prikaz poti na zemljevidu, prikaz navodil, klik na odseke poti in zagon sledenja poti.
 
+Ce uporabnik pri ze izbrani shranjeni poti spremeni parameter, ki vpliva na izracun poti, se pot obravnava kot zastarela. Gumb `Zacni` se zato spremeni nazaj v `Najdi pot`, naslednji klik pa ponovno poklice `/compute` z novimi parametri.
+
 ## Implementacija
 
 ### Glavne komponente
@@ -240,6 +243,7 @@ Za shranjeno pot prav tako ni smiselno ponovno shranjevanje iste poti prek route
 - izbiro shranjene poti;
 - klic `/compute`;
 - hranjenje `originCoords`, `destinationCoords`, mode toggle stanja in time mode stanja;
+- hranjenje signature zadnjega uspesnega izracuna poti;
 - povezovanje overlay podkomponent s callbacki iz `MainAppHome`.
 
 Vizualni deli overlaya so razdeljeni v `MainAppControlOverlayComponents`:
@@ -326,16 +330,21 @@ Vsak `RouteStep` vsebuje:
 
 Ce backend vrne napako, se response prebere v `RouteComputeError`, `routePath` se pocisti, route sheet pa prikaze `RouteErrorBox`.
 
+Po uspesnem izracunu `MainAppControlOverlay` shrani signature parametrov, ki so bili uporabljeni za `/compute`: koordinati izhodisca in cilja, naslova, `Bus`, `Kolo`, nacin casa, uro in datum. Dokler se trenutni parametri ujemajo s tem signature-om, gumb po izracunu prikazuje `Zacni`.
+
+Ce se po izracunu spremeni katerikoli od teh parametrov, trenutna pot ni vec usklajena z nastavitvami v overlayu. `RouteControls` zato gumb preklopi nazaj na `Najdi pot`. Klik na tak gumb ponovno poslje `/compute`; `onStartRoute` se poklice samo, kadar pot obstaja in trenutni parametri niso zastareli.
+
 ### Tok aktivnega sledenja poti
 
 1. Ko obstaja `routePath`, gumb `Najdi pot` postane `Zacni`.
-2. Klik na `Zacni` nastavi `isFollowingRoute` na `true`.
-3. Med aktivnim sledenjem se uporabnikova lokacija polling-a in opazuje prek Geolocation API.
-4. Zemljevid se centrira na uporabnika in zoom se dvigne vsaj na `17`.
-5. `MainAppHome` z `getActiveRouteStep` izracuna aktualni step in njegov `stepIndex`.
-6. Ce obstaja aktualni step, se prikaze card z navodilom.
-7. `RouteOptions` prejme `activeStepIndex` in posodobi videz krogcev v seznamu navodil.
-8. Klik na `Koncaj` ustavi aktivno sledenje in ponovno prilagodi pogled poti.
+2. Ce uporabnik pred zacetkom sledenja spremeni parametre poti, se gumb vrne v `Najdi pot` in pot se mora najprej ponovno izracunati.
+3. Klik na `Zacni` nastavi `isFollowingRoute` na `true`.
+4. Med aktivnim sledenjem se uporabnikova lokacija polling-a in opazuje prek Geolocation API.
+5. Zemljevid se centrira na uporabnika in zoom se dvigne vsaj na `17`.
+6. `MainAppHome` z `getActiveRouteStep` izracuna aktualni step in njegov `stepIndex`.
+7. Ce obstaja aktualni step, se prikaze card z navodilom.
+8. `RouteOptions` prejme `activeStepIndex` in posodobi videz krogcev v seznamu navodil.
+9. Klik na `Koncaj` ustavi aktivno sledenje in ponovno prilagodi pogled poti.
 
 ### Nalaganje shranjenih podatkov
 

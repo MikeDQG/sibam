@@ -59,7 +59,8 @@ Za odpravo nizke pokritosti so dodani oziroma razsirjeni naslednji testi:
 - `src/test/integracijski-testi/auth-forms.test.tsx` pokriva dodatne Firebase napake, Google auth napake, prikaz/skritje gesel, validacijo imena/emaila in navigacijo med prijavo ter registracijo.
 - `src/test/integracijski-testi/user-session-provider.test.tsx` pokriva neuspesen fetch/sync seje, sync brez imena, odjavljen auth state in uporabo hooka zunaj providerja.
 - `src/test/integracijski-testi/account-page.test.tsx` pokriva manjkajoc auth token, napake nalaganja, filtriranje neveljavnih podatkov, brisanje lokacij/poti, odjavo in obnovitev seje prek `fetchUserSession`.
-- `src/test/integracijski-testi/main-app-control-overlay.test.tsx` pokriva shranjene lokacije, trenutno lokacijo, prazno stanje shranjenih poti, shranjene poti, izbiro datuma, fallback compute response, napake Places API-ja, network napake, swap, clear, profile/logout, transport toggles in zapiranje loading overlaya.
+- `src/test/integracijski-testi/main-app-control-overlay.test.tsx` pokriva shranjene lokacije, trenutno lokacijo, prazno stanje shranjenih poti, shranjene poti, izbiro datuma, fallback compute response, napake Places API-ja, network napake, swap, clear, profile/logout, transport toggles, ponovno iskanje po spremembi parametrov ze izbrane poti in zapiranje loading overlaya.
+- `src/test/unit-testi/iskanje-poti.test.tsx` pokriva query parametre za `/compute`, stanja gumba `Najdi pot`/`Zacni`/`Koncaj`, zastarelo pot po spremembi parametrov in disabled stanje, kadar za ponovno iskanje manjkajo koordinate.
 - `src/test/unit-testi/route-options.test.tsx`, `route-popup.test.tsx`, `zemljevid.test.tsx`, `route-polyline.test.tsx` in `responsive-ui.test.tsx` dodatno pokrivajo route sheet, popupe, zemljevid, polyline klike in map controls veje.
 
 ## Pricakovani rezultat

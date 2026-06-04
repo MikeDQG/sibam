@@ -12,12 +12,8 @@ export const HeroSection = () => {
             šibaM
           </h1>
           <span className='ml-0 text-center text-2xl text-red-500 sm:text-[32px] lg:ml-2 lg:text-left lg:text-[40px]'>
-            Načrtuj pot po Mariboru.
+            Vse poti na enem mestu.
           </span>
-          <p className='mt-4 max-w-xl text-center text-base font-medium leading-7 text-muted-foreground sm:text-lg lg:ml-2 lg:text-left'>
-            Združi hojo, Mbajk in avtobus, izberi pravi čas poti ter shrani
-            lokacije in poti za naslednjič.
-          </p>
         </div>
 
         <div className='flex w-[40%] justify-center'>

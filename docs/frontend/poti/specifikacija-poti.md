@@ -188,9 +188,10 @@ Ko uporabnik klikne `Najdi pot`, frontend poklice endpoint `GET /compute` z quer
 - `date`: izbrani datum iz date kontrol;
 - `leaveAt`: izbrana ura, kadar je izbran nacin `Odhod ob`;
 - `arriveBy`: izbrana ura, kadar je izbran nacin `Prihod do`;
+- `date`: izbrani datum v obliki `YYYY-MM-DD`; privzeto je danasnji datum;
 - `userId`: Firebase UID, ce je uporabnik prijavljen.
 
-Frontend poslje samo enega od parametrov `leaveAt` ali `arriveBy`, odvisno od izbranega time mode-a.
+Frontend poslje samo enega od parametrov `leaveAt` ali `arriveBy`, odvisno od izbranega time mode-a. Parameter `date` se vedno poslje skupaj z uro, ker backend potrebuje kombinacijo datuma in ure za iskanje ustreznih voznih redov.
 
 ### Izbira trenutne lokacije kot parameter poti
 
@@ -247,7 +248,7 @@ Vizualni deli overlaya so razdeljeni v `MainAppControlOverlayComponents`:
 - `DestinationSearch` prikaze enovrsticni cilj pred odpiranjem navodil za pot.
 - `DirectionsInputs` prikaze inputa za izhodisce in cilj ter gumb za zamenjavo smeri.
 - `SearchInputRow` je skupna vrstica za Places autocomplete input.
-- `RouteControls` prikaze toggle `Bus`/`Kolo`, izbiro `Odhod ob` ali `Prihod do`, casovni input, gumb `Najdi pot`/`Zacni`/`Koncaj` in gumb za shranjene poti.
+- `RouteControls` prikaze toggle `Bus`/`Kolo`, izbiro `Odhod ob` ali `Prihod do`, casovni input (`HH:MM`), gumb za izbiro datuma, gumb `Najdi pot`/`Zacni`/`Koncaj` in gumb za shranjene poti. Gumb za datum odpre dropdown z naslednjimi 7 dnevi, formatiranimi v slovenskem kratkem zapisu (npr. *tor, 3. 6.*). Dropdown se rendira prek `createPortal` v `document.body`, da se izogne rezanju vsebine s strani starsevskih elementov z `overflow: hidden`.
 - `MapControls`, `MapZoomLocateButtons` in `ProfileButton` pokrivajo desni panel z map kontrolami, temo in profilom oziroma prijavo/odjavo.
 - `types.ts` hrani skupne tipe za overlay podkomponente.
 

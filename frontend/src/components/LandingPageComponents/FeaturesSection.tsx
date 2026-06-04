@@ -1,34 +1,68 @@
 const features = [
   {
-    title: "Pametno multimodalno načrtovanje poti",
+    title: "Multimodalno načrtovanje poti",
     description:
-      "Aplikacija uporabniku omogoča iskanje optimalne poti z uporabo različnih načinov prevoza. Sistem sam izračuna najbolj učinkovito povezavo med lokacijami.",
-    items: ["peš", "Mbajk", "avtobus", "kombinacije vseh načinov"],
-  },
-  {
-    title: "Izbira načina optimizacije poti",
-    description:
-      "Uporabnik lahko izbira med različnimi tipi poti glede na svoje potrebe.",
+      "ŠibaM izračuna pot po Mariboru z načini premikanja, ki jih lahko uporabiš samostojno ali v kombinaciji.",
     items: [
-      "Najhitrejša pot - prioriteta je čas prihoda",
-      "Zelena pot - poudarek na trajnostni mobilnosti",
-      "Dostopnostna pot - brez kolesa in z bolj dostopnimi potmi",
+      "peš odseki",
+      "Mbajk kolesa",
+      "avtobusne povezave",
+      "kombinirane poti med različnimi načini",
     ],
   },
   {
-    title: "Shranjevanje pogostih lokacij",
+    title: "Pametna izbira časa",
     description:
-      "Shranjene lokacije omogočajo hitrejše načrtovanje poti in bolj personalizirano uporabniško izkušnjo.",
-    items: ["dom", "služba", "fakulteta", "priljubljene destinacije"],
+      "Pot lahko načrtuješ glede na čas odhoda ali glede na uro, do katere želiš prispeti na cilj.",
+    items: [
+      "odhod ob izbrani uri",
+      "prihod do izbrane ure",
+      "izbira datuma v naslednjih 7 dneh",
+      "ločena izbira avtobusa in kolesa",
+    ],
   },
   {
-    title: "Integracija Mbajk in avtobusnega sistema",
+    title: "Interaktivni zemljevid",
     description:
-      "Sistem se povezuje z mestnimi podatki o mobilnosti in jih vključi neposredno v izračun poti.",
+      "Google Maps zemljevid prikaže izbrane lokacije, pot in ključne točke poti neposredno na zemljevidu.",
     items: [
-      "pregled razpoložljivih Mbajk koles",
-      "prikaz avtobusnih linij in prihodov",
-      "vključitev javnega prevoza v izračun poti",
+      "markerji začetka in cilja",
+      "trenutna lokacija uporabnika",
+      "približevanje, oddaljevanje in lociranje",
+      "barvno ločeni načini premikanja",
+    ],
+  },
+  {
+    title: "Navodila in sledenje",
+    description:
+      "Po izračunu poti lahko izbiraš med alternativami, pregledaš navodila in začneš aktivno sledenje.",
+    items: [
+      "kartice z alternativami poti",
+      "trajanje in načini prevoza za vsako pot",
+      "navodila po korakih",
+      "prikaz aktualnega koraka med sledenjem",
+    ],
+  },
+  {
+    title: "Shranjene lokacije in poti",
+    description:
+      "Prijavljeni uporabniki lahko shranijo pomembne lokacije in izračunane poti ter jih kasneje ponovno uporabijo.",
+    items: [
+      "lokacije z imenom, barvo in ikono",
+      "shranjevanje izračunanih poti",
+      "prikaz shranjenih vsebin v profilu",
+      "brisanje shranjenih lokacij in poti",
+    ],
+  },
+  {
+    title: "Podatki za mestno mobilnost",
+    description:
+      "Pri odsekih poti aplikacija prikaže podatke za Mbajk in avtobus.",
+    items: [
+      "Mbajk postaje za prevzem in oddajo",
+      "prosta kolesa in stojala, ko so podana",
+      "avtobusne linije, smeri in odhodi",
+      "napovedi števila prostih koles in stojal ter zamude avtobusov",
     ],
   },
 ];

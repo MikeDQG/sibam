@@ -422,7 +422,7 @@ export const MainAppHome = () => {
 
     requestCurrentLocation();
 
-    const intervalId = window.setInterval(requestCurrentLocation, 3000);
+    const intervalId = window.setInterval(requestCurrentLocation, 1000);
 
     return () => {
       isActive = false;

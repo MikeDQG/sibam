@@ -55,6 +55,14 @@ const formatTime = (timestamp?: string) => {
   });
 };
 
+const formatBusDelay = (delaySeconds?: number) => {
+  if (typeof delaySeconds !== "number" || !Number.isFinite(delaySeconds)) {
+    return null;
+  }
+
+  return Math.floor(delaySeconds / 60).toString();
+};
+
 const formatCount = (count?: number) => {
   if (typeof count !== "number" || !Number.isFinite(count)) return null;
 
@@ -132,6 +140,15 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
 
         <div className='mt-2 space-y-1.5'>
           <RoutePopupRow
+            label={selectedLeg.leg.code?.trim() ?? "Linija"}
+            labelBold
+            value={
+              showBusIconDetails && selectedLeg.leg.mode === "BUS"
+                ? selectedLeg.leg.headsignName?.trim()
+                : null
+            }
+          />
+          <RoutePopupRow
             label='Odhod avtobusa'
             value={
               showBusIconDetails && selectedLeg.leg.mode === "BUS"
@@ -142,18 +159,11 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
           <RoutePopupRow
             label='Pričakovana zamuda (min)'
             value={
-              showBusIconDetails &&
-              selectedLeg.leg.mode === "BUS" &&
-              typeof selectedLeg.leg.busDelayPrediction
-                ?.predictedBoardingDelaySeconds === "number" &&
-              Number.isFinite(
-                selectedLeg.leg.busDelayPrediction
-                  .predictedBoardingDelaySeconds,
-              )
-                ? Math.round(
+              showBusIconDetails && selectedLeg.leg.mode === "BUS"
+                ? formatBusDelay(
                     selectedLeg.leg.busDelayPrediction
-                      .predictedBoardingDelaySeconds / 60,
-                  ).toString()
+                      ?.predictedBoardingDelaySeconds,
+                  )
                 : null
             }
           />
@@ -234,14 +244,18 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
 type RoutePopupRowProps = {
   label: string;
   value?: ReactNode | null;
+  labelBold?: boolean;
 };
 
-const RoutePopupRow = ({ label, value }: RoutePopupRowProps) => {
+const RoutePopupRow = ({ label, value, labelBold }: RoutePopupRowProps) => {
   if (!value) return null;
 
   return (
     <div className='flex justify-between gap-5'>
-      <span className='text-muted-foreground dark:text-neutral-300'>
+      <span
+        className={
+          labelBold ? "font-medium" : "text-muted-foreground dark:text-neutral-300"
+        }>
         {label}
       </span>
       <span className='font-medium'>{value}</span>

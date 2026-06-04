@@ -77,13 +77,17 @@ function toDateString(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function getWeekDates(): Array<{value: string; label: string}> {
-  return Array.from({length: 7}, (_, i) => {
+function getWeekDates(): Array<{ value: string; label: string }> {
+  return Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
     return {
       value: toDateString(d),
-      label: d.toLocaleDateString("sl-SI", {weekday: "short", day: "numeric", month: "numeric"}),
+      label: d.toLocaleDateString("sl-SI", {
+        weekday: "short",
+        day: "numeric",
+        month: "numeric",
+      }),
     };
   });
 }
@@ -143,13 +147,50 @@ function getRouteEndpoints(route: SavedAccountRoute) {
     origin:
       getJourneyPoint(
         route.journey.origin as Parameters<typeof getJourneyPoint>[0],
-      ) ??
-      getJourneyPoint(firstLeg?.polyline[0]),
+      ) ?? getJourneyPoint(firstLeg?.polyline[0]),
     destination:
       getJourneyPoint(
         route.journey.destination as Parameters<typeof getJourneyPoint>[0],
       ) ?? getJourneyPoint(lastLeg?.polyline.at(-1)),
   };
+}
+
+function buildRouteRequestSignature({
+  originCoords,
+  destinationCoords,
+  originAddress,
+  destinationAddress,
+  useBike,
+  useBus,
+  timeMode,
+  selectedTime,
+  selectedDate,
+}: {
+  originCoords: Coordinates | null;
+  destinationCoords: Coordinates | null;
+  originAddress: string;
+  destinationAddress: string;
+  useBike: boolean;
+  useBus: boolean;
+  timeMode: TimeMode;
+  selectedTime: string;
+  selectedDate: string;
+}) {
+  if (!originCoords || !destinationCoords) return null;
+
+  return JSON.stringify({
+    originLat: originCoords.lat,
+    originLon: originCoords.lng,
+    destinationLat: destinationCoords.lat,
+    destinationLon: destinationCoords.lng,
+    originAddress,
+    destinationAddress,
+    bike: useBike,
+    bus: useBus,
+    timeMode,
+    selectedTime,
+    selectedDate,
+  });
 }
 
 export const MainAppControlOverlay = ({
@@ -185,6 +226,9 @@ export const MainAppControlOverlay = ({
   const [useBus, setUseBus] = useState(true);
   const [useBike, setUseBike] = useState(true);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [lastRouteRequestSignature, setLastRouteRequestSignature] = useState<
+    string | null
+  >(null);
   const [isSavedRoutesOpen, setIsSavedRoutesOpen] = useState(false);
   const [timeMode, setTimeMode] = useState<TimeMode>("depart");
   const [selectedTime, setSelectedTime] = useState(() => {
@@ -192,9 +236,14 @@ export const MainAppControlOverlay = ({
     now.setMinutes(now.getMinutes() + 1);
     return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   });
-  const [selectedDate, setSelectedDate] = useState(() => toDateString(new Date()));
+  const [selectedDate, setSelectedDate] = useState(() =>
+    toDateString(new Date()),
+  );
   const [isDateOpen, setIsDateOpen] = useState(false);
-  const [dateDropdownPos, setDateDropdownPos] = useState<{top: number; left: number} | null>(null);
+  const [dateDropdownPos, setDateDropdownPos] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const dateBtnRef = useRef<HTMLButtonElement>(null);
   const dateMenuRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -226,6 +275,21 @@ export const MainAppControlOverlay = ({
     isInsideMaribor(currentLocation);
   const hasSavedLocations = savedLocations.length > 0;
   const hasSavedRoutes = savedRoutes.length > 0;
+  const routeRequestSignature = buildRouteRequestSignature({
+    originCoords,
+    destinationCoords,
+    originAddress: origin.value,
+    destinationAddress: destination.value,
+    useBike,
+    useBus,
+    timeMode,
+    selectedTime,
+    selectedDate,
+  });
+  const isRouteStale =
+    hasRoute &&
+    lastRouteRequestSignature !== null &&
+    routeRequestSignature !== lastRouteRequestSignature;
 
   function getCurrentLocationCoords() {
     if (!currentLocation || !canUseCurrentLocation) return null;
@@ -242,6 +306,17 @@ export const MainAppControlOverlay = ({
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!hasRoute) {
+      setLastRouteRequestSignature(null);
+      return;
+    }
+
+    if (routeRequestSignature && lastRouteRequestSignature === null) {
+      setLastRouteRequestSignature(routeRequestSignature);
+    }
+  }, [hasRoute, lastRouteRequestSignature, routeRequestSignature]);
 
   function handleClear() {
     origin.clear();
@@ -351,6 +426,19 @@ export const MainAppControlOverlay = ({
     setOriginCoords(endpoints.origin);
     setDestinationCoords(endpoints.destination);
     setSelectedPlace(route.destinationLabel || route.name);
+    setLastRouteRequestSignature(
+      buildRouteRequestSignature({
+        originCoords: endpoints.origin,
+        destinationCoords: endpoints.destination,
+        originAddress: route.originLabel || "Začetek poti",
+        destinationAddress: route.destinationLabel || "Konec poti",
+        useBike,
+        useBus,
+        timeMode,
+        selectedTime,
+        selectedDate,
+      }),
+    );
     onSavedRouteSelect?.(route);
   }
 
@@ -406,7 +494,9 @@ export const MainAppControlOverlay = ({
               const distance = formatSavedRouteDistance(route.distance);
 
               return (
-                <li key={route.id} className='border-b border-border last:border-0 dark:border-neutral-600'>
+                <li
+                  key={route.id}
+                  className='border-b border-border last:border-0 dark:border-neutral-600'>
                   <button
                     type='button'
                     onMouseDown={() => handleSavedRouteSelect(route)}
@@ -563,7 +653,9 @@ export const MainAppControlOverlay = ({
               Shranjene lokacije
             </li>
             {savedLocations.map((location) => (
-              <li key={`${kind}-${location.id}`} className='border-b border-border last:border-0 dark:border-neutral-600'>
+              <li
+                key={`${kind}-${location.id}`}
+                className='border-b border-border last:border-0 dark:border-neutral-600'>
                 <button
                   type='button'
                   onMouseDown={() => handleSavedLocationSelect(kind, location)}
@@ -619,19 +711,26 @@ export const MainAppControlOverlay = ({
     return createPortal(
       <div
         ref={dateMenuRef}
-        style={{ position: "fixed", top: dateDropdownPos.top, left: dateDropdownPos.left }}
+        style={{
+          position: "fixed",
+          top: dateDropdownPos.top,
+          left: dateDropdownPos.left,
+        }}
         className='z-[9999] overflow-hidden rounded-lg bg-white shadow-lg dark:bg-neutral-700'>
         {getWeekDates().map(({ value, label }) => (
           <button
             key={value}
             type='button'
-            onClick={() => { setSelectedDate(value); setIsDateOpen(false); }}
+            onClick={() => {
+              setSelectedDate(value);
+              setIsDateOpen(false);
+            }}
             className={`block w-full whitespace-nowrap px-4 py-2 text-left text-sm transition-colors ${selectedDate === value ? "bg-red-700 text-white" : "text-neutral-900 hover:bg-muted dark:text-white dark:hover:bg-neutral-600"}`}>
             {label}
           </button>
         ))}
       </div>,
-      document.body
+      document.body,
     );
   }
 
@@ -641,12 +740,12 @@ export const MainAppControlOverlay = ({
       return;
     }
 
-    if (hasRoute) {
+    if (hasRoute && !isRouteStale) {
       onStartRoute?.();
       return;
     }
 
-    if (!originCoords || !destinationCoords) return;
+    if (!originCoords || !destinationCoords || !routeRequestSignature) return;
 
     setIsLoadingRoute(true);
     try {
@@ -680,9 +779,10 @@ export const MainAppControlOverlay = ({
         return;
       }
 
-      const journey = normalizeRouteResponse(await res.json());
+      const routeResponse = await res.json();
+      const journey = normalizeRouteResponse(routeResponse);
 
-      console.log("Received route path: ", journey);
+      setLastRouteRequestSignature(routeRequestSignature);
       onPathReceive?.(journey);
     } catch (error) {
       onPathError?.({
@@ -701,13 +801,49 @@ export const MainAppControlOverlay = ({
     const response = data as {
       routes?: RoutePath[];
       status?: string;
+      origin?: unknown;
+      origin_address?: string | null;
+      originAddress?: string | null;
+      destination?: unknown;
+      destination_address?: string | null;
+      destinationAddress?: string | null;
     };
 
-    const firstRoute = response.routes?.[0];
-    if (firstRoute && Array.isArray(firstRoute.legs)) {
+    const normalizedRoutes =
+      response.routes
+        ?.filter((route) => Array.isArray(route.legs))
+        .map((route) => ({
+          ...route,
+          status: route.status ?? response.status,
+          origin: route.origin ?? response.origin,
+          origin_address:
+            route.origin_address ??
+            route.originAddress ??
+            response.origin_address ??
+            response.originAddress,
+          destination: route.destination ?? response.destination,
+          destination_address:
+            route.destination_address ??
+            route.destinationAddress ??
+            response.destination_address ??
+            response.destinationAddress,
+          duration:
+            route.duration ??
+            (typeof route.totalDurationSeconds === "number"
+              ? String(route.totalDurationSeconds * 1000)
+              : undefined),
+          distance:
+            route.distance ??
+            (typeof route.totalDistanceMeters === "number"
+              ? String(route.totalDistanceMeters)
+              : undefined),
+        })) ?? [];
+
+    const firstRoute = normalizedRoutes[0];
+    if (firstRoute) {
       return {
         ...firstRoute,
-        routes: response.routes,
+        routes: normalizedRoutes,
       };
     }
 
@@ -807,6 +943,7 @@ export const MainAppControlOverlay = ({
                   selectedDate={selectedDate}
                   dateButtonRef={dateBtnRef}
                   hasRoute={hasRoute}
+                  isRouteStale={isRouteStale}
                   isRouteActive={isRouteActive}
                   originCoords={originCoords}
                   destinationCoords={destinationCoords}

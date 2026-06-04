@@ -31,9 +31,30 @@ describe("route-popup", () => {
   it("avtobusni popup prikaze odhod in napoved zamude", () => {
     render(<RoutePopup selectedLeg={{ leg: routeLegs[1], position: { lat: 1, lng: 1 }, source: "busIcon" }} />);
 
+    expect(screen.getByText("6")).toHaveClass("font-medium");
+    expect(screen.getByText("6")).not.toHaveClass("text-muted-foreground");
+    expect(screen.getByText("Bresternica - Avtobusna postaja")).toHaveClass("font-medium");
     expect(screen.getByText("Odhod avtobusa")).toBeInTheDocument();
     expect(screen.getByText("Pričakovana zamuda (min)")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
+  });
+
+  it("avtobusno zamudo pod polno minuto zaokrozi navzdol", () => {
+    render(
+      <RoutePopup
+        selectedLeg={{
+          leg: {
+            ...routeLegs[1],
+            busDelayPrediction: { predictedBoardingDelaySeconds: 59 },
+          },
+          position: { lat: 1, lng: 1 },
+          source: "busIcon",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Pričakovana zamuda (min)")).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
   });
 
   it("MBajk popup prikaze prosta kolesa ali stojala", () => {

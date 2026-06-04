@@ -10,6 +10,7 @@ type RouteControlsProps = {
   selectedDate?: string;
   dateButtonRef?: React.RefObject<HTMLButtonElement | null>;
   hasRoute: boolean;
+  isRouteStale?: boolean;
   isRouteActive: boolean;
   originCoords: Coordinates | null;
   destinationCoords: Coordinates | null;
@@ -23,9 +24,13 @@ type RouteControlsProps = {
   dateDropdown?: React.ReactNode;
 };
 
-function getRouteActionLabel(hasRoute: boolean, isRouteActive: boolean) {
+function getRouteActionLabel(
+  hasRoute: boolean,
+  isRouteStale: boolean,
+  isRouteActive: boolean,
+) {
   if (isRouteActive) return "Končaj";
-  if (hasRoute) return "Začni";
+  if (hasRoute && !isRouteStale) return "Začni";
 
   return "Najdi pot";
 }
@@ -38,6 +43,7 @@ export function RouteControls({
   selectedDate = new Date().toISOString().slice(0, 10),
   dateButtonRef,
   hasRoute,
+  isRouteStale = false,
   isRouteActive,
   originCoords,
   destinationCoords,
@@ -51,7 +57,9 @@ export function RouteControls({
   dateDropdown,
 }: RouteControlsProps) {
   const isRouteRequestDisabled =
-    !hasRoute && !isRouteActive && (!originCoords || !destinationCoords);
+    !isRouteActive &&
+    (!hasRoute || isRouteStale) &&
+    (!originCoords || !destinationCoords);
 
   return (
     <div className='flex items-center gap-2 max-[615px]:grid max-[615px]:grid-cols-2 max-[615px]:items-stretch max-[430px]:!grid-cols-1'>
@@ -114,7 +122,7 @@ export function RouteControls({
         onClick={onRouteRequest}
         disabled={isRouteRequestDisabled}
         className='ml-auto flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-neutral-50 px-4 py-1.5 text-sm font-bold text-red-700 shadow-md transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-200 max-[615px]:order-4 max-[615px]:col-start-2 max-[615px]:row-start-2 max-[615px]:ml-0 max-[615px]:rounded-lg max-[615px]:px-3 max-[430px]:!col-start-1 max-[430px]:!row-start-2 max-[430px]:w-full dark:bg-neutral-200 dark:hover:bg-neutral-50 dark:disabled:bg-neutral-200 dark:disabled:hover:bg-neutral-200'>
-        {getRouteActionLabel(hasRoute, isRouteActive)}
+        {getRouteActionLabel(hasRoute, isRouteStale, isRouteActive)}
       </button>
       <SavedRoutesButton onClick={onSavedRoutesToggle} />
     </div>

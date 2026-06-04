@@ -76,6 +76,7 @@ function mockOverlayFetch({
   placeHasLocation = true,
   placeNetworkFails = false as false | true | "origin" | "destination",
   computeFallbackShape = false,
+  computeAlternativeShape = false,
   computeJsonFails = false,
   computeNetworkFails = false,
 } = {}) {
@@ -128,7 +129,37 @@ function mockOverlayFetch({
             ? {
                 ok: true,
                 json: () =>
-                  Promise.resolve(computeFallbackShape ? { status: "OK" } : { routes: [routePath] }),
+                  Promise.resolve(
+                    computeFallbackShape
+                      ? { status: "OK" }
+                      : computeAlternativeShape
+                        ? {
+                            status: "success",
+                            origin: { lat: 46.5547, lon: 15.6459 },
+                            origin_address: "Glavni trg",
+                            destination: { lat: 46.562, lon: 15.65 },
+                            destination_address: "Tabor",
+                            routes: [
+                              {
+                                rank: 1,
+                                label: "Najhitrejša pot",
+                                totalDurationSeconds: 1860,
+                                totalDistanceMeters: 2450,
+                                modes: ["WALK", "BUS", "BIKE"],
+                                legs: routePath.legs,
+                              },
+                              {
+                                rank: 2,
+                                label: "Brez kolesa",
+                                totalDurationSeconds: 2100,
+                                totalDistanceMeters: 3200,
+                                modes: ["WALK", "BUS"],
+                                legs: routePath.legs.slice(0, 2),
+                              },
+                            ],
+                          }
+                        : { routes: [routePath] },
+                  ),
               }
             : {
                 ok: false,
@@ -202,6 +233,44 @@ describe("integracijski MainAppControlOverlay", () => {
     expect(params.get("destinationLon")).toBe("15.65");
     expect(params.get("leaveAt")).toBe("09:30");
     expect(params.get("userId")).toBe("firebase-user-1");
+  });
+
+  it("normalizira vse alternative v celotne poti", async () => {
+    mockOverlayFetch({ computeAlternativeShape: true });
+    const { onPathReceive } = renderOverlay();
+
+    await selectDestinationAndOpenDirections();
+    fireEvent.focus(screen.getByRole("textbox", { name: "Kje štartaš?" }));
+    fireEvent.mouseDown(await screen.findByText("Glavni trg"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Najdi pot" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Najdi pot" }));
+
+    await waitFor(() =>
+      expect(onPathReceive).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "success",
+          origin: { lat: 46.5547, lon: 15.6459 },
+          origin_address: "Glavni trg",
+          destination: { lat: 46.562, lon: 15.65 },
+          destination_address: "Tabor",
+          duration: "1860000",
+          distance: "2450",
+          legs: routePath.legs,
+          routes: [
+            expect.objectContaining({
+              label: "Najhitrejša pot",
+              duration: "1860000",
+              distance: "2450",
+            }),
+            expect.objectContaining({
+              label: "Brez kolesa",
+              duration: "2100000",
+              distance: "3200",
+            }),
+          ],
+        }),
+      ),
+    );
   });
 
   it("način Prihod do pošlje arriveBy namesto leaveAt", async () => {
@@ -367,6 +436,45 @@ describe("integracijski MainAppControlOverlay", () => {
     expect(onSavedRouteSelect).toHaveBeenCalled();
     expect(screen.getByDisplayValue("Začetek poti")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Konec poti")).toBeInTheDocument();
+  });
+
+  it("sprememba parametra pri izbrani poti ponovno poklice /compute namesto zacetka poti", async () => {
+    mockOverlayFetch();
+    const onStartRoute = vi.fn();
+    renderOverlay({
+      hasRoute: true,
+      onStartRoute,
+      savedRoutes: [
+        {
+          id: "route-1",
+          name: "Shranjena pot",
+          journey: routePath,
+          duration: "600000",
+          distance: "1000",
+          originLabel: "Glavni trg",
+          destinationLabel: "Tabor",
+          modes: ["WALK"],
+        },
+      ],
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Shranjene poti" }));
+    fireEvent.mouseDown(await screen.findByText("Shranjena pot"));
+
+    expect(screen.getByRole("button", { name: "Začni" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Bus" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Najdi pot" })).toBeEnabled(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Najdi pot" }));
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/compute?")),
+    );
+    expect(onStartRoute).not.toHaveBeenCalled();
   });
 
   it("dropdown shranjenih poti formatira trajanje, razdaljo in relacijo", async () => {

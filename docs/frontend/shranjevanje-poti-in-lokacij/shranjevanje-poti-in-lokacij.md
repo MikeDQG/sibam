@@ -28,12 +28,25 @@ Payload vsebuje:
 
 ## Tok shranjevanja poti
 
-1. Po izracunu poti `RouteOptions` omogoci `Shrani pot`.
-2. Uporabnik vnese ime poti.
-3. `MainAppHome.handleRouteSave` pridobi auth token in session.
-4. Frontend poslje `POST /api/paths`.
-5. Payload vsebuje `userId`, `name` in `journey: routePath`.
-6. Po uspehu se response normalizira v `SavedAccountRoute` in doda v `savedRoutes`.
+1. Po izracunu poti `MainAppHome` shrani vse alternative v `allFetchedRoutes`, aktivno alternativo pa v `routePath`.
+2. `RouteOptions` prikaze kartico za vsako fetchano alternativo in pod vsako kartico omogoci `Shrani pot`.
+3. Uporabnik odpre save flow pod konkretno kartico in vnese ime poti.
+4. `MainAppHome.handleRouteSave` pridobi auth token in session.
+5. Frontend poslje `POST /api/paths`.
+6. Payload vsebuje `userId`, `name` in `journey` iz tiste kartice, pod katero je bil odprt save flow.
+7. Po uspehu se response normalizira v `SavedAccountRoute` in doda v `savedRoutes`.
+
+Pri vec fetchanih alternativah se nikoli ne shrani celoten `allFetchedRoutes` seznam. Shrani se samo ena izbrana pot:
+
+```ts
+{
+  userId,
+  name,
+  journey: selectedRoute
+}
+```
+
+Ce `selectedRoute` ni podan, `MainAppHome.handleRouteSave` uporabi trenutno aktivni `routePath`. Pri shranjeni poti iz dropdowna se `Shrani pot` v route sheetu ne prikaze, ker je ta pot ze shranjena.
 
 ## Brisanje shranjenih podatkov
 

@@ -1,19 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { Bike, Bus, Footprints, type LucideIcon } from "lucide-react";
 import { RouteErrorBox } from "./RouteErrorBox";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import type { RouteLeg } from "./RoutePolyline";
+import type { RouteLeg, RoutePath } from "./RoutePolyline";
 import { getInstructionText } from "../../lib/text";
 
-type route = {
-  title: string;
-  time: string;
-  className: string;
-  icons: React.ComponentType[];
-};
-
 type RouteOptionProps = {
-  routes: route[];
+  routes: RoutePath[];
   legs?: RouteLeg[];
   computeError?: {
     code: string;
@@ -23,7 +17,9 @@ type RouteOptionProps = {
   hasFetchedRoute?: boolean;
   isSavedRoute?: boolean;
   activeStepIndex?: number | null;
-  onSaveRoute?: (name: string) => Promise<void>;
+  activeRouteIndex?: number;
+  onRouteSelect?: (route: RoutePath, index: number) => void;
+  onSaveRoute?: (name: string, route: RoutePath) => Promise<void>;
 };
 
 export const RouteOptions = ({
@@ -34,6 +30,8 @@ export const RouteOptions = ({
   hasFetchedRoute = true,
   isSavedRoute = false,
   activeStepIndex = null,
+  activeRouteIndex = 0,
+  onRouteSelect,
   onSaveRoute,
 }: RouteOptionProps) => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -42,11 +40,11 @@ export const RouteOptions = ({
   const didDrag = useRef(false);
   const [offsetY, setOffsetY] = useState(44);
   const [maxOffsetY, setMaxOffsetY] = useState(0);
-  const [editingRouteTitle, setEditingRouteTitle] = useState<string | null>(
+  const [editingRouteIndex, setEditingRouteIndex] = useState<number | null>(
     null,
   );
   const [routeName, setRouteName] = useState("");
-  const [savingRouteTitle, setSavingRouteTitle] = useState<string | null>(null);
+  const [savingRouteIndex, setSavingRouteIndex] = useState<number | null>(null);
 
   // initial nastavitev maxOffseta
   useEffect(() => {
@@ -111,38 +109,31 @@ export const RouteOptions = ({
     );
   };
 
-  const startRouteSave = (routeTitle: string) => {
-    setEditingRouteTitle(routeTitle);
+  const startRouteSave = (routeIndex: number) => {
+    setEditingRouteIndex(routeIndex);
     setRouteName("");
   };
 
-  const submitRouteSave = async (routeTitle: string) => {
+  const submitRouteSave = async (routeIndex: number, route: RoutePath) => {
     const trimmedName = routeName.trim();
 
-    if (!trimmedName || savingRouteTitle) return;
+    if (!trimmedName || savingRouteIndex !== null) return;
 
-    setSavingRouteTitle(routeTitle);
+    setSavingRouteIndex(routeIndex);
 
     try {
-      await onSaveRoute?.(trimmedName);
-      setEditingRouteTitle(null);
+      await onSaveRoute?.(trimmedName, route);
+      setEditingRouteIndex(null);
       setRouteName("");
     } finally {
-      setSavingRouteTitle(null);
+      setSavingRouteIndex(null);
     }
   };
 
-  const getButtonClassName = (className: string) =>
-    className
-      .split(" ")
-      .filter(
-        (classNamePart) =>
-          classNamePart && !classNamePart.startsWith("ring-"),
-      )
-      .join(" ");
-
+  const activeRoute = routes[activeRouteIndex] ?? routes[0];
+  const activeRouteLegs = activeRoute?.legs ?? legs;
   const routeSteps =
-    legs?.flatMap((leg, legIndex) =>
+    activeRouteLegs?.flatMap((leg, legIndex) =>
       (leg.steps ?? [])
         .map((step) => ({
           instruction: getInstructionText(step.instruction),
@@ -183,41 +174,51 @@ export const RouteOptions = ({
           </div>
         ) : (
           <div className='flex flex-col gap-8'>
-            {isSavedRoute ? (
-              <div className='flex min-h-40 items-center justify-center rounded-[18px] border border-border bg-muted px-8 text-center text-lg font-medium text-muted-foreground shadow-md dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'>
-                Različni načini za shranjeno pot niso na voljo.
-              </div>
-            ) : (
-              <div className='flex flex-col gap-7 lg:flex-row lg:gap-9'>
-                {routes.map((option) => {
-                  const isSelected = option.className.includes("ring-4");
-                  const buttonClassName = getButtonClassName(option.className);
+            <div className='flex flex-col gap-7 lg:flex-row lg:gap-9'>
+              {routes.map((route, index) => {
+                const isSelected = index === activeRouteIndex;
+                const routeTitle = getRouteTitle(route, index);
+                const routeTime = getRouteTime(route);
+                const routeIcons = getRouteIcons(route);
 
-                  return (
-                    <div
-                      key={option.title}
-                      className='flex w-full flex-col gap-3 lg:min-w-0 lg:flex-1'>
-                      <article
-                        className={`min-h-40 rounded-[18px] border px-8 py-7 text-left shadow-lg lg:px-12 ${option.className} ${
+                return (
+                  <div
+                    key={`${route.rank ?? index}-${routeTitle}`}
+                    className='flex w-full flex-col gap-3 lg:min-w-0 lg:flex-1'>
+                    <button
+                      type='button'
+                      onClick={() => onRouteSelect?.(route, index)}
+                      className={`min-h-40 rounded-[18px] border px-8 py-7 text-left shadow-lg transition-colors lg:px-12 ${
+                        isSelected
+                          ? "border-red-800 bg-red-700 text-white shadow-red-900/20 dark:border-red-300 dark:bg-[#941d38]"
+                          : "border-neutral-200 bg-neutral-100 text-neutral-950 hover:bg-neutral-200 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700"
+                      }`}>
+                      <span
+                        className={`block wrap-break-words text-[25px] font-normal leading-tight ${
                           isSelected
-                            ? "border-white/80 shadow-white/20 dark:border-white/70 dark:shadow-white/10"
-                            : ""
+                            ? "text-white/80"
+                            : "text-neutral-600 dark:text-neutral-300"
                         }`}>
-                        <span className='block wrap-break-words text-[25px] font-normal leading-tight text-current/70 dark:text-[#b2ada4]'>
-                          {option.title}
-                        </span>
-                        <strong className='mt-2 block text-[32px] font-bold leading-none'>
-                          {option.time}
-                        </strong>
-                        <div className='mt-4 flex items-center gap-3 text-current/60 dark:text-[#aaa69d]'>
-                          {option.icons.map((Icon, iconIndex) => (
-                            <Icon key={iconIndex} />
-                          ))}
-                        </div>
-                      </article>
+                        {routeTitle}
+                      </span>
+                      <strong className='mt-2 block text-[32px] font-bold leading-none'>
+                        {routeTime}
+                      </strong>
+                      <div
+                        className={`mt-4 flex items-center gap-3 ${
+                          isSelected
+                            ? "text-white/80"
+                            : "text-neutral-500 dark:text-neutral-300"
+                        }`}>
+                        {routeIcons.map((Icon, iconIndex) => (
+                          <Icon key={iconIndex} />
+                        ))}
+                      </div>
+                    </button>
 
+                    {!isSavedRoute && (
                       <div className='w-full'>
-                        {editingRouteTitle === option.title ? (
+                        {editingRouteIndex === index ? (
                           <div className='flex flex-col gap-3'>
                             <Input
                               value={routeName}
@@ -230,14 +231,16 @@ export const RouteOptions = ({
                             />
                             <Button
                               type='button'
-                              onClick={() =>
-                                void submitRouteSave(option.title)
-                              }
+                              onClick={() => void submitRouteSave(index, route)}
                               disabled={
-                                !routeName.trim() || savingRouteTitle !== null
+                                !routeName.trim() || savingRouteIndex !== null
                               }
-                              className={`h-11 w-full rounded-[18px] border shadow-md hover:brightness-95 ${buttonClassName}`}>
-                              {savingRouteTitle === option.title
+                              className={`h-11 w-full rounded-[18px] border shadow-md hover:brightness-95 ${
+                                isSelected
+                                  ? "border-red-800 bg-red-700 text-white hover:bg-red-800"
+                                  : "border-neutral-200 bg-neutral-100 text-neutral-950 hover:bg-neutral-200 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700"
+                              }`}>
+                              {savingRouteIndex === index
                                 ? "Shranjevanje ..."
                                 : "Shrani"}
                             </Button>
@@ -246,20 +249,24 @@ export const RouteOptions = ({
                           <Button
                             type='button'
                             variant='secondary'
-                            onClick={() => startRouteSave(option.title)}
+                            onClick={() => startRouteSave(index)}
                             disabled={!canSaveRoute}
-                            className={`h-11 w-full rounded-[18px] border shadow-md hover:brightness-95 ${buttonClassName}`}>
+                            className={`h-11 w-full rounded-[18px] border shadow-md hover:brightness-95 ${
+                              isSelected
+                                ? "border-red-800 bg-red-700 text-white hover:bg-red-800"
+                                : "border-neutral-200 bg-neutral-100 text-neutral-950 hover:bg-neutral-200 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700"
+                            }`}>
                             Shrani pot
                           </Button>
                         )}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
-            {(routeSteps.length > 0 || isSavedRoute) && (
+            {hasFetchedRoute && (
               <section className='rounded-[18px] border border-border bg-background/70 px-6 py-5 shadow-md dark:border-neutral-600 dark:bg-neutral-800/70'>
                 <h2 className='text-xl font-semibold'>Navodila za pot</h2>
                 {routeSteps.length > 0 ? (
@@ -268,7 +275,8 @@ export const RouteOptions = ({
                       const hasActiveStep =
                         typeof activeStepIndex === "number" &&
                         activeStepIndex >= 0;
-                      const isPastStep = hasActiveStep && index < activeStepIndex;
+                      const isPastStep =
+                        hasActiveStep && index < activeStepIndex;
                       const isCurrentStep =
                         hasActiveStep && index === activeStepIndex;
 
@@ -307,7 +315,7 @@ export const RouteOptions = ({
                   </ol>
                 ) : (
                   <p className='mt-4 rounded-lg bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm dark:bg-[#292927] dark:text-neutral-300'>
-                    Navodila za to shranjeno pot niso na voljo.
+                    Navodila za to pot niso na voljo.
                   </p>
                 )}
               </section>
@@ -330,4 +338,49 @@ function getModeLabel(mode: string) {
     default:
       return mode;
   }
+}
+
+function getRouteTitle(route: RoutePath, index: number) {
+  if (typeof route.label === "string" && route.label.trim()) {
+    return route.label.trim();
+  }
+
+  if (typeof route.rank === "number" && Number.isFinite(route.rank)) {
+    return `Pot ${route.rank}`;
+  }
+
+  return `Pot ${index + 1}`;
+}
+
+function getRouteTime(route: RoutePath) {
+  if (
+    typeof route.totalDurationSeconds === "number" &&
+    Number.isFinite(route.totalDurationSeconds)
+  ) {
+    return `${Math.round(route.totalDurationSeconds / 60)} min`;
+  }
+
+  const duration = Number(route.duration);
+  if (Number.isFinite(duration)) {
+    return `${Math.round(duration / 60000)} min`;
+  }
+
+  return "Ni podatka";
+}
+
+function getRouteIcons(route: RoutePath) {
+  const modeIcons = {
+    WALK: Footprints,
+    BIKE: Bike,
+    BUS: Bus,
+  } satisfies Record<string, LucideIcon>;
+  const modes =
+    route.modes && route.modes.length > 0
+      ? route.modes
+      : route.legs.map((leg) => leg.mode);
+  const uniqueModes = Array.from(new Set(modes));
+
+  return uniqueModes
+    .map((mode) => modeIcons[mode as keyof typeof modeIcons])
+    .filter((Icon): Icon is LucideIcon => Boolean(Icon));
 }

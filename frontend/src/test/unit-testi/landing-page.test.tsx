@@ -61,7 +61,7 @@ describe("landing page", () => {
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "šibaM" })).toBeInTheDocument();
-    expect(screen.getByText("Načrtuj pot po Mariboru.")).toBeInTheDocument();
+    expect(screen.getByText("Vse poti na enem mestu.")).toBeInTheDocument();
     expect(screen.getByText("Funkcionalnosti")).toBeInTheDocument();
     expect(screen.getByText("© 2026 Šibam. All rights reserved.")).toBeInTheDocument();
   });
@@ -78,7 +78,7 @@ describe("landing page", () => {
     expect(screen.getByRole("heading", { name: "Podatki za mestno mobilnost" })).toBeInTheDocument();
     expect(screen.getByText("izbira datuma v naslednjih 7 dneh")).toBeInTheDocument();
     expect(screen.getByText("prikaz aktualnega koraka med sledenjem")).toBeInTheDocument();
-    expect(screen.getByText("napovedi razpoložljivosti in zamud, ko jih backend vrne")).toBeInTheDocument();
+    expect(screen.getByText("napovedi razpoložljivosti koles, stojal in zamud")).toBeInTheDocument();
   });
 
   it("HeroSection gumb odpre glavno aplikacijo", () => {

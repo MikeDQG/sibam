@@ -58,6 +58,8 @@ public class AStarRouter {
     private static final int DESTINATION_NODE_ID = -2;
     private static final int NEAREST_STOP_LIMIT = 5;
     private static final DateTimeFormatter DEPARTURE_TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
+    private static final ZoneId ROUTING_ZONE = ZoneId.of("Europe/Ljubljana");
+    private static final int ARRIVE_BY_SEARCH_STEP_SECONDS = 60;
 
     private final GraphStore graphStore;
     private final SpatialSearchService spatialSearchService;
@@ -105,7 +107,18 @@ public class AStarRouter {
             double destinationLat,
             double destinationLon
     ) {
-        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, LocalTime.now(), true, true);
+        return findJourney(
+                originLat,
+                originLon,
+                destinationLat,
+                destinationLon,
+                null,
+                null,
+                LocalTime.now(ROUTING_ZONE),
+                LocalDate.now(ROUTING_ZONE),
+                true,
+                true
+        );
     }
 
     public Journey findJourney(
@@ -115,7 +128,18 @@ public class AStarRouter {
             double destinationLon,
             LocalTime startTime
     ) {
-        return findJourney(originLat, originLon, destinationLat, destinationLon, null, null, startTime, true, true);
+        return findJourney(
+                originLat,
+                originLon,
+                destinationLat,
+                destinationLon,
+                null,
+                null,
+                startTime,
+                LocalDate.now(ROUTING_ZONE),
+                true,
+                true
+        );
     }
 
     public Journey findJourney(
@@ -135,6 +159,7 @@ public class AStarRouter {
                 originAddress,
                 destinationAddress,
                 startTime,
+                LocalDate.now(ROUTING_ZONE),
                 true,
                 true
         );
@@ -148,6 +173,7 @@ public class AStarRouter {
             String originAddress,
             String destinationAddress,
             LocalTime startTime,
+            LocalDate startDate,
             boolean allowBike,
             boolean allowBus
     ) {
@@ -159,8 +185,40 @@ public class AStarRouter {
                 originAddress,
                 destinationAddress,
                 startTime,
+                startDate,
                 allowBike,
                 allowBus,
+                RoutingTimeMode.DEPART_AT,
+                SearchOptions.normal()
+        );
+        return candidate == null ? null : candidate.journey();
+    }
+
+    public Journey findJourney(
+            double originLat,
+            double originLon,
+            double destinationLat,
+            double destinationLon,
+            String originAddress,
+            String destinationAddress,
+            LocalTime routingTime,
+            LocalDate routingDate,
+            boolean allowBike,
+            boolean allowBus,
+            RoutingTimeMode timeMode
+    ) {
+        RouteCandidate candidate = findJourneyCandidate(
+                originLat,
+                originLon,
+                destinationLat,
+                destinationLon,
+                originAddress,
+                destinationAddress,
+                routingTime,
+                routingDate,
+                allowBike,
+                allowBus,
+                timeMode,
                 SearchOptions.normal()
         );
         return candidate == null ? null : candidate.journey();
@@ -173,9 +231,11 @@ public class AStarRouter {
             double destinationLon,
             String originAddress,
             String destinationAddress,
-            LocalTime startTime,
+            LocalTime routingTime,
+            LocalDate routingDate,
             boolean allowBike,
             boolean allowBus,
+            RoutingTimeMode timeMode,
             SearchOptions searchOptions
     ) {
         Graph graph = requireGraph();
@@ -202,21 +262,36 @@ public class AStarRouter {
         );
 
         WeatherRoutingContext weatherContext = currentWeatherContext();
-        long startMillis = toEpochMillis(startTime);
-        PathResult pathResult = findPath(
-                routingGraph,
-                ORIGIN_NODE_ID,
-                DESTINATION_NODE_ID,
-                allowBike,
-                allowBus,
-                startMillis,
-                weatherContext,
-                searchOptions == null ? SearchOptions.normal() : searchOptions
-        );
+        SearchOptions resolvedSearchOptions = searchOptions == null ? SearchOptions.normal() : searchOptions;
+        long requestedMillis = toEpochMillis(routingTime, routingDate);
+        PathResult pathResult = timeMode == RoutingTimeMode.ARRIVE_BY
+                ? findArriveByPath(
+                        routingGraph,
+                        ORIGIN_NODE_ID,
+                        DESTINATION_NODE_ID,
+                        allowBike,
+                        allowBus,
+                        requestedMillis,
+                        weatherContext,
+                        resolvedSearchOptions
+                )
+                : findPath(
+                        routingGraph,
+                        ORIGIN_NODE_ID,
+                        DESTINATION_NODE_ID,
+                        allowBike,
+                        allowBus,
+                        requestedMillis,
+                        weatherContext,
+                        resolvedSearchOptions
+                );
         if (pathResult == null) {
             return null;
         }
-        PathResult realPathResult = repricePathResult(routingGraph, pathResult, startMillis, weatherContext);
+        long repriceStartMillis = pathResult.getTimings().isEmpty()
+                ? requestedMillis
+                : pathResult.getTimings().getFirst().departureMillis();
+        PathResult realPathResult = repricePathResult(routingGraph, pathResult, repriceStartMillis, weatherContext);
 
         log.info(
                 "Path created with heuristics: \ntransferPenaltySeconds={} \nbikeDistanceThresholdMeters={} \nbikeLongDistanceMultiplier={} \nbikeShortDistanceMultiplier={} \nwalkLongDistanceMultiplier={}",
@@ -234,7 +309,7 @@ public class AStarRouter {
                 originAddress,
                 new GeoPoint(destinationLat, destinationLon),
                 destinationAddress,
-                startTime,
+                routingTime,
                 weatherContext
         );
         return new RouteCandidate(journey, realPathResult);
@@ -247,10 +322,74 @@ public class AStarRouter {
                 goalNodeId,
                 true,
                 true,
-                toEpochMillis(LocalTime.now()),
+                toEpochMillis(LocalTime.now(ROUTING_ZONE), LocalDate.now(ROUTING_ZONE)),
                 currentWeatherContext(),
                 SearchOptions.normal()
         );
+    }
+
+    public PathResult findPath(int startNodeId, int goalNodeId, LocalTime startTime, LocalDate startDate) {
+        return findPath(
+                requireGraph(),
+                startNodeId,
+                goalNodeId,
+                true,
+                true,
+                toEpochMillis(startTime, startDate),
+                currentWeatherContext(),
+                SearchOptions.normal()
+        );
+    }
+
+    private PathResult findArriveByPath(
+            Graph graph,
+            int startNodeId,
+            int goalNodeId,
+            boolean allowBike,
+            boolean allowBus,
+            long arriveByMillis,
+            WeatherRoutingContext weatherContext,
+            SearchOptions searchOptions
+    ) {
+        long dayStartMillis = LocalDateTime.ofInstant(Instant.ofEpochMilli(arriveByMillis), ROUTING_ZONE)
+                .toLocalDate()
+                .atStartOfDay(ROUTING_ZONE)
+                .toInstant()
+                .toEpochMilli();
+        long stepMillis = secondsToMillis(ARRIVE_BY_SEARCH_STEP_SECONDS);
+
+        PathResult best = null;
+        long lowMinute = 0;
+        long highMinute = (alignDownToStep(arriveByMillis, stepMillis) - dayStartMillis) / stepMillis;
+
+        while (lowMinute <= highMinute) {
+            long candidateMinute = lowMinute + (highMinute - lowMinute) / 2;
+            long candidateMillis = dayStartMillis + candidateMinute * stepMillis;
+            PathResult candidate = findPath(
+                    graph,
+                    startNodeId,
+                    goalNodeId,
+                    allowBike,
+                    allowBus,
+                    candidateMillis,
+                    weatherContext,
+                    searchOptions
+            );
+            if (candidate == null || candidate.getTimings().isEmpty()) {
+                highMinute = candidateMinute - 1;
+                continue;
+            }
+
+            long arrivalMillis = candidate.getTimings().getLast().arrivalMillis();
+            if (arrivalMillis <= arriveByMillis) {
+                best = candidate;
+                lowMinute = candidateMinute + 1;
+            } else {
+                highMinute = candidateMinute - 1;
+            }
+        }
+
+        return best;
     }
 
     private PathResult findPath(
@@ -464,7 +603,7 @@ public class AStarRouter {
                 : edge.getScheduleStopPointId();
         LocalDate currentDate = LocalDateTime.ofInstant(
                 java.time.Instant.ofEpochMilli(currentMillis),
-                ZoneId.systemDefault()
+                ROUTING_ZONE
         ).toLocalDate();
 
         if (!vaoSerializer.isRouteActiveOnDate(routeInfo.routeId(), currentDate)) {
@@ -542,7 +681,7 @@ public class AStarRouter {
         try {
             LocalTime departureTime = LocalTime.parse(departure, DEPARTURE_TIME_FORMATTER);
             return date.atTime(departureTime)
-                    .atZone(ZoneId.systemDefault())
+                    .atZone(ROUTING_ZONE)
                     .toInstant()
                     .toEpochMilli();
         } catch (DateTimeParseException ignored) {
@@ -852,8 +991,8 @@ public class AStarRouter {
         }
 
         try {
-            LocalDateTime pickupTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ZoneId.systemDefault());
-            LocalDateTime returnTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(arrivalMillis), ZoneId.systemDefault());
+            LocalDateTime pickupTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ROUTING_ZONE);
+            LocalDateTime returnTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(arrivalMillis), ROUTING_ZONE);
             float temperature = weatherContext.temperatureCelsius() != null ? weatherContext.temperatureCelsius().floatValue() : 15f;
             float rain = weatherContext.rainMm() != null ? weatherContext.rainMm() : 0f;
             float windSpeed = weatherContext.windSpeedMs() != null ? weatherContext.windSpeedMs() : 0f;
@@ -911,7 +1050,7 @@ public class AStarRouter {
         float windSpeed = weatherContext.windSpeedMs() != null ? weatherContext.windSpeedMs() : 0f;
 
         try {
-            LocalDateTime boardTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ZoneId.systemDefault());
+            LocalDateTime boardTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ROUTING_ZONE);
             int boardDow = boardTime.getDayOfWeek().getValue();
             int boardSeq = lookupStopSequence(lineId, boardStopId);
             int boardingDelay = busDelayPredictionService.predictDelay(
@@ -1108,9 +1247,13 @@ public class AStarRouter {
         return costFunction.calculateCost(edge, weatherContext);
     }
 
-    private long toEpochMillis(LocalTime time) {
-        LocalDateTime dateTime = LocalDate.now().atTime(time);
-        return dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    private long toEpochMillis(LocalTime time, LocalDate date) {
+        LocalDateTime dateTime = date.atTime(time);
+        return dateTime.atZone(ROUTING_ZONE).toInstant().toEpochMilli();
+    }
+
+    private long alignDownToStep(long millis, long stepMillis) {
+        return millis - Math.floorMod(millis, stepMillis);
     }
 
     private long secondsToMillis(int seconds) {

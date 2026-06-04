@@ -7,6 +7,8 @@ type RouteControlsProps = {
   useBike: boolean;
   timeMode: TimeMode;
   selectedTime: string;
+  selectedDate?: string;
+  dateButtonRef?: React.RefObject<HTMLButtonElement | null>;
   hasRoute: boolean;
   isRouteActive: boolean;
   originCoords: Coordinates | null;
@@ -15,8 +17,10 @@ type RouteControlsProps = {
   onToggleBike: () => void;
   onToggleTimeMode: () => void;
   onSelectedTimeChange: (value: string) => void;
+  onDateButtonClick?: () => void;
   onRouteRequest: () => void;
   onSavedRoutesToggle: () => void;
+  dateDropdown?: React.ReactNode;
 };
 
 function getRouteActionLabel(hasRoute: boolean, isRouteActive: boolean) {
@@ -31,6 +35,8 @@ export function RouteControls({
   useBike,
   timeMode,
   selectedTime,
+  selectedDate = new Date().toISOString().slice(0, 10),
+  dateButtonRef,
   hasRoute,
   isRouteActive,
   originCoords,
@@ -39,8 +45,10 @@ export function RouteControls({
   onToggleBike,
   onToggleTimeMode,
   onSelectedTimeChange,
+  onDateButtonClick,
   onRouteRequest,
   onSavedRoutesToggle,
+  dateDropdown,
 }: RouteControlsProps) {
   const isRouteRequestDisabled =
     !hasRoute && !isRouteActive && (!originCoords || !destinationCoords);
@@ -75,7 +83,32 @@ export function RouteControls({
           onChange={(e) => onSelectedTimeChange(e.target.value)}
           className='w-[5.5rem] bg-transparent px-2 py-1.5 text-sm focus:outline-none max-[615px]:w-[4.7rem] max-[615px]:px-1.5 dark:text-white'
         />
+        {onDateButtonClick && (
+          <>
+            <div className='w-px bg-border dark:bg-neutral-600' />
+            <button
+              ref={dateButtonRef}
+              type='button'
+              onClick={onDateButtonClick}
+              className='whitespace-nowrap px-3 py-1.5 text-sm transition-colors hover:bg-muted max-[615px]:px-2 dark:text-white dark:hover:bg-neutral-600'>
+              <span className='max-[430px]:hidden'>
+                {new Date(`${selectedDate}T00:00:00`).toLocaleDateString("sl-SI", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "numeric",
+                })}
+              </span>
+              <span className='hidden max-[430px]:inline'>
+                {new Date(`${selectedDate}T00:00:00`).toLocaleDateString("sl-SI", {
+                  day: "numeric",
+                  month: "numeric",
+                })}
+              </span>
+            </button>
+          </>
+        )}
       </div>
+      {dateDropdown}
       <button
         type='button'
         onClick={onRouteRequest}

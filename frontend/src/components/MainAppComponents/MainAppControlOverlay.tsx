@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   usePlacesAutocomplete,
   MARIBOR_BOUNDS,
@@ -70,6 +71,21 @@ function isInsideMaribor({ lat, lng }: Coordinates) {
     lng >= MARIBOR_BOUNDS.low.longitude &&
     lng <= MARIBOR_BOUNDS.high.longitude
   );
+}
+
+function toDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function getWeekDates(): Array<{value: string; label: string}> {
+  return Array.from({length: 7}, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return {
+      value: toDateString(d),
+      label: d.toLocaleDateString("sl-SI", {weekday: "short", day: "numeric", month: "numeric"}),
+    };
+  });
 }
 
 function formatSavedRouteDuration(value?: string | number | null) {
@@ -176,6 +192,11 @@ export const MainAppControlOverlay = ({
     now.setMinutes(now.getMinutes() + 1);
     return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   });
+  const [selectedDate, setSelectedDate] = useState(() => toDateString(new Date()));
+  const [isDateOpen, setIsDateOpen] = useState(false);
+  const [dateDropdownPos, setDateDropdownPos] = useState<{top: number; left: number} | null>(null);
+  const dateBtnRef = useRef<HTMLButtonElement>(null);
+  const dateMenuRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const origin = usePlacesAutocomplete(placesApiKey);
@@ -585,6 +606,35 @@ export const MainAppControlOverlay = ({
     );
   }
 
+  function handleDateButtonClick() {
+    if (!isDateOpen && dateBtnRef.current) {
+      const rect = dateBtnRef.current.getBoundingClientRect();
+      setDateDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setIsDateOpen((v) => !v);
+  }
+
+  function renderDateDropdown() {
+    if (!isDateOpen || !dateDropdownPos) return null;
+    return createPortal(
+      <div
+        ref={dateMenuRef}
+        style={{ position: "fixed", top: dateDropdownPos.top, left: dateDropdownPos.left }}
+        className='z-[9999] overflow-hidden rounded-lg bg-white shadow-lg dark:bg-neutral-700'>
+        {getWeekDates().map(({ value, label }) => (
+          <button
+            key={value}
+            type='button'
+            onClick={() => { setSelectedDate(value); setIsDateOpen(false); }}
+            className={`block w-full whitespace-nowrap px-4 py-2 text-left text-sm transition-colors ${selectedDate === value ? "bg-red-700 text-white" : "text-neutral-900 hover:bg-muted dark:text-white dark:hover:bg-neutral-600"}`}>
+            {label}
+          </button>
+        ))}
+      </div>,
+      document.body
+    );
+  }
+
   async function handleRouteRequest() {
     if (isRouteActive) {
       onEndRoute?.();
@@ -611,6 +661,8 @@ export const MainAppControlOverlay = ({
         bike: String(useBike),
         bus: String(useBus),
       });
+
+      params.set("date", selectedDate);
 
       if (timeMode === "depart") {
         params.set("leaveAt", selectedTime);
@@ -699,6 +751,20 @@ export const MainAppControlOverlay = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [setDestinationIsOpen, setOriginIsOpen]);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        !dateBtnRef.current?.contains(target) &&
+        !dateMenuRef.current?.contains(target)
+      ) {
+        setIsDateOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <>
       {isLoadingRoute && (
@@ -738,6 +804,8 @@ export const MainAppControlOverlay = ({
                   useBike={useBike}
                   timeMode={timeMode}
                   selectedTime={selectedTime}
+                  selectedDate={selectedDate}
+                  dateButtonRef={dateBtnRef}
                   hasRoute={hasRoute}
                   isRouteActive={isRouteActive}
                   originCoords={originCoords}
@@ -746,8 +814,10 @@ export const MainAppControlOverlay = ({
                   onToggleBike={() => setUseBike((value) => !value)}
                   onToggleTimeMode={handleToggleTimeMode}
                   onSelectedTimeChange={setSelectedTime}
+                  onDateButtonClick={handleDateButtonClick}
                   onRouteRequest={handleRouteRequest}
                   onSavedRoutesToggle={handleSavedRoutesToggle}
+                  dateDropdown={renderDateDropdown()}
                 />
               </>
             ) : (

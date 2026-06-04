@@ -397,6 +397,15 @@ describe("integracijski MainAppControlOverlay", () => {
     expect(screen.getByText("Center → Fakulteta")).toBeInTheDocument();
   });
 
+  it("dropdown shranjenih poti prikaze prazno stanje", async () => {
+    mockOverlayFetch();
+    renderOverlay({ savedRoutes: [] });
+
+    fireEvent.click(screen.getByRole("button", { name: "Shranjene poti" }));
+
+    expect(await screen.findByText("Ni še shranjenih poti.")).toBeInTheDocument();
+  });
+
   it("zamenja smeri, pocisti inpute in zapre dropdowne ob kliku zunaj", async () => {
     mockOverlayFetch();
     const onPlaceSelect = vi.fn();
@@ -537,5 +546,41 @@ describe("integracijski MainAppControlOverlay", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Prekliči iskanje poti" }));
 
     await waitFor(() => expect(screen.queryByText("Iščem pot...")).not.toBeInTheDocument());
+  });
+
+  it("izbira datuma v dropdownu doda date parameter v compute zahtevo", async () => {
+    mockOverlayFetch();
+    renderOverlay();
+
+    await selectDestinationAndOpenDirections();
+    fireEvent.focus(screen.getByRole("textbox", { name: "Kje štartaš?" }));
+    fireEvent.mouseDown(await screen.findByText("Glavni trg"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Najdi pot" })).toBeEnabled());
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowValue = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+    const todayLabel = new Date().toLocaleDateString("sl-SI", {
+      weekday: "short",
+      day: "numeric",
+      month: "numeric",
+    });
+    const tomorrowLabel = tomorrow.toLocaleDateString("sl-SI", {
+      weekday: "short",
+      day: "numeric",
+      month: "numeric",
+    });
+
+    fireEvent.click(screen.getByText(todayLabel).closest("button")!);
+    fireEvent.click(await screen.findByRole("button", { name: tomorrowLabel }));
+    fireEvent.click(screen.getByRole("button", { name: "Najdi pot" }));
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/compute?")));
+    const computeUrl = vi
+      .mocked(fetch)
+      .mock.calls.map(([url]) => String(url))
+      .find((url) => url.includes("/compute?"));
+
+    expect(new URL(computeUrl as string).searchParams.get("date")).toBe(tomorrowValue);
   });
 });

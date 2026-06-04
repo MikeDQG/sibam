@@ -24,13 +24,13 @@ public class SavedLocationService {
     }
 
     public List<SavedLocation> getLocationsForUser(UUID userId, String uid) {
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = findUserOrThrow(userId);
         if (!user.getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         return savedLocationRepository.findByUserId(userId);
     }
 
     public SavedLocation saveLocation(UUID userId, String name, String address, Double latitude, Double longitude, String color, String logo, String uid) {
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = findUserOrThrow(userId);
         if (!user.getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         SavedLocation location = new SavedLocation();
         location.setUser(user);
@@ -45,7 +45,7 @@ public class SavedLocationService {
     }
 
     public SavedLocation updateLocation(UUID locationId, String name, String address, Double latitude, Double longitude, String color, String logo, String uid) {
-        SavedLocation location = savedLocationRepository.findById(locationId).orElseThrow();
+        SavedLocation location = findLocationOrThrow(locationId);
         if (!location.getUser().getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         location.setAddress(address);
         location.setName(name);
@@ -57,8 +57,18 @@ public class SavedLocationService {
     }
 
     public void deleteLocation(UUID locationId, String uid) {
-        SavedLocation location = savedLocationRepository.findById(locationId).orElseThrow();
+        SavedLocation location = findLocationOrThrow(locationId);
         if (!location.getUser().getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         savedLocationRepository.deleteById(locationId);
+    }
+
+    private User findUserOrThrow(UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+
+    private SavedLocation findLocationOrThrow(UUID locationId) {
+        return savedLocationRepository.findById(locationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Location not found"));
     }
 }

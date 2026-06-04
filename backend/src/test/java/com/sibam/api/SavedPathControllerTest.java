@@ -7,8 +7,10 @@ import com.sibam.graph.model.output.Journey;
 import com.sibam.persistence.SavedPath;
 import com.sibam.service.SavedPathService;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -76,5 +78,16 @@ class SavedPathControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(service).deletePath(eq(pathId), eq("uid-1"));
+    }
+
+    @Test
+    void deleteForeignPathReturns403() throws Exception {
+        UUID pathId = UUID.randomUUID();
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
+                .when(service).deletePath(eq(pathId), eq("uid-1"));
+
+        mockMvc.perform(delete("/api/paths/{pathId}", pathId)
+                        .requestAttr("uid", "uid-1"))
+                .andExpect(status().isForbidden());
     }
 }

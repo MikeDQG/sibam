@@ -77,13 +77,17 @@ function toDateString(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function getWeekDates(): Array<{value: string; label: string}> {
-  return Array.from({length: 7}, (_, i) => {
+function getWeekDates(): Array<{ value: string; label: string }> {
+  return Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
     return {
       value: toDateString(d),
-      label: d.toLocaleDateString("sl-SI", {weekday: "short", day: "numeric", month: "numeric"}),
+      label: d.toLocaleDateString("sl-SI", {
+        weekday: "short",
+        day: "numeric",
+        month: "numeric",
+      }),
     };
   });
 }
@@ -143,8 +147,7 @@ function getRouteEndpoints(route: SavedAccountRoute) {
     origin:
       getJourneyPoint(
         route.journey.origin as Parameters<typeof getJourneyPoint>[0],
-      ) ??
-      getJourneyPoint(firstLeg?.polyline[0]),
+      ) ?? getJourneyPoint(firstLeg?.polyline[0]),
     destination:
       getJourneyPoint(
         route.journey.destination as Parameters<typeof getJourneyPoint>[0],
@@ -233,9 +236,14 @@ export const MainAppControlOverlay = ({
     now.setMinutes(now.getMinutes() + 1);
     return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   });
-  const [selectedDate, setSelectedDate] = useState(() => toDateString(new Date()));
+  const [selectedDate, setSelectedDate] = useState(() =>
+    toDateString(new Date()),
+  );
   const [isDateOpen, setIsDateOpen] = useState(false);
-  const [dateDropdownPos, setDateDropdownPos] = useState<{top: number; left: number} | null>(null);
+  const [dateDropdownPos, setDateDropdownPos] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const dateBtnRef = useRef<HTMLButtonElement>(null);
   const dateMenuRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -486,7 +494,9 @@ export const MainAppControlOverlay = ({
               const distance = formatSavedRouteDistance(route.distance);
 
               return (
-                <li key={route.id} className='border-b border-border last:border-0 dark:border-neutral-600'>
+                <li
+                  key={route.id}
+                  className='border-b border-border last:border-0 dark:border-neutral-600'>
                   <button
                     type='button'
                     onMouseDown={() => handleSavedRouteSelect(route)}
@@ -643,7 +653,9 @@ export const MainAppControlOverlay = ({
               Shranjene lokacije
             </li>
             {savedLocations.map((location) => (
-              <li key={`${kind}-${location.id}`} className='border-b border-border last:border-0 dark:border-neutral-600'>
+              <li
+                key={`${kind}-${location.id}`}
+                className='border-b border-border last:border-0 dark:border-neutral-600'>
                 <button
                   type='button'
                   onMouseDown={() => handleSavedLocationSelect(kind, location)}
@@ -699,19 +711,26 @@ export const MainAppControlOverlay = ({
     return createPortal(
       <div
         ref={dateMenuRef}
-        style={{ position: "fixed", top: dateDropdownPos.top, left: dateDropdownPos.left }}
+        style={{
+          position: "fixed",
+          top: dateDropdownPos.top,
+          left: dateDropdownPos.left,
+        }}
         className='z-[9999] overflow-hidden rounded-lg bg-white shadow-lg dark:bg-neutral-700'>
         {getWeekDates().map(({ value, label }) => (
           <button
             key={value}
             type='button'
-            onClick={() => { setSelectedDate(value); setIsDateOpen(false); }}
+            onClick={() => {
+              setSelectedDate(value);
+              setIsDateOpen(false);
+            }}
             className={`block w-full whitespace-nowrap px-4 py-2 text-left text-sm transition-colors ${selectedDate === value ? "bg-red-700 text-white" : "text-neutral-900 hover:bg-muted dark:text-white dark:hover:bg-neutral-600"}`}>
             {label}
           </button>
         ))}
       </div>,
-      document.body
+      document.body,
     );
   }
 
@@ -760,9 +779,9 @@ export const MainAppControlOverlay = ({
         return;
       }
 
-      const journey = normalizeRouteResponse(await res.json());
+      const routeResponse = await res.json();
+      const journey = normalizeRouteResponse(routeResponse);
 
-      console.log("Received route path: ", journey);
       setLastRouteRequestSignature(routeRequestSignature);
       onPathReceive?.(journey);
     } catch (error) {

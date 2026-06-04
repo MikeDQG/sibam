@@ -69,16 +69,22 @@ describe("route-options", () => {
   });
 
   it("gumb Shrani pot je na voljo za izracunano pot", () => {
-    render(<RouteOptions routes={routeOptions} legs={routeLegs} canSaveRoute />);
+    render(
+      <RouteOptions routes={routeOptions} legs={routeLegs} canSaveRoute />,
+    );
 
-    expect(screen.getAllByRole("button", { name: "Shrani pot" })[0]).toBeEnabled();
+    expect(
+      screen.getAllByRole("button", { name: "Shrani pot" })[0],
+    ).toBeEnabled();
   });
 
   it("pri shranjeni poti prikaze eno kartico brez gumba za shranjevanje", () => {
     render(<RouteOptions routes={[routePath]} legs={routeLegs} isSavedRoute />);
 
     expect(screen.getByText("Najhitrejša pot")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Shrani pot" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Shrani pot" }),
+    ).not.toBeInTheDocument();
   });
 
   it("prikaze napako izracuna in odpre sheet", () => {
@@ -93,10 +99,19 @@ describe("route-options", () => {
     expect(screen.getByText("Ni poti.")).toBeInTheDocument();
   });
 
-  it("za shranjeno pot brez navodil prikaze prazno stanje navodil", () => {
-    render(<RouteOptions routes={[routePath]} legs={[]} isSavedRoute />);
+  it("za pot brez navodil prikaze prazno stanje navodil", () => {
+    render(<RouteOptions routes={[{ ...routePath, legs: [] }]} isSavedRoute />);
 
-    expect(screen.getByText("Navodila za to shranjeno pot niso na voljo.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Navodila za to pot niso na voljo."),
+    ).toBeInTheDocument();
+  });
+
+  it("navodila prebere iz aktivne route kartice", () => {
+    render(<RouteOptions routes={routeOptions} activeRouteIndex={1} />);
+
+    expect(screen.getByText("Pelji se z avtobusom")).toBeInTheDocument();
+    expect(screen.queryByText("Vzemi kolo")).not.toBeInTheDocument();
   });
 
   it("shrani pot z vnesenim imenom za izbrani card in zaklene gumb med shranjevanjem", async () => {
@@ -124,7 +139,9 @@ describe("route-options", () => {
         alternativeRoutePath,
       ),
     );
-    expect(screen.getAllByRole("button", { name: "Shrani pot" })[0]).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: "Shrani pot" })[0],
+    ).toBeInTheDocument();
   });
 
   it("drag sheeta ne sprozi toggla ob pointer premiku", () => {

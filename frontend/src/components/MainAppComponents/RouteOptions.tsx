@@ -130,8 +130,10 @@ export const RouteOptions = ({
     }
   };
 
+  const activeRoute = routes[activeRouteIndex] ?? routes[0];
+  const activeRouteLegs = activeRoute?.legs ?? legs;
   const routeSteps =
-    legs?.flatMap((leg, legIndex) =>
+    activeRouteLegs?.flatMap((leg, legIndex) =>
       (leg.steps ?? [])
         .map((step) => ({
           instruction: getInstructionText(step.instruction),
@@ -229,9 +231,7 @@ export const RouteOptions = ({
                             />
                             <Button
                               type='button'
-                              onClick={() =>
-                                void submitRouteSave(index, route)
-                              }
+                              onClick={() => void submitRouteSave(index, route)}
                               disabled={
                                 !routeName.trim() || savingRouteIndex !== null
                               }
@@ -266,7 +266,7 @@ export const RouteOptions = ({
               })}
             </div>
 
-            {(routeSteps.length > 0 || isSavedRoute) && (
+            {hasFetchedRoute && (
               <section className='rounded-[18px] border border-border bg-background/70 px-6 py-5 shadow-md dark:border-neutral-600 dark:bg-neutral-800/70'>
                 <h2 className='text-xl font-semibold'>Navodila za pot</h2>
                 {routeSteps.length > 0 ? (
@@ -275,7 +275,8 @@ export const RouteOptions = ({
                       const hasActiveStep =
                         typeof activeStepIndex === "number" &&
                         activeStepIndex >= 0;
-                      const isPastStep = hasActiveStep && index < activeStepIndex;
+                      const isPastStep =
+                        hasActiveStep && index < activeStepIndex;
                       const isCurrentStep =
                         hasActiveStep && index === activeStepIndex;
 
@@ -314,7 +315,7 @@ export const RouteOptions = ({
                   </ol>
                 ) : (
                   <p className='mt-4 rounded-lg bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm dark:bg-[#292927] dark:text-neutral-300'>
-                    Navodila za to shranjeno pot niso na voljo.
+                    Navodila za to pot niso na voljo.
                   </p>
                 )}
               </section>

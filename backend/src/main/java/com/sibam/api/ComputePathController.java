@@ -7,6 +7,7 @@ import com.sibam.graph.model.GeoPoint;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.routing.AStarRouter;
 import com.sibam.graph.routing.RouteAccessDistanceException;
+import com.sibam.graph.routing.RoutingTimeMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @RestController
@@ -21,6 +23,7 @@ import java.util.List;
 public class ComputePathController {
 
     private static final Logger log = LoggerFactory.getLogger(ComputePathController.class);
+    private static final ZoneId ROUTING_ZONE = ZoneId.of("Europe/Ljubljana");
     
     private final VaoSerializer vaoSerializer;
     private final GraphBootstrap graphBootstrap;
@@ -60,8 +63,8 @@ public class ComputePathController {
             graphBootstrap.ensureInitialized();
         }
 
-        LocalDate startDate = resolveStartDate(date);
-        LocalTime startTime = resolveStartTime(leaveNow, leaveAt);
+        LocalDate routingDate = resolveRoutingDate(date);
+        RoutingTimeRequest routingTime = resolveRoutingTime(leaveNow, leaveAt, arriveBy);
         String resolvedOriginAddress = resolveAddress(originAddress, originAddressSnake);
         String resolvedDestinationAddress = resolveAddress(destinationAddress, destinationAddressSnake);
         Journey journey;
@@ -73,10 +76,11 @@ public class ComputePathController {
                     destinationLon,
                     resolvedOriginAddress,
                     resolvedDestinationAddress,
-                    startTime,
-                    startDate,
+                    routingTime.time(),
+                    routingDate,
                     bike,
-                    bus
+                    bus,
+                    routingTime.mode()
             );
         } catch (RouteAccessDistanceException e) {
             log.info("Failed to compute path: {}", e.getMessage());
@@ -109,19 +113,23 @@ public class ComputePathController {
     }
 
 
-    private LocalDate resolveStartDate(String date) {
+    private LocalDate resolveRoutingDate(String date) {
         if (date == null || date.isBlank()) {
-            return LocalDate.now();
+            return LocalDate.now(ROUTING_ZONE);
         }
         return LocalDate.parse(date);
     }
 
-    private LocalTime resolveStartTime(boolean leaveNow, String leaveAt) {
-        if (leaveNow || leaveAt == null || leaveAt.isBlank()) {
-            return LocalTime.now();
+    private RoutingTimeRequest resolveRoutingTime(boolean leaveNow, String leaveAt, String arriveBy) {
+        if (!leaveNow && arriveBy != null && !arriveBy.isBlank()) {
+            return new RoutingTimeRequest(LocalTime.parse(arriveBy), RoutingTimeMode.ARRIVE_BY);
         }
 
-        return LocalTime.parse(leaveAt);
+        if (leaveNow || leaveAt == null || leaveAt.isBlank()) {
+            return new RoutingTimeRequest(LocalTime.now(ROUTING_ZONE), RoutingTimeMode.DEPART_AT);
+        }
+
+        return new RoutingTimeRequest(LocalTime.parse(leaveAt), RoutingTimeMode.DEPART_AT);
     }
 
     private String resolveAddress(String camelCaseAddress, String snakeCaseAddress) {
@@ -130,5 +138,8 @@ public class ComputePathController {
         }
 
         return snakeCaseAddress;
+    }
+
+    private record RoutingTimeRequest(LocalTime time, RoutingTimeMode mode) {
     }
 }

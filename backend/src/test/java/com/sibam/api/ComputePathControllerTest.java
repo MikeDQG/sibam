@@ -39,6 +39,10 @@ class ComputePathControllerTest {
 
         RouteAlternative route = new RouteAlternative(
                 1,
+                new GeoPoint(1, 1),
+                null,
+                new GeoPoint(2, 2),
+                null,
                 RouteAlternativeLabel.FASTEST.displayName(),
                 List.of(RouteAlternativeLabel.FASTEST.displayName()),
                 100,
@@ -60,10 +64,6 @@ class ComputePathControllerTest {
                 eq(RoutingTimeMode.DEPART_AT)
         )).thenReturn(new RouteAlternativesResponse(
                 "success",
-                new GeoPoint(1, 1),
-                null,
-                new GeoPoint(2, 2),
-                null,
                 List.of(route)
         ));
 
@@ -78,8 +78,14 @@ class ComputePathControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.routes").isArray())
                 .andExpect(jsonPath("$.routes[0].rank").value(1))
+                .andExpect(jsonPath("$.routes[0].origin.lat").value(1))
+                .andExpect(jsonPath("$.routes[0].origin.lon").value(1))
+                .andExpect(jsonPath("$.routes[0].destination.lat").value(2))
+                .andExpect(jsonPath("$.routes[0].destination.lon").value(2))
                 .andExpect(jsonPath("$.routes[0].labels[0]").value(RouteAlternativeLabel.FASTEST.displayName()))
                 .andExpect(jsonPath("$.routes[0].label").value(RouteAlternativeLabel.FASTEST.displayName()))
+                .andExpect(jsonPath("$.origin").doesNotExist())
+                .andExpect(jsonPath("$.destination").doesNotExist())
                 .andExpect(jsonPath("$.route").doesNotExist())
                 .andExpect(jsonPath("$.bestRoute").doesNotExist());
     }
@@ -121,10 +127,10 @@ class ComputePathControllerTest {
                         .param("bus", "true")
                         .param("userId", "sjdfb7e4tfg74g74"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.origin.lat").value(originLat))
-                .andExpect(jsonPath("$.origin.lon").value(originLon))
-                .andExpect(jsonPath("$.destination.lat").value(destinationLat))
-                .andExpect(jsonPath("$.destination.lon").value(destinationLon));
+                .andExpect(jsonPath("$.routes").isArray())
+                .andExpect(jsonPath("$.routes").isEmpty())
+                .andExpect(jsonPath("$.origin").doesNotExist())
+                .andExpect(jsonPath("$.destination").doesNotExist());
 
         verify(graphBootstrap).refresh();
     }

@@ -37,6 +37,8 @@ class RouteAlternativeServiceTest {
 
         assertThat(response.routes()).hasSize(1);
         assertThat(response.routes().getFirst().modes()).doesNotContain("BIKE");
+        assertThat(response.routes().getFirst().origin()).isEqualTo(new GeoPoint(1, 1));
+        assertThat(response.routes().getFirst().destination()).isEqualTo(new GeoPoint(2, 2));
     }
 
     @Test

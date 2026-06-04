@@ -111,16 +111,21 @@ public class RouteAlternativeService {
                 .toList();
         List<Candidate> qualityFiltered = filterQuality(sorted);
         List<RouteAlternative> alternatives = new ArrayList<>();
+        GeoPoint origin = new GeoPoint(originLat, originLon);
+        GeoPoint destination = new GeoPoint(destinationLat, destinationLon);
         for (int i = 0; i < qualityFiltered.size(); i++) {
-            alternatives.add(toAlternative(i + 1, qualityFiltered.get(i)));
+            alternatives.add(toAlternative(
+                    i + 1,
+                    qualityFiltered.get(i),
+                    origin,
+                    originAddress,
+                    destination,
+                    destinationAddress
+            ));
         }
 
         return new RouteAlternativesResponse(
                 alternatives.isEmpty() ? "not_found" : "success",
-                new GeoPoint(originLat, originLon),
-                originAddress,
-                new GeoPoint(destinationLat, destinationLon),
-                destinationAddress,
                 alternatives
         );
     }
@@ -172,12 +177,23 @@ public class RouteAlternativeService {
         return false;
     }
 
-    private RouteAlternative toAlternative(int rank, Candidate candidate) {
+    private RouteAlternative toAlternative(
+            int rank,
+            Candidate candidate,
+            GeoPoint origin,
+            String originAddress,
+            GeoPoint destination,
+            String destinationAddress
+    ) {
         Journey journey = candidate.routeCandidate().journey();
         List<String> modes = journey.legs().stream().map(Leg::mode).toList();
         List<String> labels = labelsFor(rank, candidate, modes);
         return new RouteAlternative(
                 rank,
+                origin,
+                originAddress,
+                destination,
+                destinationAddress,
                 labels.getFirst(),
                 labels,
                 candidate.durationSeconds(),

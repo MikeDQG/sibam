@@ -333,7 +333,7 @@ export const AccountPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center bg-[url('/LandingPage/background.jpeg')] bg-cover bg-center px-6 pt-25">
+    <div className="flex min-h-screen w-full flex-col items-center bg-[url('/LandingPage/background_light.jpg')] bg-cover bg-center px-6 pt-25 dark:bg-[url('/LandingPage/background.jpeg')]">
       <div className='flex w-full max-w-[80vw] flex-col gap-6 rounded-lg bg-card/95 p-10 text-card-foreground shadow-xl backdrop-blur-sm dark:bg-neutral-700/95'>
         <button
           type='button'

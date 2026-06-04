@@ -5,10 +5,10 @@ export const HeroSection = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex h-screen items-center bg-[url('/LandingPage/background.jpeg')] bg-cover bg-center">
+    <div className="flex h-screen items-center bg-[url('/LandingPage/background_light.jpg')] bg-cover bg-center dark:bg-[url('/LandingPage/background.jpeg')]">
       <div className='flex w-full flex-col items-center gap-5 lg:flex-row lg:gap-0'>
         <div className='flex flex-1 flex-col items-center text-center lg:ml-[10%] lg:items-start lg:text-left'>
-          <h1 className='m-0 p-0 text-center text-[72px] font-bold leading-none text-white sm:text-[92px] lg:text-left lg:text-[120px]'>
+          <h1 className='m-0 p-0 text-center text-[72px] font-bold leading-none text-foreground sm:text-[92px] lg:text-left lg:text-[120px]'>
             šibaM
           </h1>
           <span className='ml-0 text-center text-2xl text-red-500 sm:text-[32px] lg:ml-2 lg:text-left lg:text-[40px]'>

@@ -31,6 +31,9 @@ describe("route-popup", () => {
   it("avtobusni popup prikaze odhod in napoved zamude", () => {
     render(<RoutePopup selectedLeg={{ leg: routeLegs[1], position: { lat: 1, lng: 1 }, source: "busIcon" }} />);
 
+    expect(screen.getByText("6")).toHaveClass("font-medium");
+    expect(screen.getByText("6")).not.toHaveClass("text-muted-foreground");
+    expect(screen.getByText("Bresternica - Avtobusna postaja")).toHaveClass("font-medium");
     expect(screen.getByText("Odhod avtobusa")).toBeInTheDocument();
     expect(screen.getByText("Pričakovana zamuda (min)")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();

@@ -140,6 +140,15 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
 
         <div className='mt-2 space-y-1.5'>
           <RoutePopupRow
+            label={selectedLeg.leg.code?.trim() ?? "Linija"}
+            labelBold
+            value={
+              showBusIconDetails && selectedLeg.leg.mode === "BUS"
+                ? selectedLeg.leg.headsignName?.trim()
+                : null
+            }
+          />
+          <RoutePopupRow
             label='Odhod avtobusa'
             value={
               showBusIconDetails && selectedLeg.leg.mode === "BUS"
@@ -235,14 +244,18 @@ export const RoutePopup = ({ selectedLeg, onClose }: RoutePopupProps) => {
 type RoutePopupRowProps = {
   label: string;
   value?: ReactNode | null;
+  labelBold?: boolean;
 };
 
-const RoutePopupRow = ({ label, value }: RoutePopupRowProps) => {
+const RoutePopupRow = ({ label, value, labelBold }: RoutePopupRowProps) => {
   if (!value) return null;
 
   return (
     <div className='flex justify-between gap-5'>
-      <span className='text-muted-foreground dark:text-neutral-300'>
+      <span
+        className={
+          labelBold ? "font-medium" : "text-muted-foreground dark:text-neutral-300"
+        }>
         {label}
       </span>
       <span className='font-medium'>{value}</span>

@@ -51,6 +51,7 @@ Klik na polyline odsek poti odpre popup s povzetkom tega odseka:
 Klik na avtobusno ikono odpre popup z informacijami o avtobusu:
 
 - naslov `Avtobus`;
+- linijo avtobusa iz `leg.code` na levi in smer/naziv linije iz `leg.headsignName` na desni, ce sta podana;
 - cas odhoda avtobusa, ce je podan v `leg.departure`.
 - pricakovana zamuda v minutah, ce je podana v `leg.busDelayPrediction.predictedBoardingDelaySeconds`.
 
@@ -295,6 +296,7 @@ Vsak `RouteLeg` vsebuje:
 - `duration`;
 - `distance`;
 - podatke za bus ali bike, kot so `departure`, `freeBikes`, `freeStands`;
+- opcijska `code` in `headsignName` pri `BUS` legih;
 - opcijski `busDelayPrediction` pri `BUS` legih:
   - `predictedBoardingDelaySeconds`;
 - opcijski `bikePrediction` pri `BIKE` legih:

@@ -29,6 +29,8 @@ export const routeLegs: RouteLeg[] = [
     mode: "BUS",
     duration: "900000",
     distance: "1800",
+    code: "6",
+    headsignName: "Bresternica - Avtobusna postaja",
     departure: "1767355200000",
     busDelayPrediction: { predictedBoardingDelaySeconds: 180 },
     polyline: [

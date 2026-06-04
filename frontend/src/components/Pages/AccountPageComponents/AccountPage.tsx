@@ -20,15 +20,15 @@ import {
   SavedRouteMapCard,
   type SavedAccountRoute,
 } from "./SavedRouteMapCard";
+import { buildApiUrl, parseUuid } from "../../../lib/api";
 
-const apiUrl = import.meta.env.VITE_API_URL;
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const defaultLocationColor = "#b91c1c";
 const defaultLocationIcon: LocationIcon = "home";
 
 type SavedLocationResponse = {
-  id: string;
+  id: unknown;
   name?: string | null;
   latitude?: number | string | null;
   longitude?: number | string | null;
@@ -37,7 +37,7 @@ type SavedLocationResponse = {
 };
 
 type SavedRouteResponse = {
-  id: string;
+  id: unknown;
   name?: string | null;
   journey?: RoutePath & {
     duration?: string | null;
@@ -64,7 +64,7 @@ function normalizeSavedLocation(
   if (lat === null || lng === null) return null;
 
   return {
-    id: location.id,
+    id: parseUuid(location.id, "location.id"),
     name: location.name?.trim() || "Shranjena lokacija",
     position: { lat, lng },
     color: location.color ?? defaultLocationColor,
@@ -81,7 +81,7 @@ function normalizeSavedRoute(
   if (!journey || !hasDrawableRoute) return null;
 
   return {
-    id: route.id,
+    id: parseUuid(route.id, "route.id"),
     name: route.name?.trim() || "Shranjena pot",
     journey,
     duration: journey?.duration,
@@ -150,11 +150,14 @@ export const AccountPage = () => {
 
         const session = userSession ?? (await fetchUserSession(token));
 
-        const response = await fetch(`${apiUrl}/api/locations/${session.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const response = await fetch(
+          buildApiUrl("api", "locations", session.id),
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         if (!response.ok) {
           throw new Error(`Saved locations request failed: ${response.status}`);
@@ -208,7 +211,7 @@ export const AccountPage = () => {
 
         const session = userSession ?? (await fetchUserSession(token));
 
-        const response = await fetch(`${apiUrl}/api/paths/${session.id}`, {
+        const response = await fetch(buildApiUrl("api", "paths", session.id), {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -258,12 +261,15 @@ export const AccountPage = () => {
         return;
       }
 
-      const response = await fetch(`${apiUrl}/api/locations/${locationId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        buildApiUrl("api", "locations", parseUuid(locationId, "location.id")),
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Delete location request failed: ${response.status}`);
@@ -297,12 +303,15 @@ export const AccountPage = () => {
         return;
       }
 
-      const response = await fetch(`${apiUrl}/api/paths/${routeId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        buildApiUrl("api", "paths", parseUuid(routeId, "route.id")),
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Delete route request failed: ${response.status}`);

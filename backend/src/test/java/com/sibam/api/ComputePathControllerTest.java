@@ -2,7 +2,11 @@ package com.sibam.api;
 
 import com.sibam.engine.VaoSerializer;
 import com.sibam.graph.bootstrap.GraphBootstrap;
-import com.sibam.graph.routing.AStarRouter;
+import com.sibam.graph.model.GeoPoint;
+import com.sibam.graph.model.RouteAlternativeLabel;
+import com.sibam.graph.model.output.RouteAlternative;
+import com.sibam.graph.model.output.RouteAlternativesResponse;
+import com.sibam.graph.routing.RouteAlternativeService;
 import com.sibam.graph.routing.RouteAccessDistanceException;
 import com.sibam.graph.routing.RoutingTimeMode;
 import org.junit.jupiter.api.Test;
@@ -11,8 +15,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -24,11 +30,66 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ComputePathControllerTest {
 
     @Test
+    void returnsRoutesArray() throws Exception {
+        VaoSerializer vaoSerializer = mock(VaoSerializer.class);
+        GraphBootstrap graphBootstrap = mock(GraphBootstrap.class);
+        RouteAlternativeService routeAlternativeService = mock(RouteAlternativeService.class);
+        ComputePathController controller = new ComputePathController(vaoSerializer, graphBootstrap, routeAlternativeService);
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        RouteAlternative route = new RouteAlternative(
+                1,
+                RouteAlternativeLabel.FASTEST.displayName(),
+                List.of(RouteAlternativeLabel.FASTEST.displayName()),
+                100,
+                500,
+                List.of("WALK"),
+                List.of()
+        );
+        when(routeAlternativeService.findAlternatives(
+                anyDouble(),
+                anyDouble(),
+                anyDouble(),
+                anyDouble(),
+                any(),
+                any(),
+                any(LocalTime.class),
+                any(LocalDate.class),
+                eq(false),
+                eq(false),
+                eq(RoutingTimeMode.DEPART_AT)
+        )).thenReturn(new RouteAlternativesResponse(
+                "success",
+                new GeoPoint(1, 1),
+                null,
+                new GeoPoint(2, 2),
+                null,
+                List.of(route)
+        ));
+
+        mockMvc.perform(get("/compute")
+                        .param("originLat", "1")
+                        .param("originLon", "1")
+                        .param("destinationLat", "2")
+                        .param("destinationLon", "2")
+                        .param("leaveNow", "true")
+                        .param("bike", "false")
+                        .param("bus", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.routes").isArray())
+                .andExpect(jsonPath("$.routes[0].rank").value(1))
+                .andExpect(jsonPath("$.routes[0].labels[0]").value(RouteAlternativeLabel.FASTEST.displayName()))
+                .andExpect(jsonPath("$.routes[0].label").value(RouteAlternativeLabel.FASTEST.displayName()))
+                .andExpect(jsonPath("$.route").doesNotExist())
+                .andExpect(jsonPath("$.bestRoute").doesNotExist());
+    }
+
+    @Test
     void fallbackResponseKeepsRequestedCoordinates() throws Exception {
         VaoSerializer vaoSerializer = mock(VaoSerializer.class);
         GraphBootstrap graphBootstrap = mock(GraphBootstrap.class);
-        AStarRouter aStarRouter = mock(AStarRouter.class);
-        ComputePathController controller = new ComputePathController(vaoSerializer, graphBootstrap, aStarRouter);
+        RouteAlternativeService routeAlternativeService = mock(RouteAlternativeService.class);
+        ComputePathController controller = new ComputePathController(vaoSerializer, graphBootstrap, routeAlternativeService);
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
         double originLat = 46.538077;
@@ -36,7 +97,7 @@ class ComputePathControllerTest {
         double destinationLat = 46.561754;
         double destinationLon = 15.629752;
 
-        when(aStarRouter.findJourney(
+        when(routeAlternativeService.findAlternatives(
                 eq(originLat),
                 eq(originLon),
                 eq(destinationLat),
@@ -72,8 +133,8 @@ class ComputePathControllerTest {
     void returnsBadRequestWhenEndpointIsOutsideServiceArea() throws Exception {
         VaoSerializer vaoSerializer = mock(VaoSerializer.class);
         GraphBootstrap graphBootstrap = mock(GraphBootstrap.class);
-        AStarRouter aStarRouter = mock(AStarRouter.class);
-        ComputePathController controller = new ComputePathController(vaoSerializer, graphBootstrap, aStarRouter);
+        RouteAlternativeService routeAlternativeService = mock(RouteAlternativeService.class);
+        ComputePathController controller = new ComputePathController(vaoSerializer, graphBootstrap, routeAlternativeService);
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
         double originLat = 46.538077;
@@ -81,7 +142,7 @@ class ComputePathControllerTest {
         double destinationLat = 46.561754;
         double destinationLon = 15.629752;
 
-        when(aStarRouter.findJourney(
+        when(routeAlternativeService.findAlternatives(
                 eq(originLat),
                 eq(originLon),
                 eq(destinationLat),
@@ -115,8 +176,8 @@ class ComputePathControllerTest {
     void forwardsArriveByTimeModeToRouter() throws Exception {
         VaoSerializer vaoSerializer = mock(VaoSerializer.class);
         GraphBootstrap graphBootstrap = mock(GraphBootstrap.class);
-        AStarRouter aStarRouter = mock(AStarRouter.class);
-        ComputePathController controller = new ComputePathController(vaoSerializer, graphBootstrap, aStarRouter);
+        RouteAlternativeService routeAlternativeService = mock(RouteAlternativeService.class);
+        ComputePathController controller = new ComputePathController(vaoSerializer, graphBootstrap, routeAlternativeService);
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
         double originLat = 46.538077;
@@ -124,7 +185,7 @@ class ComputePathControllerTest {
         double destinationLat = 46.561754;
         double destinationLon = 15.629752;
 
-        when(aStarRouter.findJourney(
+        when(routeAlternativeService.findAlternatives(
                 eq(originLat),
                 eq(originLon),
                 eq(destinationLat),

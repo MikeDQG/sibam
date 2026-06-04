@@ -19,9 +19,9 @@ import type {
 } from "../MainAppComponents/RoutePolyline";
 import { useUserSession } from "../Authorization/UserSessionProvider";
 import { MARIBOR_BOUNDS } from "../../hooks/usePlacesAutocomplete";
+import { buildApiUrl, parseUuid } from "../../lib/api";
+import { getInstructionText } from "../../lib/text";
 import type { SavedAccountRoute } from "./AccountPageComponents/SavedRouteMapCard";
-
-const apiUrl = import.meta.env.VITE_API_URL;
 
 const routeOptions = [
   {
@@ -78,7 +78,7 @@ type ClosestRoutePoint = {
 };
 
 type SavedLocationResponse = {
-  id: string;
+  id: unknown;
   name: string;
   latitude: number;
   longitude: number;
@@ -87,7 +87,7 @@ type SavedLocationResponse = {
 };
 
 type SavedRouteResponse = {
-  id: string;
+  id: unknown;
   name?: string | null;
   journey?: RoutePath & {
     duration?: string | null;
@@ -121,7 +121,7 @@ function normalizeSavedRoute(
   if (!journey || !hasDrawableRoute) return null;
 
   return {
-    id: route.id,
+    id: parseUuid(route.id, "route.id"),
     name: route.name?.trim() || "Shranjena pot",
     journey,
     duration: journey.duration,
@@ -178,20 +178,6 @@ function getRouteEndpoints(path: RoutePath) {
         path.destination as Parameters<typeof getJourneyPoint>[0],
       ) ?? getJourneyPoint(lastLeg?.polyline.at(-1)),
   };
-}
-
-function getInstructionText(instruction?: string | null) {
-  if (!instruction) return "";
-
-  if (typeof DOMParser === "undefined") {
-    return instruction
-      .replace(/<[^>]*>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  const document = new DOMParser().parseFromString(instruction, "text/html");
-  return (document.body.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
 function getModeLabel(mode: string) {
@@ -534,11 +520,14 @@ export const MainAppHome = () => {
       try {
         const session = userSession ?? (await fetchUserSession(token));
 
-        const response = await fetch(`${apiUrl}/api/locations/${session.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const response = await fetch(
+          buildApiUrl("api", "locations", session.id),
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         if (!response.ok) {
           throw new Error(`Saved locations request failed: ${response.status}`);
@@ -556,7 +545,7 @@ export const MainAppHome = () => {
                 Number.isFinite(location.longitude),
             )
             .map((location) => ({
-              id: location.id,
+              id: parseUuid(location.id, "location.id"),
               name: location.name,
               position: {
                 lat: location.latitude,
@@ -595,7 +584,7 @@ export const MainAppHome = () => {
       try {
         const session = userSession ?? (await fetchUserSession(token));
 
-        const response = await fetch(`${apiUrl}/api/paths/${session.id}`, {
+        const response = await fetch(buildApiUrl("api", "paths", session.id), {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -793,7 +782,7 @@ export const MainAppHome = () => {
         logo: draft.icon,
       };
 
-      const response = await fetch(`${apiUrl}/api/locations`, {
+      const response = await fetch(buildApiUrl("api", "locations"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -811,7 +800,7 @@ export const MainAppHome = () => {
       setSavedLocations((currentLocations) => [
         ...currentLocations,
         {
-          id: savedLocation.id,
+          id: parseUuid(savedLocation.id, "location.id"),
           name: savedLocation.name,
           position: {
             lat: savedLocation.latitude,
@@ -844,12 +833,15 @@ export const MainAppHome = () => {
         return;
       }
 
-      const response = await fetch(`${apiUrl}/api/locations/${locationId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        buildApiUrl("api", "locations", parseUuid(locationId, "location.id")),
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Delete location request failed: ${response.status}`);
@@ -882,7 +874,7 @@ export const MainAppHome = () => {
 
       const session = userSession ?? (await fetchUserSession(token));
 
-      const response = await fetch(`${apiUrl}/api/paths`, {
+      const response = await fetch(buildApiUrl("api", "paths"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

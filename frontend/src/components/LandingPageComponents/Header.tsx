@@ -46,12 +46,9 @@ export const Header = () => {
           ? "bg-white/70 shadow-lg backdrop-blur-md dark:bg-neutral-600/40"
           : "bg-white/0 dark:bg-neutral-600/00"
       }`}>
-      <img
-        src='/logo.svg'
-        alt='Šibam'
-        className='h-15 w-auto'
-        onClick={() => navigate("/")}
-      />
+      <button type='button' onClick={() => navigate("/")} aria-label='Domov'>
+        <img src='/logo.svg' alt='Šibam' className='h-15 w-auto' />
+      </button>
       <div className='flex gap-3'>
         <ThemeToggle />
         {location.pathname !== "/" && (

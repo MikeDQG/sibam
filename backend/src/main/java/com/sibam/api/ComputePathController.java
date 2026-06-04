@@ -4,8 +4,8 @@ import com.sibam.engine.VaoSerializer;
 import com.sibam.dto.ApiErrorResponse;
 import com.sibam.graph.bootstrap.GraphBootstrap;
 import com.sibam.graph.model.GeoPoint;
-import com.sibam.graph.model.output.Journey;
-import com.sibam.graph.routing.AStarRouter;
+import com.sibam.graph.model.output.RouteAlternativesResponse;
+import com.sibam.graph.routing.RouteAlternativeService;
 import com.sibam.graph.routing.RouteAccessDistanceException;
 import com.sibam.graph.routing.RoutingTimeMode;
 import org.slf4j.Logger;
@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.List;
 
 @RestController
 @RequestMapping("/compute")
@@ -27,16 +26,16 @@ public class ComputePathController {
     
     private final VaoSerializer vaoSerializer;
     private final GraphBootstrap graphBootstrap;
-    private final AStarRouter aStarRouter;
+    private final RouteAlternativeService routeAlternativeService;
 
     public ComputePathController(
             VaoSerializer vaoSerializer,
             GraphBootstrap graphBootstrap,
-            AStarRouter aStarRouter
+            RouteAlternativeService routeAlternativeService
     ) {
         this.vaoSerializer = vaoSerializer;
         this.graphBootstrap = graphBootstrap;
-        this.aStarRouter = aStarRouter;
+        this.routeAlternativeService = routeAlternativeService;
     }
 
     @GetMapping
@@ -67,9 +66,9 @@ public class ComputePathController {
         RoutingTimeRequest routingTime = resolveRoutingTime(leaveNow, leaveAt, arriveBy);
         String resolvedOriginAddress = resolveAddress(originAddress, originAddressSnake);
         String resolvedDestinationAddress = resolveAddress(destinationAddress, destinationAddressSnake);
-        Journey journey;
+        RouteAlternativesResponse response;
         try {
-            journey = aStarRouter.findJourney(
+            response = routeAlternativeService.findAlternatives(
                     originLat,
                     originLon,
                     destinationLat,
@@ -96,20 +95,18 @@ public class ComputePathController {
 
         log.info("Received path computation request with origin ({}, {})", originLat, originLon);
 
-        if (journey == null) {
-            return ResponseEntity.ok(new Journey(
+        if (response == null) {
+            return ResponseEntity.ok(new RouteAlternativesResponse(
                     "not_found",
                     new GeoPoint(originLat, originLon),
                     resolvedOriginAddress,
                     new GeoPoint(destinationLat, destinationLon),
                     resolvedDestinationAddress,
-                    "0",
-                    "0",
-                    List.of()
+                    java.util.List.of()
             ));
         }
 
-        return ResponseEntity.ok(journey);
+        return ResponseEntity.ok(response);
     }
 
 

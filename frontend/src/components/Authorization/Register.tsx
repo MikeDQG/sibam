@@ -7,12 +7,32 @@ import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
 import { auth } from "../../firebase";
 import { ThemeToggle } from "../ThemeToggle";
+import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
 import { useUserSession } from "./UserSessionProvider";
+
+function isValidEmailAddress(value: string) {
+  const email = value;
+  const atIndex = email.indexOf("@");
+  const lastAtIndex = email.lastIndexOf("@");
+
+  if (atIndex <= 0 || atIndex !== lastAtIndex) return false;
+
+  const domain = email.slice(atIndex + 1);
+  const dotIndex = domain.indexOf(".");
+
+  if (dotIndex <= 0 || dotIndex === domain.length - 1) return false;
+
+  for (const character of email) {
+    if (character.trim() === "") return false;
+  }
+
+  return true;
+}
 
 export const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -45,8 +65,7 @@ export const Register = () => {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!isValidEmailAddress(email)) {
       setError("Vnesite veljaven email naslov.");
       return;
     }
@@ -62,8 +81,9 @@ export const Register = () => {
       await syncUserSession(token, fullName);
 
       navigate("/account");
-    } catch (error: any) {
-      switch (error.code) {
+    } catch (error: unknown) {
+      const errorCode = error instanceof FirebaseError ? error.code : "";
+      switch (errorCode) {
         case "auth/email-already-in-use":
           setError("Ta email je že registriran.");
           break;
@@ -88,7 +108,7 @@ export const Register = () => {
       await syncUserSession(token);
 
       navigate("/account");
-    } catch (error: any) {
+    } catch {
       setError("Prišlo je do napake pri Google registraciji.");
     }
   };
@@ -114,12 +134,13 @@ export const Register = () => {
 
   return (
     <div className='relative flex min-h-screen w-full items-center justify-end bg-neutral-800 max-[699px]:justify-center'>
-      <img
-        src='logo.svg'
-        className='absolute left-9 top-6 z-2 h-15 w-auto max-[699px]:hidden'
-        alt='Logo'
+      <button
+        type='button'
+        className='absolute left-9 top-6 z-2 h-15 w-auto cursor-pointer max-[699px]:hidden'
         onClick={() => navigate("/")}
-      />
+        aria-label='Domov'>
+        <img src='logo.svg' className='h-full w-auto' alt='Logo' />
+      </button>
       <img
         className='absolute left-0 top-0 h-full w-[80%] max-w-[80%] object-cover max-[699px]:hidden'
         src='/LandingPage/background.jpeg'

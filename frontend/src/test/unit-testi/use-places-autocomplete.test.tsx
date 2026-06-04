@@ -138,4 +138,64 @@ describe("usePlacesAutocomplete", () => {
     await waitFor(() => expect(result.current.predictions).toEqual([]));
     expect(result.current.isOpen).toBe(false);
   });
+
+  it("response brez suggestions zapre dropdown brez predlogov", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: () => Promise.resolve({}),
+      }),
+    );
+
+    const { result } = renderHook(() => usePlacesAutocomplete("places-key"));
+
+    act(() => {
+      result.current.handleChange({
+        target: { value: "Lent" },
+      } as React.ChangeEvent<HTMLInputElement>);
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    vi.useRealTimers();
+
+    await waitFor(() => expect(result.current.predictions).toEqual([]));
+    expect(result.current.isOpen).toBe(false);
+  });
+
+  it("nova sprememba vnosa preklice prejsnji debounce", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          suggestions: [],
+        }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => usePlacesAutocomplete("places-key"));
+
+    act(() => {
+      result.current.handleChange({
+        target: { value: "Ta" },
+      } as React.ChangeEvent<HTMLInputElement>);
+      result.current.handleChange({
+        target: { value: "Tabor" },
+      } as React.ChangeEvent<HTMLInputElement>);
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://places.googleapis.com/v1/places:autocomplete",
+      expect.objectContaining({
+        body: expect.stringContaining('"input":"Tabor"'),
+      }),
+    );
+  });
 });

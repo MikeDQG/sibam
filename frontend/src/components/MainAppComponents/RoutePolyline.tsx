@@ -89,6 +89,22 @@ export type RouteLeg = {
 
 export type RoutePath = {
   legs: RouteLeg[];
+  status?: string;
+  origin?: unknown;
+  origin_address?: string | null;
+  originAddress?: string | null;
+  destination?: unknown;
+  destination_address?: string | null;
+  destinationAddress?: string | null;
+  duration?: string | number | null;
+  distance?: string | number | null;
+  label?: string | null;
+  labels?: string[];
+  rank?: number;
+  totalDurationSeconds?: number;
+  totalDistanceMeters?: number;
+  modes?: string[];
+  routes?: RoutePath[];
   [key: string]: unknown;
 };
 

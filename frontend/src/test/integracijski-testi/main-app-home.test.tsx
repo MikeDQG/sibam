@@ -6,6 +6,11 @@ const integrationData = vi.hoisted(() => ({
   routePath: {
     origin: { lat: 46.5547, lng: 15.6459 },
     destination: { lat: 46.562, lng: 15.65 },
+    label: "Prva alternativa",
+    rank: 1,
+    totalDurationSeconds: 300,
+    totalDistanceMeters: 350,
+    modes: ["WALK"],
     legs: [
       {
         mode: "WALK",
@@ -241,7 +246,11 @@ vi.mock("../../components/MainAppComponents/MainAppControlOverlay", () => ({
   MainAppControlOverlay: (props: {
     hasRoute?: boolean;
     isRouteActive?: boolean;
-    onPathReceive?: (path: typeof integrationData.routePath) => void;
+    onPathReceive?: (
+      path: typeof integrationData.routePath & {
+        routes?: Array<typeof integrationData.routePath>;
+      },
+    ) => void;
     onPathError?: (error: { code: string; message?: string }) => void;
     onZoomIn?: () => void;
     onZoomOut?: () => void;
@@ -284,6 +293,42 @@ vi.mock("../../components/MainAppComponents/MainAppControlOverlay", () => ({
       </button>
       <button type='button' onClick={() => props.onPathReceive?.(integrationData.routePath)}>
         Vrni izračunano pot
+      </button>
+      <button
+        type='button'
+        onClick={() =>
+          props.onPathReceive?.({
+            ...integrationData.routePath,
+            routes: [
+              {
+                ...integrationData.routePath,
+                label: "Prva alternativa",
+                rank: 1,
+                totalDurationSeconds: 300,
+              },
+              {
+                ...integrationData.routePath,
+                label: "Druga alternativa",
+                rank: 2,
+                totalDurationSeconds: 600,
+                legs: [
+                  {
+                    ...integrationData.routePath.legs[0],
+                    mode: "BUS",
+                    steps: [
+                      {
+                        instruction: "Druga pot z busom",
+                        startPolylineIndex: 0,
+                        endPolylineIndex: 1,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          })
+        }>
+        Vrni alternativne poti
       </button>
       <button
         type='button'
@@ -357,14 +402,22 @@ vi.mock("../../components/MainAppComponents/RouteOptions", () => ({
     hasFetchedRoute?: boolean;
     isSavedRoute?: boolean;
     activeStepIndex?: number | null;
-    onSaveRoute?: (name: string) => Promise<void>;
+    onSaveRoute?: (
+      name: string,
+      route?: typeof integrationData.routePath,
+    ) => Promise<void>;
+    routes?: Array<typeof integrationData.routePath>;
+    activeRouteIndex?: number;
+    onRouteSelect?: (route: typeof integrationData.routePath, index: number) => void;
   }) => (
     <div>
       <span data-testid='route-options-state'>
         {props.canSaveRoute ? "can-save" : "cannot-save"}{" "}
         {props.hasFetchedRoute ? "fetched" : "not-fetched"}{" "}
         {props.isSavedRoute ? "saved-route" : "computed-route"} active:
-        {props.activeStepIndex ?? "none"}
+        {props.activeStepIndex ?? "none"} route-index:
+        {props.activeRouteIndex ?? "none"} routes:
+        {props.routes?.length ?? 0}
       </span>
       {props.computeError && (
         <div role='alert'>
@@ -376,6 +429,20 @@ vi.mock("../../components/MainAppComponents/RouteOptions", () => ({
       )}
       <button type='button' onClick={() => props.onSaveRoute?.("Pot domov")}>
         Shrani trenutno pot
+      </button>
+      <button
+        type='button'
+        onClick={() =>
+          props.routes?.[1] && props.onRouteSelect?.(props.routes[1], 1)
+        }>
+        Izberi drugo alternativo
+      </button>
+      <button
+        type='button'
+        onClick={() =>
+          props.routes?.[1] && props.onSaveRoute?.("Druga pot", props.routes[1])
+        }>
+        Shrani drugo pot
       </button>
     </div>
   ),
@@ -898,6 +965,36 @@ describe("integracijski MainAppHome", () => {
         }),
       }),
     );
+  });
+
+  it("vec fetchanih poti shrani vse alternative, klik nastavi aktivno in shrani izbrano", async () => {
+    mockGeolocation();
+    mockHomeFetch();
+    renderHome();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vrni alternativne poti" }));
+
+    expect(screen.getByTestId("route-options-state")).toHaveTextContent("routes:2");
+    expect(screen.getByTestId("route-options-state")).toHaveTextContent("route-index:0");
+    expect(screen.getByText("Pojdi proti postaji")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Izberi drugo alternativo" }));
+
+    expect(screen.getByTestId("route-options-state")).toHaveTextContent("route-index:1");
+    expect(screen.getByText("Druga pot z busom")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Shrani drugo pot" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Pot je shranjena."));
+    const postPathCall = vi
+      .mocked(fetch)
+      .mock.calls.find(([url]) => String(url).endsWith("/api/paths"));
+    const body = JSON.parse(String(postPathCall?.[1]?.body));
+
+    expect(body.name).toBe("Druga pot");
+    expect(body.journey.label).toBe("Druga alternativa");
+    expect(body.journey.legs[0].steps[0].instruction).toBe("Druga pot z busom");
+    expect(body.journey.routes).toBeUndefined();
   });
 
   it("pri manjkajoci seji jo pridobi pred nalaganjem in shranjevanjem", async () => {

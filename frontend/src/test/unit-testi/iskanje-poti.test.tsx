@@ -112,6 +112,78 @@ describe("iskanje-poti", () => {
     expect(screen.getByRole("button", { name: "Začni" })).toBeEnabled();
   });
 
+  it("spremenjeni parametri izracunane poti preklopijo gumb nazaj v Najdi pot", () => {
+    render(
+      <RouteControls
+        useBus={false}
+        useBike
+        timeMode='depart'
+        selectedTime='08:15'
+        hasRoute
+        isRouteStale
+        isRouteActive={false}
+        originCoords={mariborCenter}
+        destinationCoords={tabor}
+        onToggleBus={vi.fn()}
+        onToggleBike={vi.fn()}
+        onToggleTimeMode={vi.fn()}
+        onSelectedTimeChange={vi.fn()}
+        onRouteRequest={vi.fn()}
+        onSavedRoutesToggle={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Najdi pot" })).toBeEnabled();
+  });
+
+  it("zastarela pot brez koordinat onemogoci ponovno iskanje", () => {
+    render(
+      <RouteControls
+        useBus
+        useBike
+        timeMode='depart'
+        selectedTime='08:15'
+        hasRoute
+        isRouteStale
+        isRouteActive={false}
+        originCoords={null}
+        destinationCoords={tabor}
+        onToggleBus={vi.fn()}
+        onToggleBike={vi.fn()}
+        onToggleTimeMode={vi.fn()}
+        onSelectedTimeChange={vi.fn()}
+        onRouteRequest={vi.fn()}
+        onSavedRoutesToggle={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Najdi pot" })).toBeDisabled();
+  });
+
+  it("aktivna pot ima prednost pred zastarelimi parametri", () => {
+    render(
+      <RouteControls
+        useBus
+        useBike
+        timeMode='depart'
+        selectedTime='08:15'
+        hasRoute
+        isRouteStale
+        isRouteActive
+        originCoords={mariborCenter}
+        destinationCoords={tabor}
+        onToggleBus={vi.fn()}
+        onToggleBike={vi.fn()}
+        onToggleTimeMode={vi.fn()}
+        onSelectedTimeChange={vi.fn()}
+        onRouteRequest={vi.fn()}
+        onSavedRoutesToggle={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Končaj" })).toBeEnabled();
+  });
+
   it("aktivna pot preklopi gumb v Koncaj", () => {
     const onRouteRequest = vi.fn();
     render(

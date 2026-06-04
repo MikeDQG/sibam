@@ -62,7 +62,7 @@ const features = [
       "Mbajk postaje za prevzem in oddajo",
       "prosta kolesa in stojala, ko so podana",
       "avtobusne linije, smeri in odhodi",
-      "napovedi razpoložljivosti koles, stojal in zamud",
+      "napovedi števila prostih koles in stojal ter zamude avtobusov",
     ],
   },
 ];

@@ -2,7 +2,10 @@ package com.sibam.graph.routing;
 
 import com.sibam.engine.VaoSerializer;
 import com.sibam.engine.vao.BusStopVao;
+import com.sibam.engine.vao.LineScheduleVao;
+import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.RouteVao;
+import com.sibam.engine.vao.StopScheduleVao;
 import com.sibam.graph.model.BusNode;
 import com.sibam.graph.model.Edge;
 import com.sibam.graph.model.EdgeType;
@@ -22,6 +25,8 @@ import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +42,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
 class AStarRouterTest {
+
+    private static final LocalDate TEST_DATE = LocalDate.parse("2026-06-04");
+    private static final ZoneId ROUTING_ZONE = ZoneId.of("Europe/Ljubljana");
 
     @Test
     void journeyKeepsRequestedCoordinatesAndOnlyUsesNearestNodesForEdges() {
@@ -76,6 +84,7 @@ class AStarRouterTest {
                 null,
                 null,
                 LocalTime.NOON,
+                TEST_DATE,
                 true,
                 true
         );
@@ -144,6 +153,51 @@ class AStarRouterTest {
     }
 
     @Test
+    void leaveAtUsesNextScheduledBusDepartureAfterRequestedTime() {
+        RouteInfo route = new RouteInfo(1, 101, "End", "1");
+        Node start = new BusNode(1, 46.0, 15.0, "Start");
+        Node end = new BusNode(2, 46.0, 15.012, "End");
+        Graph graph = new Graph(
+                Map.of(1, start, 2, end),
+                Map.of(1, List.of(bus(1, 2, 60, route)), 2, List.of())
+        );
+
+        Journey journey = routerFor(graph, scheduledVao(route, 1, "10:00", "10:10", "10:20"))
+                .findJourney(
+                        start.getLat(), start.getLon(), end.getLat(), end.getLon(),
+                        null, null, LocalTime.of(10, 5), TEST_DATE, true, true
+                );
+
+        Leg busLeg = firstBusLeg(journey);
+        assertThat(localTime(busLeg.departure())).isEqualTo(LocalTime.of(10, 10));
+        assertThat(localTime(busLeg.arrival())).isEqualTo(LocalTime.of(10, 11));
+    }
+
+    @Test
+    void arriveByUsesScheduledDepartureThatArrivesBeforeDeadline() {
+        RouteInfo route = new RouteInfo(1, 101, "End", "1");
+        Node start = new BusNode(1, 46.0, 15.0, "Start");
+        Node end = new BusNode(2, 46.0, 15.012, "End");
+        Graph graph = new Graph(
+                Map.of(1, start, 2, end),
+                Map.of(1, List.of(bus(1, 2, 60, route)), 2, List.of())
+        );
+
+        Journey journey = routerFor(graph, scheduledVao(route, 1, "10:00", "10:10", "10:20"))
+                .findJourney(
+                        start.getLat(), start.getLon(), end.getLat(), end.getLon(),
+                        null, null, LocalTime.of(10, 12), TEST_DATE, true, true,
+                        RoutingTimeMode.ARRIVE_BY
+                );
+
+        Leg busLeg = firstBusLeg(journey);
+        Leg lastLeg = journey.legs().getLast();
+        assertThat(localTime(busLeg.departure())).isEqualTo(LocalTime.of(10, 10));
+        assertThat(Long.parseLong(lastLeg.arrival()))
+                .isLessThanOrEqualTo(TEST_DATE.atTime(10, 12).atZone(ROUTING_ZONE).toInstant().toEpochMilli());
+    }
+
+    @Test
     void walkLegIncludesNavigationStepsWhenGoogleReturnsThem() {
         double originLat = 46.538077;
         double originLon = 15.603520;
@@ -181,6 +235,7 @@ class AStarRouterTest {
                 null,
                 null,
                 LocalTime.NOON,
+                TEST_DATE,
                 true,
                 true
         );
@@ -222,6 +277,7 @@ class AStarRouterTest {
                 null,
                 null,
                 LocalTime.NOON,
+                TEST_DATE,
                 true,
                 true
         );
@@ -248,6 +304,7 @@ class AStarRouterTest {
                 null,
                 null,
                 LocalTime.NOON,
+                TEST_DATE,
                 true,
                 true
         ))
@@ -278,7 +335,7 @@ class AStarRouterTest {
 
         Journey journey = routerWithBusPrediction(graph, predService).findJourney(
                 start.getLat(), start.getLon(), end.getLat(), end.getLon(),
-                null, null, LocalTime.NOON, true, true
+                null, null, LocalTime.NOON, TEST_DATE, true, true
         );
 
         Leg busLeg = journey.legs().stream()
@@ -304,7 +361,7 @@ class AStarRouterTest {
 
         Journey journey = routerWithBusPrediction(graph, predService).findJourney(
                 start.getLat(), start.getLon(), end.getLat(), end.getLon(),
-                null, null, LocalTime.NOON, true, true
+                null, null, LocalTime.NOON, TEST_DATE, true, true
         );
 
         Leg busLeg = journey.legs().stream()
@@ -356,7 +413,7 @@ class AStarRouterTest {
         );
 
         router.findJourney(start.getLat(), start.getLon(), end.getLat(), end.getLon(),
-                null, null, LocalTime.NOON, true, true);
+                null, null, LocalTime.NOON, TEST_DATE, true, true);
 
         ArgumentCaptor<Integer> seqCaptor = ArgumentCaptor.forClass(Integer.class);
         verify(predService).predictDelay(
@@ -392,6 +449,25 @@ class AStarRouterTest {
         return routerFor(graph, googleRoutesService, routingConfig());
     }
 
+    private AStarRouter routerFor(Graph graph, VaoSerializer vaoSerializer) {
+        InMemoryGraphStore graphStore = new InMemoryGraphStore();
+        graphStore.replaceGraph(graph);
+        HelperService helperService = new HelperService();
+        return new AStarRouter(
+                graphStore,
+                new SpatialSearchService(helperService),
+                helperService,
+                vaoSerializer,
+                mock(GoogleRoutesService.class),
+                new HeuristicService(),
+                new WeightedCostFunction(routingConfig()),
+                routingConfig(),
+                null,
+                null,
+                null
+        );
+    }
+
     private AStarRouter routerFor(Graph graph, GoogleRoutesService googleRoutesService, RoutingConfig routingConfig) {
         InMemoryGraphStore graphStore = new InMemoryGraphStore();
         graphStore.replaceGraph(graph);
@@ -418,6 +494,38 @@ class AStarRouterTest {
 
     private Edge bus(int fromNodeId, int toNodeId, int costSeconds, RouteInfo routeInfo) {
         return new Edge(fromNodeId, toNodeId, EdgeType.BUS, costSeconds, costSeconds, routeInfo);
+    }
+
+    private VaoSerializer scheduledVao(RouteInfo route, int stopId, String... departures) {
+        VaoSerializer vaoSerializer = mock(VaoSerializer.class);
+        Map<Integer, StopScheduleVao> schedules = Map.of(
+                stopId,
+                new StopScheduleVao(
+                        stopId,
+                        "Start",
+                        null,
+                        List.of(new LineScheduleVao(
+                                route.lineId(),
+                                List.of(new RouteScheduleVao(route.headsignName(), List.of(departures)))
+                        ))
+                )
+        );
+        when(vaoSerializer.getSchedulesMap()).thenReturn(schedules);
+        when(vaoSerializer.getSchedulesMap(any(LocalDate.class))).thenReturn(schedules);
+        when(vaoSerializer.isRouteActiveOnDate(eq(route.routeId()), any(LocalDate.class))).thenReturn(true);
+        when(vaoSerializer.getRoutesMap()).thenReturn(Map.of());
+        return vaoSerializer;
+    }
+
+    private Leg firstBusLeg(Journey journey) {
+        return journey.legs().stream()
+                .filter(leg -> "BUS".equals(leg.mode()))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private LocalTime localTime(String epochMillis) {
+        return LocalTime.ofInstant(Instant.ofEpochMilli(Long.parseLong(epochMillis)), ROUTING_ZONE);
     }
 
     private RoutingConfig routingConfig() {

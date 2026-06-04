@@ -7,6 +7,7 @@ import com.sibam.graph.model.output.Leg;
 import com.sibam.graph.model.output.RouteAlternativesResponse;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -20,17 +21,19 @@ import static org.mockito.Mockito.when;
 
 class RouteAlternativeServiceTest {
 
+    private static final LocalDate TEST_DATE = LocalDate.parse("2026-06-04");
+
     @Test
     void busOnlyRequestDoesNotReturnBikeLegs() {
         AStarRouter router = mock(AStarRouter.class);
         RouteAlternativeService service = service(router);
         when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
-                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
                 .thenReturn(candidate(journey(1000, "BIKE"), 1, 2, 3))
                 .thenReturn(candidate(journey(1100, "WALK", "BUS"), 1, 4, 5))
                 .thenReturn(null);
 
-        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, false, true);
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, false, true, RoutingTimeMode.DEPART_AT);
 
         assertThat(response.routes()).hasSize(1);
         assertThat(response.routes().getFirst().modes()).doesNotContain("BIKE");
@@ -41,12 +44,12 @@ class RouteAlternativeServiceTest {
         AStarRouter router = mock(AStarRouter.class);
         RouteAlternativeService service = service(router);
         when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
-                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
                 .thenReturn(candidate(journey(1000, "BUS"), 1, 2, 3))
                 .thenReturn(candidate(journey(1100, "WALK", "BIKE"), 1, 4, 5))
                 .thenReturn(null);
 
-        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, false);
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, false, RoutingTimeMode.DEPART_AT);
 
         assertThat(response.routes()).hasSize(1);
         assertThat(response.routes().getFirst().modes()).doesNotContain("BUS");
@@ -57,12 +60,12 @@ class RouteAlternativeServiceTest {
         AStarRouter router = mock(AStarRouter.class);
         RouteAlternativeService service = service(router);
         when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
-                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
                 .thenReturn(candidate(journey(1500, "WALK", "BIKE"), 1, 2, 3))
                 .thenReturn(candidate(journey(1000, "WALK", "BUS"), 1, 4, 5))
                 .thenReturn(candidate(journey(1200, "WALK", "BUS", "BIKE"), 1, 6, 7));
 
-        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
 
         assertThat(response.routes()).hasSize(3);
         assertThat(response.routes()).extracting("totalDurationSeconds")
@@ -78,11 +81,11 @@ class RouteAlternativeServiceTest {
         AStarRouter router = mock(AStarRouter.class);
         RouteAlternativeService service = service(router);
         when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
-                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
                 .thenReturn(candidate(journey(1000, "WALK", "BIKE"), 1, 2, 3))
                 .thenReturn(null);
 
-        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
 
         assertThat(response.routes()).hasSize(1);
         assertThat(response.routes().getFirst().rank()).isEqualTo(1);
@@ -99,12 +102,12 @@ class RouteAlternativeServiceTest {
         AStarRouter router = mock(AStarRouter.class);
         RouteAlternativeService service = service(router);
         when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
-                any(), any(), any(LocalTime.class), anyBoolean(), anyBoolean(), any()))
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
                 .thenReturn(candidate(journey(1000, "BUS"), 1, 2, 3, 4))
                 .thenReturn(candidate(journey(1010, "BUS"), 1, 2, 3, 4))
                 .thenReturn(candidate(journey(1200, "BIKE"), 1, 5, 6, 7));
 
-        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, true, true);
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
 
         assertThat(response.routes()).hasSize(2);
     }

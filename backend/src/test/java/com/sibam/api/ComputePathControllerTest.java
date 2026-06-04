@@ -8,10 +8,12 @@ import com.sibam.graph.model.output.RouteAlternative;
 import com.sibam.graph.model.output.RouteAlternativesResponse;
 import com.sibam.graph.routing.RouteAlternativeService;
 import com.sibam.graph.routing.RouteAccessDistanceException;
+import com.sibam.graph.routing.RoutingTimeMode;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -52,8 +54,10 @@ class ComputePathControllerTest {
                 any(),
                 any(),
                 any(LocalTime.class),
+                any(LocalDate.class),
                 eq(false),
-                eq(false)
+                eq(false),
+                eq(RoutingTimeMode.DEPART_AT)
         )).thenReturn(new RouteAlternativesResponse(
                 "success",
                 new GeoPoint(1, 1),
@@ -101,8 +105,10 @@ class ComputePathControllerTest {
                 eq(null),
                 eq(null),
                 any(LocalTime.class),
+                any(LocalDate.class),
                 eq(true),
-                eq(true)
+                eq(true),
+                eq(RoutingTimeMode.DEPART_AT)
         )).thenReturn(null);
 
         mockMvc.perform(get("/compute")
@@ -144,8 +150,10 @@ class ComputePathControllerTest {
                 eq(null),
                 eq(null),
                 any(LocalTime.class),
+                any(LocalDate.class),
                 eq(true),
-                eq(true)
+                eq(true),
+                eq(RoutingTimeMode.DEPART_AT)
         )).thenThrow(new RouteAccessDistanceException("origin", 3200.0, 3000));
 
         mockMvc.perform(get("/compute")
@@ -162,5 +170,47 @@ class ComputePathControllerTest {
                 .andExpect(jsonPath("$.endpoint").value("origin"))
                 .andExpect(jsonPath("$.distanceMeters").value(3200.0))
                 .andExpect(jsonPath("$.maxDistanceMeters").value(3000));
+    }
+
+    @Test
+    void forwardsArriveByTimeModeToRouter() throws Exception {
+        VaoSerializer vaoSerializer = mock(VaoSerializer.class);
+        GraphBootstrap graphBootstrap = mock(GraphBootstrap.class);
+        RouteAlternativeService routeAlternativeService = mock(RouteAlternativeService.class);
+        ComputePathController controller = new ComputePathController(vaoSerializer, graphBootstrap, routeAlternativeService);
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        double originLat = 46.538077;
+        double originLon = 15.603520;
+        double destinationLat = 46.561754;
+        double destinationLon = 15.629752;
+
+        when(routeAlternativeService.findAlternatives(
+                eq(originLat),
+                eq(originLon),
+                eq(destinationLat),
+                eq(destinationLon),
+                eq(null),
+                eq(null),
+                eq(LocalTime.of(10, 30)),
+                eq(LocalDate.parse("2026-06-04")),
+                eq(true),
+                eq(true),
+                eq(RoutingTimeMode.ARRIVE_BY)
+        )).thenReturn(null);
+
+        mockMvc.perform(get("/compute")
+                        .param("originLat", String.valueOf(originLat))
+                        .param("originLon", String.valueOf(originLon))
+                        .param("destinationLat", String.valueOf(destinationLat))
+                        .param("destinationLon", String.valueOf(destinationLon))
+                        .param("leaveNow", "false")
+                        .param("arriveBy", "10:30")
+                        .param("date", "2026-06-04")
+                        .param("bike", "true")
+                        .param("bus", "true"))
+                .andExpect(status().isOk());
+
+        verify(graphBootstrap).refresh();
     }
 }

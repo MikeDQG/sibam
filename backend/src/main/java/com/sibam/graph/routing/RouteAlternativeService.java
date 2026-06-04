@@ -10,6 +10,7 @@ import com.sibam.graph.model.output.RouteAlternativesResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -48,8 +49,10 @@ public class RouteAlternativeService {
             String originAddress,
             String destinationAddress,
             LocalTime startTime,
+            LocalDate startDate,
             boolean allowBike,
-            boolean allowBus
+            boolean allowBus,
+            RoutingTimeMode timeMode
     ) {
         List<SearchProfile> profiles = List.of(
                 new SearchProfile(RouteAlternativeLabel.FASTEST, 1.0, 1.0),
@@ -79,8 +82,10 @@ public class RouteAlternativeService {
                     originAddress,
                     destinationAddress,
                     startTime,
+                    startDate,
                     allowBike,
                     allowBus,
+                    timeMode,
                     options
             );
 

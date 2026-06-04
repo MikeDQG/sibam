@@ -61,6 +61,7 @@ describe("landing page", () => {
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "šibaM" })).toBeInTheDocument();
+    expect(screen.getByText("Načrtuj pot po Mariboru.")).toBeInTheDocument();
     expect(screen.getByText("Funkcionalnosti")).toBeInTheDocument();
     expect(screen.getByText("© 2026 Šibam. All rights reserved.")).toBeInTheDocument();
   });
@@ -69,9 +70,15 @@ describe("landing page", () => {
     renderWithTheme(<FeaturesSection />);
 
     expect(screen.getByRole("heading", { name: /Načrtovanje poti/ })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Pametno multimodalno načrtovanje poti" })).toBeInTheDocument();
-    expect(screen.getByText("Najhitrejša pot - prioriteta je čas prihoda")).toBeInTheDocument();
-    expect(screen.getByText("pregled razpoložljivih Mbajk koles")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Multimodalno načrtovanje poti" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Pametna izbira časa" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Interaktivni zemljevid" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Navodila in sledenje" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Shranjene lokacije in poti" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Podatki za mestno mobilnost" })).toBeInTheDocument();
+    expect(screen.getByText("izbira datuma v naslednjih 7 dneh")).toBeInTheDocument();
+    expect(screen.getByText("prikaz aktualnega koraka med sledenjem")).toBeInTheDocument();
+    expect(screen.getByText("napovedi razpoložljivosti in zamud, ko jih backend vrne")).toBeInTheDocument();
   });
 
   it("HeroSection gumb odpre glavno aplikacijo", () => {

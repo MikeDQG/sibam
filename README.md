@@ -91,8 +91,6 @@ Registrirani uporabniki si lahko shranijo priljubljene lokacije (npr. Dom, Služ
 
 ### Diagram primerov uporabe
 
-![Diagram primerov uporabe](docs/diagrami/DPU/DPU.png)
-
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrami/DPU/DPUdark.png">
   <img alt="Diagram primerov uporabe" src="docs/diagrami/DPU/DPU.png">

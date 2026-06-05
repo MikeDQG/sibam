@@ -58,6 +58,9 @@
     - [Frontend — Firebase Hosting](#frontend--firebase-hosting)
     - [ML pipeline — GitHub Actions](#ml-pipeline--github-actions-1)
     - [Startup sekvenca — Railway `prod`](#startup-sekvenca--railway-prod)
+ 
+
+Podrobnejša dokumentacija projekta je znotraj mape /docs
 
 ---
 

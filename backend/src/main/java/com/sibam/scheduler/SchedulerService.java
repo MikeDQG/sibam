@@ -1,5 +1,7 @@
 package com.sibam.scheduler;
 
+import com.sibam.service.BikePredictionService;
+import com.sibam.service.BusDelayPredictionService;
 import com.sibam.service.GTFSRTDataService;
 import com.sibam.service.MBajkDataService;
 import com.sibam.service.WeatherDataService;
@@ -20,6 +22,8 @@ public class SchedulerService {
     private final MBajkDataService mbajkDataService;
     private final WeatherDataService weatherDataService;
     private final GTFSRTDataService gtfsRTDataService;
+    private final BikePredictionService bikePredictionService;
+    private final BusDelayPredictionService busDelayPredictionService;
     private final Clock clock;
 
     @Value("${schedulers.fetch-bike-ingestion.on}")
@@ -31,15 +35,22 @@ public class SchedulerService {
     @Value("${schedulers.fetch-bus-ingestion.on}")
     private boolean fetchBusIngestion;
 
+    @Value("${schedulers.reload-ml-models.on:false}")
+    private boolean reloadMlModels;
+
     public SchedulerService(
             MBajkDataService mbajkDataService,
             WeatherDataService weatherDataService,
             GTFSRTDataService gtfsRTDataService,
+            BikePredictionService bikePredictionService,
+            BusDelayPredictionService busDelayPredictionService,
             Clock clock
     ) {
         this.mbajkDataService = mbajkDataService;
         this.weatherDataService = weatherDataService;
         this.gtfsRTDataService = gtfsRTDataService;
+        this.bikePredictionService = bikePredictionService;
+        this.busDelayPredictionService = busDelayPredictionService;
         this.clock = clock;
     }
 
@@ -112,6 +123,25 @@ public class SchedulerService {
             log.info("Bus trips ingestion completed");
         } catch (Exception e) {
             log.error(FAILED_INGESTION_MESSAGE, e);
+        }
+    }
+
+    /**
+     * Ponoven prenos ML modelov iz Supabase Storage, vsak dan ob 3:30 UTC (5:30 CEST).
+     * Zažene se 2,5h po nočnem ML pipeline-u (1:00 UTC), ki pripravi nove modele.
+     */
+    @Scheduled(cron = "0 30 3 * * *")
+    public void reloadMlModels() {
+        if (!reloadMlModels) {
+            log.info("Skipping ML model reload, blocked by config");
+            return;
+        }
+        try {
+            bikePredictionService.reloadModels();
+            busDelayPredictionService.reloadModel();
+            log.info("ML models reloaded successfully");
+        } catch (Exception e) {
+            log.error("Failed to reload ML models", e);
         }
     }
 }

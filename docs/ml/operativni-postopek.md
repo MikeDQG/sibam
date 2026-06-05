@@ -24,7 +24,7 @@ ML pipeline se samodejno izvaja vsako noč prek GitHub Actions workflowa [`.gith
 
 Workflow izvede korake 2–5 spodaj (export → silver → trening) v tem vrstnem redu. Workflow je mogoče sprožiti tudi ročno prek GitHub Actions (`workflow_dispatch`).
 
-Korak 6 (ponovni zagon backenda) je po zaključku workflowa še vedno potreben ročno.
+Korak 6 (nalaganje novih modelov v backend) je avtomatiziran — backend ob 3:30 UTC samodejno prenese nove modele iz Supabase Storage brez ponovnega zagona.
 
 Za nadzor poslednjega zagona: Actions → ML Retrain.
 
@@ -94,9 +94,9 @@ Rezultat v `gold/models`:
 
 - `model_bus_delay.onnx`
 
-### 6. Ponovni zagon backend aplikacije
+### 6. Nalaganje novih modelov v backend
 
-Backend modele naloži ob zagonu v `@PostConstruct`. Po zamenjavi modelov v `gold/models` je zato treba backend ponovno zagnati, da se nove ONNX datoteke naložijo v `OrtSession`.
+Backend ob **3:30 UTC** samodejno prenese nove ONNX modele iz `gold/models` v Supabase Storage in jih zamenja v pomnilniku brez ponovnega zagona. Ponovni zagon backenda ni potreben.
 
 ## Kontrole po zagonu
 
@@ -106,7 +106,7 @@ Preden se modeli štejejo za uporabne, preveri:
 - da `silver/bikes/latest.parquet` in `silver/buses/latest.parquet` obstajata;
 - da trening izpiše razumne metrike (`MAE` za regresije, `ROC-AUC` za klasifikacije);
 - da so novi ONNX modeli v `gold/models`;
-- da se backend zažene brez napake pri nalaganju modelov iz Supabase Storage;
+- da backend ob okoli 3:30 UTC v logu izpiše `ML models reloaded successfully`;
 - da endpointa `POST /predict/bikes` in `POST /api/bus-delay/predict` vrneta odgovor.
 
 ## Znane omejitve

@@ -30,6 +30,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Mapper iz Marprom DTO odgovorov v interne VAO objekte.
+ *
+ * VAO modeli so stabilen vhod za cache, gradnjo grafa in časovno odvisne BUS
+ * robove, zato mapper normalizira tudi vrstni red voznih redov.
+ */
 @Service
 public class MarpromDtoToVaoMapper {
 
@@ -40,6 +46,11 @@ public class MarpromDtoToVaoMapper {
         this.transitDataService = transitDataService;
     }
 
+    /**
+     * Preslika Marprom postajališča v mapo BusStopVao po ID-ju postaje.
+     *
+     * @return mapa avtobusnih postaj za graf
+     */
     public Map<Integer, BusStopVao> mapBusStops() {
         List<MarpromStopDto> stops = transitDataService.getBusStops();
         Map<Integer, BusStopVao> busStopsMap = new HashMap<Integer, BusStopVao>();
@@ -54,6 +65,11 @@ public class MarpromDtoToVaoMapper {
         return busStopsMap;
     }
 
+    /**
+     * Preslika Marprom trase, shape točke in postaje v RouteVao objekte.
+     *
+     * @return mapa tras po routeId
+     */
     public Map<Integer, RouteVao> mapRoutes() {
         List<MarpromRouteDto> allRoutes = transitDataService.getAllRoutes();
         List<MarpromLineDto> lines = transitDataService.getLines();
@@ -89,14 +105,31 @@ public class MarpromDtoToVaoMapper {
         return routesMap;
     }
 
+    /**
+     * Preslika današnje vozne rede v mapo po postaji.
+     *
+     * @return vozni redi za današnji datum
+     */
     public Map<Integer, StopScheduleVao> mapSchedules() {
         return mapSchedules(LocalDate.now());
     }
 
+    /**
+     * Preslika vozne rede za podan datum.
+     *
+     * @param date datum voznega reda
+     * @return mapa voznih redov po stopId
+     */
     public Map<Integer, StopScheduleVao> mapSchedules(LocalDate date) {
         return mapSchedules(date.toString());
     }
 
+    /**
+     * Preslika vozne rede za datum v obliki, ki jo pričakuje Marprom API.
+     *
+     * @param date datum v obliki yyyy-MM-dd
+     * @return normalizirana mapa voznih redov po stopId
+     */
     public Map<Integer, StopScheduleVao> mapSchedules(String date) {
         List<MarpromLineDto> lines = transitDataService.getLines(date);
         Map<Integer, StopScheduleVao> schedulesByStop = new HashMap<>();
@@ -166,6 +199,12 @@ public class MarpromDtoToVaoMapper {
         return normalizeScheduleMap(schedulesByStop);
     }
 
+    /**
+     * Zgradi tedenski cache voznih redov z deduplikacijo enakih urnikov.
+     *
+     * @param dates datumi, ki jih mora cache pokrivati
+     * @return tedenski VAO cache z unikatnimi varianti urnikov
+     */
     public WeeklyScheduleCacheVao mapWeeklySchedules(List<LocalDate> dates) {
         Map<String, String> dateToScheduleKey = new LinkedHashMap<>();
         Map<String, Map<Integer, StopScheduleVao>> uniqueSchedules = new LinkedHashMap<>();
@@ -187,6 +226,12 @@ public class MarpromDtoToVaoMapper {
         return mapActiveRouteIds(date.toString());
     }
 
+    /**
+     * Vrne aktivne routeId vrednosti za izbran datum.
+     *
+     * @param date datum v obliki yyyy-MM-dd
+     * @return urejen seznam aktivnih tras
+     */
     public List<Integer> mapActiveRouteIds(String date) {
         List<MarpromRouteDto> activeRoutes = transitDataService.getAllRoutes(date);
         return safeList(activeRoutes).stream()
@@ -232,6 +277,12 @@ public class MarpromDtoToVaoMapper {
         return values == null ? List.of() : values;
     }
 
+    /**
+     * Izračuna SHA-256 hash normaliziranega voznega reda.
+     *
+     * @param schedule vozni red po postajah
+     * @return heksadecimalni hash za deduplikacijo schedule variant
+     */
     public String hashSchedule(Map<Integer, StopScheduleVao> schedule) {
         try {
             byte[] json = objectMapper.writeValueAsString(schedule).getBytes(StandardCharsets.UTF_8);

@@ -26,6 +26,13 @@ public class SupabaseStorageClient {
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
+    /**
+     * Prenese datoteko iz Supabase Storage bucketa.
+     *
+     * @param bucket ime bucketa, na primer gold
+     * @param path pot do objekta znotraj bucketa
+     * @return bajti prenesene datoteke
+     */
     public byte[] download(String bucket, String path) {
         String url = supabaseUrl + "/storage/v1/object/" + bucket + "/" + path;
         HttpRequest request = HttpRequest.newBuilder()

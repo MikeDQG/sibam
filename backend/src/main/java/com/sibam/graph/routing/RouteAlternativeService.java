@@ -1,7 +1,7 @@
 package com.sibam.graph.routing;
 
-import com.sibam.graph.model.GeoPoint;
 import com.sibam.graph.model.EdgeType;
+import com.sibam.graph.model.GeoPoint;
 import com.sibam.graph.model.RouteAlternativeLabel;
 import com.sibam.graph.model.output.Journey;
 import com.sibam.graph.model.output.Leg;
@@ -18,8 +18,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Servis za izdelavo in filtriranje alternativnih poti.
+ *
+ * A* požene z različnimi profili uteži, penalizira že uporabljena vozlišča,
+ * odstrani preveč podobne ali prepočasne poti in rezultat pretvori v javni
+ * RouteAlternative odgovor.
+ */
 @Service
 public class RouteAlternativeService {
+
+    private static final int MAX_ALLOWED_ROUTES = 3;
 
     private final AStarRouter aStarRouter;
     private final int maxRoutes;
@@ -29,18 +38,26 @@ public class RouteAlternativeService {
 
     public RouteAlternativeService(
             AStarRouter aStarRouter,
-            @Value("${routing.alternatives.max-routes:3}") int maxRoutes,
+            @Value("${compute.path.max-alternatives:${routing.alternatives.max-routes:3}}") int maxRoutes,
             @Value("${routing.alternatives.max-similarity:0.8}") double maxSimilarity,
             @Value("${routing.alternatives.max-slowdown-multiplier:1.4}") double maxSlowdownMultiplier,
             @Value("${routing.alternatives.node-penalty-seconds:180}") int nodePenaltySeconds
     ) {
         this.aStarRouter = aStarRouter;
-        this.maxRoutes = maxRoutes;
+        this.maxRoutes = Math.max(1, Math.min(MAX_ALLOWED_ROUTES, maxRoutes));
         this.maxSimilarity = maxSimilarity;
         this.maxSlowdownMultiplier = maxSlowdownMultiplier;
         this.nodePenaltySeconds = nodePenaltySeconds;
     }
 
+    /**
+     * Poišče do konfiguriranega števila alternativ med izvorom in ciljem.
+     *
+     * @param allowBike ali so dovoljene MBajk BIKE etape
+     * @param allowBus ali so dovoljene Marprom BUS etape
+     * @param timeMode DEPART_AT ali ARRIVE_BY način routinga
+     * @return odgovor z najdenimi alternativami ali statusom not_found
+     */
     public RouteAlternativesResponse findAlternatives(
             double originLat,
             double originLon,
@@ -130,6 +147,12 @@ public class RouteAlternativeService {
         );
     }
 
+    /**
+     * Odstrani alternative, ki so bistveno počasnejše od najhitrejše.
+     *
+     * @param candidates kandidati, sortirani po trajanju
+     * @return filtriran seznam, vedno vsaj z najhitrejšim kandidatom
+     */
     private List<Candidate> filterQuality(List<Candidate> candidates) {
         if (candidates.size() <= 1) {
             return candidates;
@@ -142,6 +165,11 @@ public class RouteAlternativeService {
         return filtered.isEmpty() ? List.of(candidates.getFirst()) : filtered;
     }
 
+    /**
+     * Preveri, ali pot uporablja način, ki ga je zahtevek izključil.
+     *
+     * @return true, če pot vsebuje nedovoljen BIKE ali BUS leg
+     */
     private boolean violatesModes(Journey journey, boolean allowBike, boolean allowBus) {
         for (Leg leg : journey.legs()) {
             if (!allowBike && EdgeType.BIKE.name().equals(leg.mode())) {
@@ -154,6 +182,13 @@ public class RouteAlternativeService {
         return false;
     }
 
+    /**
+     * Preveri podobnost kandidata z že sprejetimi alternativami po skupnih vozliščih.
+     *
+     * @param candidate nov kandidat
+     * @param accepted že sprejete alternative
+     * @return true, če kandidat preseže konfiguriran prag podobnosti
+     */
     private boolean isTooSimilar(Candidate candidate, List<Candidate> accepted) {
         Set<Integer> nodes = new LinkedHashSet<>(candidate.routeCandidate().pathResult().getNodeIds());
         if (nodes.isEmpty()) {
@@ -193,7 +228,7 @@ public class RouteAlternativeService {
                 originAddress,
                 destination,
                 destinationAddress,
-                labelFor(rank, candidate),
+                labelFor(rank, modes),
                 candidate.durationSeconds(),
                 parseInt(journey.distance()),
                 modes,
@@ -201,12 +236,30 @@ public class RouteAlternativeService {
         );
     }
 
-    private String labelFor(int rank, Candidate candidate) {
+    private String labelFor(int rank, List<String> modes) {
         if (rank == 1) {
             return RouteAlternativeLabel.FASTEST.displayName();
         }
 
-        return candidate.label().displayName();
+        Set<String> uniqueModes = new LinkedHashSet<>(modes);
+        boolean hasBus = uniqueModes.contains(EdgeType.BUS.name());
+        boolean hasBike = uniqueModes.contains(EdgeType.BIKE.name());
+        boolean hasWalk = uniqueModes.contains(EdgeType.WALK.name());
+
+        if (hasBus && hasBike) {
+            return RouteAlternativeLabel.MULTIMODAL.displayName();
+        }
+        if (hasBus) {
+            return RouteAlternativeLabel.TRANSIT_FRIENDLY.displayName();
+        }
+        if (hasBike) {
+            return RouteAlternativeLabel.BIKE_FRIENDLY.displayName();
+        }
+        if (hasWalk) {
+            return RouteAlternativeLabel.WALK_FRIENDLY.displayName();
+        }
+
+        return RouteAlternativeLabel.ALTERNATIVE.displayName();
     }
 
     private int parseInt(String value) {

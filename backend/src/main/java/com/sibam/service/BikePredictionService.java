@@ -10,6 +10,12 @@ import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Servis za MBajk ONNX inferenco.
+ *
+ * Ob zagonu prenese štiri modele iz Supabase Storage gold/models in iz njih
+ * napove število prostih koles, prostih stojal ter verjetnosti razpoložljivosti.
+ */
 @Service
 public class BikePredictionService {
     private OrtSession modelBikes;
@@ -25,6 +31,11 @@ public class BikePredictionService {
         this.supabaseStorageClient = supabaseStorageClient;
     }
 
+    /**
+     * Ob zagonu aplikacije naloži vse MBajk ONNX modele v pomnilnik.
+     *
+     * @throws OrtException če ONNX seje ni mogoče ustvariti
+     */
     @PostConstruct
     public void loadModels() throws OrtException {
         env = OrtEnvironment.getEnvironment();
@@ -34,12 +45,22 @@ public class BikePredictionService {
         modelStandAvailable = loadFromGold("model_available_stand.onnx");
     }
 
+    /**
+     * Prenese model iz Supabase Storage gold bucket-a in ustvari ONNX sejo.
+     *
+     * @param filename ime datoteke v mapi gold/models
+     * @return pripravljena ONNX seja
+     */
     private OrtSession loadFromGold(String filename) throws OrtException {
         byte[] bytes = supabaseStorageClient.download("gold", "models/" + filename);
         return env.createSession(bytes, new OrtSession.SessionOptions());
     }
 
-
+    /**
+     * Sinhronizirano prenese nove MBajk modele in zamenja aktivne ONNX seje.
+     *
+     * @throws OrtException če prenos ali ustvarjanje nove seje spodleti
+     */
     public synchronized void reloadModels() throws OrtException {
         OrtSession newBikes          = loadFromGold("model_bikes.onnx");
         OrtSession newStands         = loadFromGold("model_stands.onnx");
@@ -61,6 +82,12 @@ public class BikePredictionService {
         try { session.close(); } catch (OrtException e) { /* best-effort close before reload */ }
     }
 
+    /**
+     * Izvede napoved za MBajk postajo iz časovnih in vremenskih značilk.
+     *
+     * @param req vhodne značilke v vrstnem redu, ki ga pričakujejo modeli
+     * @return napoved prostih koles, stojal in verjetnosti razpoložljivosti
+     */
     public synchronized BikePredictionResponse predict(BikePredictionRequest req) throws OrtException {
         float[] features = {
                 req.stationNumber(),
@@ -85,6 +112,13 @@ public class BikePredictionService {
         );
     }
 
+    /**
+     * Zažene regresijski ONNX model in vrne surovo float napoved.
+     *
+     * @param session ONNX seja regresijskega modela
+     * @param features sedem vhodnih značilk za MBajk model
+     * @return surova regresijska vrednost
+     */
     private float runRegressor(OrtSession session, float[] features) throws OrtException {
         OnnxTensor tensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(features), new long[]{1, 7});
         try (var result = session.run(Map.of("float_input", tensor))) {
@@ -93,6 +127,13 @@ public class BikePredictionService {
         }
     }
     
+    /**
+     * Zažene klasifikacijski ONNX model in vrne verjetnost razreda 1.
+     *
+     * @param session ONNX seja klasifikacijskega modela
+     * @param features sedem vhodnih značilk za MBajk model
+     * @return verjetnost razpoložljivosti
+     */
     @SuppressWarnings("unchecked")
     private double runClassifier(OrtSession session, float[] features) throws OrtException {
         OnnxTensor tensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(features), new long[]{1, 7});

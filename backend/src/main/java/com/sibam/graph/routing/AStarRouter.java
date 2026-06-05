@@ -1,5 +1,6 @@
 package com.sibam.graph.routing;
 
+import com.sibam.config.FallbackProperties;
 import com.sibam.graph.model.BikeNode;
 import com.sibam.graph.model.Edge;
 import com.sibam.graph.model.EdgeType;
@@ -24,17 +25,21 @@ import com.sibam.dto.prediction.BikePredictionRequest;
 import com.sibam.engine.vao.BusLegDelayVao;
 import com.sibam.engine.vao.BusStopVao;
 import com.sibam.engine.vao.RouteVao;
+import com.sibam.persistence.StopDelayEntity;
+import com.sibam.repository.StopDelaySnapshotRepository;
 import com.sibam.service.BikePredictionService;
 import com.sibam.service.BusDelayPredictionService;
 import com.sibam.service.GoogleRoutesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -48,6 +53,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 
+/**
+ * Glavni usmerjevalnik za multimodalne poti po internem grafu.
+ *
+ * A* iskanje podpira WALK, BIKE, BUS in TRANSFER robove, časovno odvisne
+ * odhode avtobusov, vremenske uteži, prestopne kazni, arrive-by iskanje ter
+ * obogatitev etap z Google navigacijo in ML napovedmi.
+ */
 @Service
 public class AStarRouter {
 
@@ -72,6 +84,40 @@ public class AStarRouter {
     private final WeatherRoutingAdjuster weatherRoutingAdjuster;
     private final BikePredictionService bikePredictionService;
     private final BusDelayPredictionService busDelayPredictionService;
+    private final StopDelaySnapshotRepository stopDelaySnapshotRepository;
+    private final FallbackProperties fallbackProperties;
+
+    @Autowired
+    public AStarRouter(
+            GraphStore graphStore,
+            SpatialSearchService spatialSearchService,
+            HelperService helperService,
+            VaoSerializer vaoSerializer,
+            GoogleRoutesService googleRoutesService,
+            HeuristicService heuristicService,
+            CostFunction costFunction,
+            RoutingConfig routingConfig,
+            WeatherRoutingAdjuster weatherRoutingAdjuster,
+            BikePredictionService bikePredictionService,
+            BusDelayPredictionService busDelayPredictionService,
+            StopDelaySnapshotRepository stopDelaySnapshotRepository,
+            FallbackProperties fallbackProperties
+    ) {
+        this.graphStore = graphStore;
+        this.spatialSearchService = spatialSearchService;
+        this.helperService = helperService;
+        this.vaoSerializer = vaoSerializer;
+        this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
+        this.googleRoutesService = googleRoutesService;
+        this.heuristicService = heuristicService;
+        this.costFunction = costFunction;
+        this.routingConfig = routingConfig;
+        this.weatherRoutingAdjuster = weatherRoutingAdjuster;
+        this.bikePredictionService = bikePredictionService;
+        this.busDelayPredictionService = busDelayPredictionService;
+        this.stopDelaySnapshotRepository = stopDelaySnapshotRepository;
+        this.fallbackProperties = fallbackProperties;
+    }
 
     public AStarRouter(
             GraphStore graphStore,
@@ -86,20 +132,28 @@ public class AStarRouter {
             BikePredictionService bikePredictionService,
             BusDelayPredictionService busDelayPredictionService
     ) {
-        this.graphStore = graphStore;
-        this.spatialSearchService = spatialSearchService;
-        this.helperService = helperService;
-        this.vaoSerializer = vaoSerializer;
-        this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
-        this.googleRoutesService = googleRoutesService;
-        this.heuristicService = heuristicService;
-        this.costFunction = costFunction;
-        this.routingConfig = routingConfig;
-        this.weatherRoutingAdjuster = weatherRoutingAdjuster;
-        this.bikePredictionService = bikePredictionService;
-        this.busDelayPredictionService = busDelayPredictionService;
+        this(
+                graphStore,
+                spatialSearchService,
+                helperService,
+                vaoSerializer,
+                googleRoutesService,
+                heuristicService,
+                costFunction,
+                routingConfig,
+                weatherRoutingAdjuster,
+                bikePredictionService,
+                busDelayPredictionService,
+                null,
+                new FallbackProperties(60)
+        );
     }
 
+    /**
+     * Poišče pot z današnjim časom in privzeto dovoljenima BIKE ter BUS načinoma.
+     *
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -120,6 +174,12 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Poišče pot za podan čas odhoda na današnji datum.
+     *
+     * @param startTime lokalni čas odhoda
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -141,6 +201,14 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Poišče pot za podan čas odhoda in prikazna naslova.
+     *
+     * @param originAddress naslov izvora za odgovor
+     * @param destinationAddress naslov cilja za odgovor
+     * @param startTime lokalni čas odhoda
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -164,6 +232,15 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Poišče pot z možnostjo izklopa BIKE ali BUS etap.
+     *
+     * @param startTime lokalni čas odhoda
+     * @param startDate datum voznih redov
+     * @param allowBike ali so dovoljene MBajk etape
+     * @param allowBus ali so dovoljene avtobusne etape
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -193,6 +270,14 @@ public class AStarRouter {
         return candidate == null ? null : candidate.journey();
     }
 
+    /**
+     * Poišče pot v načinu DEPART_AT ali ARRIVE_BY.
+     *
+     * @param routingTime čas odhoda ali želeni čas prihoda
+     * @param routingDate datum voznih redov
+     * @param timeMode časovni način iskanja
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -223,6 +308,19 @@ public class AStarRouter {
         return candidate == null ? null : candidate.journey();
     }
 
+    /**
+     * Zgradi začasni graf z uporabnikovim izvorom/ciljem in izvede routing.
+     *
+     * Metoda najde najbližja vozlišča, preveri dostopno razdaljo, doda WALK
+     * povezave od/do uporabnikovih koordinat, uporabi vremenski kontekst ter
+     * vrne tudi PathResult za poznejše filtriranje alternativ.
+     *
+     * @param allowBike ali so dovoljene BIKE etape
+     * @param allowBus ali so dovoljene BUS etape
+     * @param timeMode DEPART_AT ali ARRIVE_BY
+     * @param searchOptions uteži in penalizirana vozlišča za alternative
+     * @return kandidat poti ali null, če pot ni najdena
+     */
     public RouteCandidate findJourneyCandidate(
             double originLat,
             double originLon,
@@ -314,6 +412,13 @@ public class AStarRouter {
         return new RouteCandidate(journey, realPathResult);
     }
 
+    /**
+     * Poišče najcenejšo pot med dvema vozliščema v trenutno naloženem grafu.
+     *
+     * @param startNodeId začetno vozlišče
+     * @param goalNodeId ciljno vozlišče
+     * @return PathResult ali null, če pot ni najdena
+     */
     public PathResult findPath(int startNodeId, int goalNodeId) {
         return findPath(
                 requireGraph(),
@@ -340,6 +445,12 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Z binarnim iskanjem poišče najpoznejši odhod, ki še prispe do arriveBy časa.
+     *
+     * @param arriveByMillis zahtevani čas prihoda v epoch milisekundah
+     * @return najboljša pot, ki prispe pravočasno
+     */
     private PathResult findArriveByPath(
             Graph graph,
             int startNodeId,
@@ -391,6 +502,18 @@ public class AStarRouter {
         return best;
     }
 
+    /**
+     * Izvede A* iskanje po grafu z dovoljenimi načini in časovno odvisnimi stroški.
+     *
+     * BUS robovi se sprostijo glede na vozni red in prestope, WALK/BIKE robovi pa
+     * glede na osnovno ceno, vremenske prilagoditve in uteži alternativ.
+     *
+     * @param graph graf za iskanje
+     * @param allowBike ali so dovoljeni BIKE robovi
+     * @param allowBus ali so dovoljeni BUS robovi
+     * @param startMillis čas začetka v epoch milisekundah
+     * @return rezultat poti ali null, če pot ni dosegljiva
+     */
     private PathResult findPath(
             Graph graph,
             int startNodeId,
@@ -468,6 +591,14 @@ public class AStarRouter {
         return null;
     }
 
+    /**
+     * Izračuna časovni in stroškovni prispevek enega roba.
+     *
+     * Za BUS rob upošteva naslednji odhod in prestopno kazen, za WALK/BIKE pa
+     * vremensko prilagojeno ceno ter profil alternativ.
+     *
+     * @return sprostitev roba ali null, če bus odhod ni več na voljo
+     */
     private EdgeRelaxation relaxEdge(
             Edge edge,
             Edge previousEdge,
@@ -520,6 +651,14 @@ public class AStarRouter {
         return adjusted;
     }
 
+    /**
+     * Ponovno ovrednoti najdeno pot z dejanskimi časi odhodov in prihodov.
+     *
+     * @param graph graf, po katerem je bila pot najdena
+     * @param pathResult grob rezultat A* iskanja
+     * @param startMillis začetni čas repricinga
+     * @return PathResult z realnimi timing podatki
+     */
     private PathResult repricePathResult(
             Graph graph,
             PathResult pathResult,
@@ -589,6 +728,13 @@ public class AStarRouter {
         return adjustedTransferPenaltySeconds(weatherContext);
     }
 
+    /**
+     * Poišče naslednji odhod za BUS rob glede na trenutni čas.
+     *
+     * @param edge BUS rob z RouteInfo podatki
+     * @param currentMillis trenutni čas na vozlišču
+     * @return epoch milisekunde naslednjega odhoda ali -1, če ga ni
+     */
     private long nextBusDepartureMillis(Edge edge, long currentMillis) {
         RouteInfo routeInfo = edge.getRouteInfo();
         if (routeInfo == null) {
@@ -744,6 +890,11 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Pridobi zadnji vremenski kontekst za prilagajanje WALK/BIKE stroškov.
+     *
+     * @return trenutni vremenski kontekst ali nevtralni kontekst ob napaki
+     */
     private WeatherRoutingContext currentWeatherContext() {
         if (weatherRoutingAdjuster == null) {
             return WeatherRoutingContext.neutral();
@@ -779,6 +930,14 @@ public class AStarRouter {
         return new PathResult(path, edges, timings, totalCost);
     }
 
+    /**
+     * Pretvori PathResult v javni Journey odgovor.
+     *
+     * Združi zaporedne robove v etape, doda transfer etape, obogati WALK/BIKE
+     * etape z Google navigacijo in vključi ML napovedi za BIKE/BUS.
+     *
+     * @return Journey za API odgovor
+     */
     private Journey toJourney(
             Graph graph,
             PathResult pathResult,
@@ -793,7 +952,7 @@ public class AStarRouter {
             return new Journey("success", origin, originAddress, destination, destinationAddress, "0", "0", List.of());
         }
 
-        List<Leg> legs = new ArrayList<>();
+        List<LegDraft> legDrafts = new ArrayList<>();
         Edge legStartEdge = pathResult.getEdges().getFirst();
         Edge previousEdge = legStartEdge;
         int legDistanceMeters = previousEdge.getDistanceMeters();
@@ -810,7 +969,7 @@ public class AStarRouter {
 
             PathStepTiming firstTiming = pathResult.getTimings().get(legStartIndex);
             PathStepTiming lastTiming = pathResult.getTimings().get(i - 1);
-            legs.add(toLeg(
+            legDrafts.add(toLegDraft(
                     graph,
                     pathResult.getEdges().subList(legStartIndex, i),
                     legStartEdge,
@@ -821,9 +980,9 @@ public class AStarRouter {
                     lastTiming.arrivalMillis(),
                     weatherContext
             ));
-            addSameStopTransferLegIfNeeded(
+            addSameStopTransferDraftIfNeeded(
                     graph,
-                    legs,
+                    legDrafts,
                     previousEdge,
                     currentEdge,
                     lastTiming.arrivalMillis(),
@@ -838,7 +997,7 @@ public class AStarRouter {
 
         PathStepTiming firstTiming = pathResult.getTimings().get(legStartIndex);
         PathStepTiming lastTiming = pathResult.getTimings().getLast();
-        legs.add(toLeg(
+        legDrafts.add(toLegDraft(
                 graph,
                 pathResult.getEdges().subList(legStartIndex, pathResult.getEdges().size()),
                 legStartEdge,
@@ -849,6 +1008,10 @@ public class AStarRouter {
                 lastTiming.arrivalMillis(),
                 weatherContext
         ));
+        enrichCoupledNavigation(graph, legDrafts);
+        List<Leg> legs = legDrafts.stream()
+                .map(draft -> toLeg(graph, draft, weatherContext))
+                .toList();
 
         int totalDistanceMeters = pathResult.getEdges().stream()
                 .mapToInt(Edge::getDistanceMeters)
@@ -880,9 +1043,9 @@ public class AStarRouter {
         return true;
     }
 
-    private void addSameStopTransferLegIfNeeded(
+    private void addSameStopTransferDraftIfNeeded(
             Graph graph,
-            List<Leg> legs,
+            List<LegDraft> legs,
             Edge previousEdge,
             Edge currentEdge,
             long previousArrivalMillis,
@@ -897,19 +1060,12 @@ public class AStarRouter {
                 (currentDepartureMillis - previousArrivalMillis) / 1000.0
         ));
 
-        legs.add(new Leg(
-                "TRANSFER",
+        legs.add(LegDraft.transfer(
                 stopPoint,
                 stopPoint,
-                String.valueOf(secondsToMillis(transferSeconds)),
-                "0",
-                List.of(stopPoint),
-                null,
-                null,
-                null,
-                null,
-                String.valueOf(previousArrivalMillis),
-                String.valueOf(currentDepartureMillis)
+                transferSeconds,
+                previousArrivalMillis,
+                currentDepartureMillis
         ));
     }
 
@@ -937,7 +1093,7 @@ public class AStarRouter {
         return (int) Math.max(0, Math.round((lastTiming.arrivalMillis() - firstTiming.departureMillis()) / 1000.0));
     }
 
-    private Leg toLeg(
+    private LegDraft toLegDraft(
             Graph graph,
             List<Edge> edges,
             Edge firstEdge,
@@ -948,29 +1104,64 @@ public class AStarRouter {
             long arrivalMillis,
             WeatherRoutingContext weatherContext
     ) {
-        RouteInfo routeInfo = firstEdge.getRouteInfo();
-        LegNavigation navigation = legNavigation(graph, edges, firstEdge, lastEdge);
-
-        return new Leg(
-                toMode(firstEdge.getEdgeType()),
+        return LegDraft.normal(
+                List.copyOf(edges),
+                firstEdge,
+                lastEdge,
+                durationSeconds,
+                distanceMeters,
+                departureMillis,
+                arrivalMillis,
                 nodePoint(graph, firstEdge.getFromNodeId()),
                 nodePoint(graph, lastEdge.getToNodeId()),
-                String.valueOf(secondsToMillis(durationSeconds)),
-                String.valueOf(distanceMeters),
-                navigation.polyline(),
-                routeInfo == null ? null : routeInfo.lineCode(),
-                routeInfo == null ? null : routeInfo.headsignName(),
-                freeStands(graph, firstEdge, lastEdge),
-                freeBikes(graph, firstEdge),
-                String.valueOf(departureMillis),
-                String.valueOf(arrivalMillis),
-                navigation.navigationAvailable(),
-                navigation.steps(),
-                computeBikePrediction(graph, firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext),
-                computeBusDelayPrediction(firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext)
+                localNavigation(graph, edges, firstEdge, lastEdge)
         );
     }
 
+    /**
+     * Pretvori osnutek etape v javni Leg model.
+     *
+     * @param draft osnutek etape iz robov grafa
+     * @param weatherContext vremenski kontekst za ML napovedi
+     * @return Leg z načinom, polilinijo, časi, navigacijo in napovedmi
+     */
+    private Leg toLeg(
+            Graph graph,
+            LegDraft draft,
+            WeatherRoutingContext weatherContext
+    ) {
+        RouteInfo routeInfo = draft.firstEdge() == null ? null : draft.firstEdge().getRouteInfo();
+        EdgeType edgeType = draft.firstEdge() == null ? EdgeType.TRANSFER : draft.firstEdge().getEdgeType();
+        LegNavigation navigation = draft.navigation();
+
+        return new Leg(
+                draft.transfer() ? "TRANSFER" : toMode(edgeType),
+                draft.origin(),
+                draft.destination(),
+                String.valueOf(secondsToMillis(draft.durationSeconds())),
+                String.valueOf(draft.distanceMeters()),
+                navigation.polyline(),
+                routeInfo == null ? null : routeInfo.lineCode(),
+                routeInfo == null ? null : routeInfo.headsignName(),
+                draft.transfer() ? null : freeStands(graph, draft.firstEdge(), draft.lastEdge()),
+                draft.transfer() ? null : freeBikes(graph, draft.firstEdge()),
+                String.valueOf(draft.departureMillis()),
+                String.valueOf(draft.arrivalMillis()),
+                navigation.navigationAvailable(),
+                navigation.steps(),
+                draft.transfer() ? null : computeBikePrediction(graph, draft.firstEdge(), draft.lastEdge(), draft.departureMillis(), draft.arrivalMillis(), weatherContext),
+                draft.transfer() ? null : computeBusDelayPrediction(draft.firstEdge(), draft.lastEdge(), draft.departureMillis(), draft.arrivalMillis(), weatherContext)
+        );
+    }
+
+    /**
+     * Izvede MBajk ML napoved za BIKE etapo.
+     *
+     * Napove razpoložljivost kolesa ob prevzemu in stojala ob vračilu; pri
+     * drugih načinih ali napaki vrne null.
+     *
+     * @return napoved za BIKE etapo ali null
+     */
     private BikeLegPredictionVao computeBikePrediction(
             Graph graph,
             Edge firstEdge,
@@ -1022,6 +1213,14 @@ public class AStarRouter {
         }
     }
 
+    /**
+     * Izvede obogatitev BUS etape z zamudo.
+     *
+     * Najprej uporabi svež GTFS-RT posnetek, če obstaja, sicer pokliče ONNX model
+     * za napoved zamude in ob napaki vrne nevtralno zamudo 0.
+     *
+     * @return zamuda za BUS etapo ali null za druge načine
+     */
     private BusLegDelayVao computeBusDelayPrediction(
             Edge firstEdge,
             Edge lastEdge,
@@ -1043,6 +1242,12 @@ public class AStarRouter {
         int boardStopId = firstEdge.getScheduleStopPointId() != null
                 ? firstEdge.getScheduleStopPointId()
                 : firstEdge.getFromNodeId();
+        int boardSeq = lookupStopSequence(lineId, boardStopId);
+
+        StopDelayEntity latestDelay = latestFreshDelay(routeInfo, boardSeq);
+        if (latestDelay != null) {
+            return new BusLegDelayVao(latestDelay.getDelaySeconds());
+        }
 
         float temperature = weatherContext.temperatureCelsius() != null ? weatherContext.temperatureCelsius().floatValue() : 15f;
         float rain = weatherContext.rainMm() != null ? weatherContext.rainMm() : 0f;
@@ -1051,7 +1256,6 @@ public class AStarRouter {
         try {
             LocalDateTime boardTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ROUTING_ZONE);
             int boardDow = boardTime.getDayOfWeek().getValue();
-            int boardSeq = lookupStopSequence(lineId, boardStopId);
             int boardingDelay = busDelayPredictionService.predictDelay(
                     lineId, boardSeq,
                     boardTime.getHour(), boardDow, boardDow >= 6 ? 1 : 0,
@@ -1059,11 +1263,42 @@ public class AStarRouter {
                     boardStopId
             );
 
+            log.info("Using predicted bus delay for line {} stop {} because fresh snapshot is unavailable.", lineId, boardStopId);
             return new BusLegDelayVao(boardingDelay);
         } catch (Exception e) {
-            log.warn("Bus delay prediction unavailable, skipping enrichment: {}", e.getMessage());
+            log.warn("Bus delay prediction unavailable for line {} stop {}; using neutral delay 0: {}",
+                    lineId, boardStopId, e.getMessage());
+            return new BusLegDelayVao(0);
+        }
+    }
+
+    private StopDelayEntity latestFreshDelay(RouteInfo routeInfo, int stopSequence) {
+        if (stopDelaySnapshotRepository == null || routeInfo == null) {
             return null;
         }
+
+        try {
+            return stopDelaySnapshotRepository
+                    .findFirstByTrip_RouteIdAndStopSequenceOrderByTrip_RecordedAtDesc(
+                            String.valueOf(routeInfo.lineId()),
+                            stopSequence
+                    )
+                    .filter(delay -> delay.getTrip() != null && isFresh(delay.getTrip().getRecordedAt()))
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("Could not load latest bus delay snapshot for line {} stop sequence {}; falling back: {}",
+                    routeInfo.lineId(), stopSequence, e.getMessage());
+            return null;
+        }
+    }
+
+    private boolean isFresh(OffsetDateTime recordedAt) {
+        if (recordedAt == null || fallbackProperties == null) {
+            return false;
+        }
+
+        OffsetDateTime oldestFresh = OffsetDateTime.now(ROUTING_ZONE).minus(fallbackProperties.realtimeMaxAge());
+        return !recordedAt.isBefore(oldestFresh);
     }
 
     private int lookupStopSequence(int lineId, int stopId) {
@@ -1121,29 +1356,79 @@ public class AStarRouter {
         return new GeoPoint(node.getLat(), node.getLon());
     }
 
-    private LegNavigation legNavigation(Graph graph, List<Edge> edges, Edge firstEdge, Edge lastEdge) {
-        GeoPoint from = nodePoint(graph, firstEdge.getFromNodeId());
-        GeoPoint to = nodePoint(graph, lastEdge.getToNodeId());
-
-        if (navigationSupported(firstEdge)) {
-            try {
-                GoogleRoutesService.RouteDetails routeDetails =
-                        googleRoutesService.fetchRouteDetails(from, to, firstEdge.getEdgeType());
-                if (routeDetails != null) {
-                    List<GeoPoint> polyline = routeDetails.polyline().isEmpty()
-                            ? localPolyline(graph, edges, firstEdge, lastEdge)
-                            : routeDetails.polyline();
-                    List<NavigationStep> steps = routeDetails.steps();
-                    return new LegNavigation(polyline, !steps.isEmpty(), steps.isEmpty() ? null : steps);
-                }
-            } catch (Exception e) {
-                log.warn("Google navigation details unavailable for {} leg: {}", firstEdge.getEdgeType(), e.toString());
+    /**
+     * Združi zaporedne WALK/BIKE etape v skupine za en Google Routes zahtevek.
+     *
+     * @param graph graf poti
+     * @param legDrafts osnutki etap, ki se posodobijo z navigacijo
+     */
+    private void enrichCoupledNavigation(Graph graph, List<LegDraft> legDrafts) {
+        int index = 0;
+        while (index < legDrafts.size()) {
+            LegDraft draft = legDrafts.get(index);
+            if (!navigationSupported(draft)) {
+                index++;
+                continue;
             }
 
-            return new LegNavigation(localPolyline(graph, edges, firstEdge, lastEdge), false, null);
-        }
+            int endExclusive = index + 1;
+            while (endExclusive < legDrafts.size() && navigationSupported(legDrafts.get(endExclusive))) {
+                endExclusive++;
+            }
 
-        return new LegNavigation(localPolyline(graph, edges, firstEdge, lastEdge), null, null);
+            enrichNavigationGroup(legDrafts, index, endExclusive);
+            index = endExclusive;
+        }
+    }
+
+    /**
+     * Obogati eno skupino zaporednih WALK/BIKE etap z Google polilinijami.
+     *
+     * @param startInclusive prvi indeks skupine
+     * @param endExclusive indeks za zadnjim elementom skupine
+     */
+    private void enrichNavigationGroup(List<LegDraft> legDrafts, int startInclusive, int endExclusive) {
+        try {
+            List<GeoPoint> points = new ArrayList<>();
+            points.add(legDrafts.get(startInclusive).origin());
+            for (int i = startInclusive; i < endExclusive; i++) {
+                points.add(legDrafts.get(i).destination());
+            }
+
+            List<GoogleRoutesService.RouteDetails> routeDetails = googleRoutesService.fetchRouteDetails(points, EdgeType.WALK);
+            for (int i = startInclusive; i < endExclusive; i++) {
+                int detailsIndex = i - startInclusive;
+                if (detailsIndex >= routeDetails.size()) {
+                    continue;
+                }
+                GoogleRoutesService.RouteDetails details = routeDetails.get(detailsIndex);
+                LegDraft draft = legDrafts.get(i);
+                List<GeoPoint> polyline = details.polyline().isEmpty()
+                        ? draft.navigation().polyline()
+                        : details.polyline();
+                List<NavigationStep> steps = details.steps();
+                legDrafts.set(i, draft.withNavigation(new LegNavigation(
+                        polyline,
+                        steps != null && !steps.isEmpty(),
+                        steps
+                )));
+            }
+        } catch (Exception e) {
+            log.warn("Google coupled navigation details unavailable for {} route legs: {}",
+                    endExclusive - startInclusive,
+                    e.toString());
+        }
+    }
+
+    private LegNavigation localNavigation(Graph graph, List<Edge> edges, Edge firstEdge, Edge lastEdge) {
+        Boolean navigationAvailable = navigationSupported(firstEdge) ? false : null;
+        return new LegNavigation(localPolyline(graph, edges, firstEdge, lastEdge), navigationAvailable, null);
+    }
+
+    private boolean navigationSupported(LegDraft draft) {
+        return !draft.transfer()
+                && draft.firstEdge() != null
+                && navigationSupported(draft.firstEdge());
     }
 
     private boolean navigationSupported(Edge firstEdge) {
@@ -1180,6 +1465,14 @@ public class AStarRouter {
         }
     }
 
+    /**
+     * Ustvari začasno kopijo grafa z izvorom in ciljem uporabnika.
+     *
+     * Dodani sta sintetični vozlišči in WALK robovi do najbližjih postaj oziroma
+     * neposredna hoja od izvora do cilja.
+     *
+     * @return graf, pripravljen za en routing zahtevek
+     */
     private Graph withUserWalkingEdges(
             Graph graph,
             double originLat,
@@ -1218,6 +1511,11 @@ public class AStarRouter {
         return new Graph(nodes, adjacencyList);
     }
 
+    /**
+     * Preveri, ali je izvor ali cilj dovolj blizu internemu grafu.
+     *
+     * @throws RouteAccessDistanceException če je razdalja večja od konfigurirane meje
+     */
     private void validateAccessDistance(String endpoint, double lat, double lon, Node nearestStop) {
         int maxDistanceMeters = routingConfig.getMaxAccessDistanceMeters();
         double distanceMeters = helperService.haversineMeters(
@@ -1284,6 +1582,93 @@ public class AStarRouter {
     ) {
     }
 
+    private record LegDraft(
+            List<Edge> edges,
+            Edge firstEdge,
+            Edge lastEdge,
+            int durationSeconds,
+            int distanceMeters,
+            long departureMillis,
+            long arrivalMillis,
+            GeoPoint origin,
+            GeoPoint destination,
+            boolean transfer,
+            LegNavigation navigation
+    ) {
+        static LegDraft normal(
+                List<Edge> edges,
+                Edge firstEdge,
+                Edge lastEdge,
+                int durationSeconds,
+                int distanceMeters,
+                long departureMillis,
+                long arrivalMillis,
+                GeoPoint origin,
+                GeoPoint destination,
+                LegNavigation navigation
+        ) {
+            return new LegDraft(
+                    edges,
+                    firstEdge,
+                    lastEdge,
+                    durationSeconds,
+                    distanceMeters,
+                    departureMillis,
+                    arrivalMillis,
+                    origin,
+                    destination,
+                    false,
+                    navigation
+            );
+        }
+
+        static LegDraft transfer(
+                GeoPoint origin,
+                GeoPoint destination,
+                int durationSeconds,
+                long departureMillis,
+                long arrivalMillis
+        ) {
+            return new LegDraft(
+                    List.of(),
+                    null,
+                    null,
+                    durationSeconds,
+                    0,
+                    departureMillis,
+                    arrivalMillis,
+                    origin,
+                    destination,
+                    true,
+                    new LegNavigation(List.of(origin, destination), null, null)
+            );
+        }
+
+        LegDraft withNavigation(LegNavigation navigation) {
+            return new LegDraft(
+                    edges,
+                    firstEdge,
+                    lastEdge,
+                    durationSeconds,
+                    distanceMeters,
+                    departureMillis,
+                    arrivalMillis,
+                    origin,
+                    destination,
+                    transfer,
+                    navigation
+            );
+        }
+    }
+
+    /**
+     * Nastavitve enega A* iskanja za ustvarjanje alternativ.
+     *
+     * @param bikeMultiplier množitelj stroškov BIKE robov
+     * @param busMultiplier množitelj stroškov BUS robov
+     * @param penalizedNodeIds vozlišča, ki dobijo dodatno kazen
+     * @param nodePenaltySeconds kazen za že uporabljena vozlišča
+     */
     public record SearchOptions(
             double bikeMultiplier,
             double busMultiplier,
@@ -1295,6 +1680,12 @@ public class AStarRouter {
         }
     }
 
+    /**
+     * Interni rezultat route iskanja, ki hrani odgovor in surov PathResult.
+     *
+     * @param journey javni model poti
+     * @param pathResult vozlišča in časi, uporabljeni za filtriranje alternativ
+     */
     public record RouteCandidate(
             Journey journey,
             PathResult pathResult

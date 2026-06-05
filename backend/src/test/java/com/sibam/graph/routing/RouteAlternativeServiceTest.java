@@ -76,6 +76,25 @@ class RouteAlternativeServiceTest {
     }
 
     @Test
+    void labelsAreBasedOnActualRouteModesAfterSorting() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = service(router);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
+                .thenReturn(candidate(journey(1000, "WALK", "BUS"), 1, 2, 3))
+                .thenReturn(candidate(journey(1200, "WALK", "BUS", "BIKE"), 4, 5, 6))
+                .thenReturn(candidate(journey(1300, "WALK", "BIKE", "WALK"), 7, 8, 9));
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
+
+        assertThat(response.routes()).hasSize(3);
+        assertThat(response.routes().get(0).label()).isEqualTo(RouteAlternativeLabel.FASTEST.displayName());
+        assertThat(response.routes().get(1).label()).isEqualTo(RouteAlternativeLabel.MULTIMODAL.displayName());
+        assertThat(response.routes().get(2).modes()).contains("BIKE").doesNotContain("BUS");
+        assertThat(response.routes().get(2).label()).isEqualTo(RouteAlternativeLabel.BIKE_FRIENDLY.displayName());
+    }
+
+    @Test
     void fastestBikeRouteUsesFastestLabel() {
         AStarRouter router = mock(AStarRouter.class);
         RouteAlternativeService service = service(router);
@@ -134,6 +153,36 @@ class RouteAlternativeServiceTest {
         RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
 
         assertThat(response.routes()).hasSize(3);
+    }
+
+    @Test
+    void configuredMaxRoutesIsCappedAtThree() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = new RouteAlternativeService(router, 10, 0.8, 2.0, 180);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
+                .thenReturn(candidate(journey(1000, "BUS"), 1, 2))
+                .thenReturn(candidate(journey(1100, "BUS"), 3, 4))
+                .thenReturn(candidate(journey(1200, "BUS"), 5, 6))
+                .thenReturn(candidate(journey(1300, "BUS"), 7, 8));
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
+
+        assertThat(response.routes()).hasSize(3);
+    }
+
+    @Test
+    void configuredMaxRoutesIsAtLeastOne() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = new RouteAlternativeService(router, 0, 0.8, 2.0, 180);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
+                .thenReturn(candidate(journey(1000, "BUS"), 1, 2))
+                .thenReturn(candidate(journey(1100, "BUS"), 3, 4));
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
+
+        assertThat(response.routes()).hasSize(1);
     }
 
     @Test

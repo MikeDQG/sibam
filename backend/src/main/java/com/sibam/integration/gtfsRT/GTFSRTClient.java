@@ -4,6 +4,12 @@ import com.google.transit.realtime.GtfsRealtime;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+/**
+ * Odjemalec za Marprom GTFS-RT protobuf vire.
+ *
+ * Sinhrono prenese vehicle_positions in trip_updates ter jih parsira v
+ * FeedMessage objekte knjižnice GTFS Realtime.
+ */
 @Component
 public class GTFSRTClient {
 
@@ -19,6 +25,11 @@ public class GTFSRTClient {
         this.webClient = webClientBuilder.build();
     }
 
+    /**
+     * Prenese trenutne položaje Marprom vozil iz GTFS-RT vira.
+     *
+     * @return parsiran FeedMessage z VehiclePosition entitetami
+     */
     public GtfsRealtime.FeedMessage getVehiclePositions() {
         try {
 
@@ -40,6 +51,11 @@ public class GTFSRTClient {
         }
     }
 
+    /**
+     * Prenese trenutne posodobitve voženj in zamud iz GTFS-RT vira.
+     *
+     * @return parsiran FeedMessage s TripUpdate entitetami
+     */
     public GtfsRealtime.FeedMessage getTripUpdates() {
         try {
 

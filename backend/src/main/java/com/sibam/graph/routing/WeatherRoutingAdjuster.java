@@ -1,15 +1,26 @@
 package com.sibam.graph.routing;
 
+import com.sibam.config.FallbackProperties;
 import com.sibam.graph.model.EdgeType;
 import com.sibam.persistence.WeatherSnapshot;
 import com.sibam.repository.WeatherSnapshotRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Locale;
 
+/**
+ * Prilagaja routing stroške glede na zadnje shranjeno vreme.
+ *
+ * Dež, mraz ali vročina lahko podražijo WALK/BIKE robove, dež pa lahko omeji
+ * predolge peš povezave in poveča prestopno kazen.
+ */
 @Component
 public class WeatherRoutingAdjuster {
 
@@ -17,19 +28,51 @@ public class WeatherRoutingAdjuster {
 
     private final RoutingConfig routingConfig;
     private final WeatherSnapshotRepository weatherSnapshotRepository;
+    private final FallbackProperties fallbackProperties;
+    private final Clock clock;
 
+    @Autowired
     public WeatherRoutingAdjuster(
             RoutingConfig routingConfig,
-            WeatherSnapshotRepository weatherSnapshotRepository
+            WeatherSnapshotRepository weatherSnapshotRepository,
+            FallbackProperties fallbackProperties,
+            Clock clock
     ) {
         this.routingConfig = routingConfig;
         this.weatherSnapshotRepository = weatherSnapshotRepository;
+        this.fallbackProperties = fallbackProperties;
+        this.clock = clock;
     }
 
+    WeatherRoutingAdjuster(
+            RoutingConfig routingConfig,
+            WeatherSnapshotRepository weatherSnapshotRepository
+    ) {
+        this(
+                routingConfig,
+                weatherSnapshotRepository,
+                new FallbackProperties(60),
+                Clock.system(ZoneId.of("Europe/Ljubljana"))
+        );
+    }
+
+    /**
+     * Prilagodi strošek roba z uporabo zadnjega svežega vremenskega posnetka.
+     *
+     * @return strošek v sekundah
+     */
     public int adjustedEdgeCost(EdgeType edgeType, int baseCostSeconds) {
         return adjustedEdgeCost(edgeType, baseCostSeconds, currentWeather());
     }
 
+    /**
+     * Prilagodi strošek roba glede na podan vremenski kontekst.
+     *
+     * @param edgeType tip roba WALK, BIKE, BUS ali TRANSFER
+     * @param baseCostSeconds osnovni strošek v sekundah
+     * @param weather vremenski kontekst
+     * @return prilagojen strošek v sekundah
+     */
     public int adjustedEdgeCost(
             EdgeType edgeType,
             int baseCostSeconds,
@@ -39,6 +82,12 @@ public class WeatherRoutingAdjuster {
         return (int) Math.max(1, Math.round(baseCostSeconds * multiplier));
     }
 
+    /**
+     * Prilagodi prestopno kazen z uporabo zadnjega svežega vremena.
+     *
+     * @param baseTransferPenaltySeconds osnovna prestopna kazen
+     * @return prilagojena kazen v sekundah
+     */
     public int adjustedTransferPenaltySeconds(int baseTransferPenaltySeconds) {
         return adjustedTransferPenaltySeconds(baseTransferPenaltySeconds, currentWeather());
     }
@@ -60,6 +109,11 @@ public class WeatherRoutingAdjuster {
         return isEdgeAllowed(edgeType, distanceMeters, currentWeather());
     }
 
+    /**
+     * Preveri, ali je rob dovoljen v podanih vremenskih razmerah.
+     *
+     * @return false predvsem za predolge WALK robove v dežju
+     */
     public boolean isEdgeAllowed(
             EdgeType edgeType,
             int distanceMeters,
@@ -72,15 +126,35 @@ public class WeatherRoutingAdjuster {
         return distanceMeters <= routingConfig.getRainMaxWalkDistanceMeters();
     }
 
+    /**
+     * Vrne zadnji svež vremenski posnetek kot routing kontekst.
+     *
+     * Če podatkov ni ali so zastareli, vrne nevtralni kontekst.
+     *
+     * @return vremenski kontekst za izračun stroškov
+     */
     public WeatherRoutingContext currentWeather() {
         try {
             return weatherSnapshotRepository.findFirstByOrderByRecordedAtDesc()
+                    .filter(this::isFresh)
                     .map(this::toContext)
-                    .orElseGet(WeatherRoutingContext::neutral);
+                    .orElseGet(() -> {
+                        log.info("Weather snapshot missing or stale. Falling back to neutral routing weather.");
+                        return WeatherRoutingContext.neutral();
+                    });
         } catch (DataAccessException ex) {
-            log.warn("Could not load latest weather snapshot. Falling back to neutral routing weather.", ex);
+            log.warn("Could not load latest weather snapshot. Falling back to neutral routing weather: {}", ex.getMessage());
             return WeatherRoutingContext.neutral();
         }
+    }
+
+    private boolean isFresh(WeatherSnapshot snapshot) {
+        if (snapshot.getRecordedAt() == null) {
+            return false;
+        }
+
+        OffsetDateTime oldestFresh = OffsetDateTime.now(clock).minus(fallbackProperties.realtimeMaxAge());
+        return !snapshot.getRecordedAt().isBefore(oldestFresh);
     }
 
     private WeatherRoutingContext toContext(WeatherSnapshot snapshot) {

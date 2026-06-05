@@ -22,6 +22,12 @@ import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
+/**
+ * Serializator grafa v lokalni in Supabase cache.
+ *
+ * Kljub imenu uporablja Java object serialization za binarni graph.bin in ob
+ * vsakem shranjevanju ali nalaganju zapiše manifest s SHA-256 hash vrednostjo.
+ */
 @Component
 public class KryoGraphSerializer implements GraphSerializer {
 
@@ -48,6 +54,11 @@ public class KryoGraphSerializer implements GraphSerializer {
         this.enabled = enabled;
     }
 
+    /**
+     * Serializira graf in ga shrani lokalno ter v Supabase cache, če je omogočen.
+     *
+     * @param graph graf za shranjevanje
+     */
     @Override
     public void save(Graph graph) {
         if (!enabled) {
@@ -72,6 +83,11 @@ public class KryoGraphSerializer implements GraphSerializer {
         }
     }
 
+    /**
+     * Naloži graf iz lokalnega cache-a.
+     *
+     * @return deserializiran graf ali null, če cache ni uporaben
+     */
     @Override
     public Graph load() {
         if (!enabled) {
@@ -96,6 +112,11 @@ public class KryoGraphSerializer implements GraphSerializer {
         }
     }
 
+    /**
+     * Preveri lokalni cache in po potrebi poskusi obnovitev iz Supabase.
+     *
+     * @return true, če je graf cache mogoče naložiti
+     */
     @Override
     public boolean exists() {
         if (!enabled) {

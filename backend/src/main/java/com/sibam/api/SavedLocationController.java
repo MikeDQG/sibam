@@ -9,6 +9,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Controller za shranjene uporabniške lokacije.
+ *
+ * Vsi endpointi uporabljajo Firebase uid iz avtentikacijskega filtra, da servis
+ * preveri lastništvo uporabniških podatkov.
+ */
 @RestController
 @RequestMapping("/api/locations")
 public class SavedLocationController {
@@ -18,6 +24,13 @@ public class SavedLocationController {
         this.locationService = locationService;
     }
 
+    /**
+     * Vrne vse shranjene lokacije izbranega uporabnika.
+     *
+     * @param userId interni ID uporabnika
+     * @param uid Firebase uid iz request atributa
+     * @return seznam shranjenih lokacij
+     */
     @GetMapping("/{userId}")
     public ResponseEntity<List<SavedLocation>> getLocations(
             @PathVariable UUID userId,
@@ -25,6 +38,13 @@ public class SavedLocationController {
         return ResponseEntity.ok(locationService.getLocationsForUser(userId, uid));
     }
 
+    /**
+     * Ustvari novo shranjeno lokacijo za uporabnika.
+     *
+     * @param request podatki lokacije iz zahtevka
+     * @param uid Firebase uid iz request atributa
+     * @return shranjena lokacija
+     */
     @PostMapping
     public ResponseEntity<SavedLocation> saveLocation(
             @RequestBody SavedLocationRequest request,
@@ -34,6 +54,14 @@ public class SavedLocationController {
         ));
     }
 
+    /**
+     * Posodobi obstoječo shranjeno lokacijo.
+     *
+     * @param locationId ID lokacije, ki se posodablja
+     * @param request novi podatki lokacije
+     * @param uid Firebase uid iz request atributa
+     * @return posodobljena lokacija
+     */
     @PutMapping("/{locationId}")
     public ResponseEntity<SavedLocation> updateLocation(
             @PathVariable UUID locationId,
@@ -44,6 +72,13 @@ public class SavedLocationController {
         ));
     }
 
+    /**
+     * Izbriše shranjeno lokacijo uporabnika.
+     *
+     * @param locationId ID lokacije za brisanje
+     * @param uid Firebase uid iz request atributa
+     * @return prazen 204 odgovor
+     */
     @DeleteMapping("/{locationId}")
     public ResponseEntity<Void> deleteLocation(
             @PathVariable UUID locationId,

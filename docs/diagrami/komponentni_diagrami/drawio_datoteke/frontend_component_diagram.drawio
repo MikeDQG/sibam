@@ -1,292 +1,389 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Frontend" id="frontend-diagram">
-    <mxGraphModel dx="2580" dy="1663" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1200" math="0" shadow="0">
+    <mxGraphModel dx="1341" dy="880" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1380" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="ext_fb" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;" value="«external system»&lt;br&gt;&lt;b&gt;Firebase Auth&lt;/b&gt;&lt;br&gt;Google Cloud" vertex="1">
-          <mxGeometry height="65" width="185" x="80" y="30" as="geometry" />
+        <mxCell id="ext_browser" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#f5f5f5;strokeColor=#555555;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«external runtime»&lt;br&gt;&lt;b&gt;Browser / PWA&lt;/b&gt;&lt;br&gt;geolocation · localStorage" vertex="1">
+          <mxGeometry height="78" width="230" x="40" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="ext_gm" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;" value="«external system»&lt;br&gt;&lt;b&gt;Google Maps JS SDK&lt;/b&gt;&lt;br&gt;@vis.gl/react-google-maps" vertex="1">
-          <mxGeometry height="65" width="215" x="630" y="30" as="geometry" />
+        <mxCell id="ext_fb" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#f5f5f5;strokeColor=#555555;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«external system»&lt;br&gt;&lt;b&gt;Firebase Auth&lt;/b&gt;&lt;br&gt;email/password · Google login" vertex="1">
+          <mxGeometry height="78" width="250" x="330" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="ext_places" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;" value="«external system»&lt;br&gt;&lt;b&gt;Google Places API&lt;/b&gt;&lt;br&gt;autocomplete suggestions" vertex="1">
-          <mxGeometry height="60" width="210" x="1150" y="30" as="geometry" />
+        <mxCell id="ext_maps" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#f5f5f5;strokeColor=#555555;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«external system»&lt;br&gt;&lt;b&gt;Google Maps JS SDK&lt;/b&gt;&lt;br&gt;@vis.gl/react-google-maps" vertex="1">
+          <mxGeometry height="78" width="260" x="680" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="ext_backend" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;" value="«external system»&lt;br&gt;&lt;b&gt;Backend API&lt;/b&gt;&lt;br&gt;Spring Boot" vertex="1">
-          <mxGeometry height="65" width="200" x="1370" y="30" as="geometry" />
+        <mxCell id="ext_places" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#f5f5f5;strokeColor=#555555;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«external system»&lt;br&gt;&lt;b&gt;Google Places API&lt;/b&gt;&lt;br&gt;autocomplete + place details" vertex="1">
+          <mxGeometry height="78" width="260" x="1670" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="fe_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=6;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontSize=12;align=center;" value="«subsystem»&lt;br&gt;&lt;b&gt;Frontend — React + Vite + TypeScript&lt;/b&gt;" vertex="1">
-          <mxGeometry height="960" width="1560" x="40" y="145" as="geometry" />
+        <mxCell id="ext_backend" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#f5f5f5;strokeColor=#555555;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«external system»&lt;br&gt;&lt;b&gt;Backend API&lt;/b&gt;&lt;br&gt;Spring Boot" vertex="1">
+          <mxGeometry height="78" width="260" x="1200" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="app" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;App.tsx&lt;/b&gt;&lt;br&gt;React Router — 5 routes" vertex="1">
-          <mxGeometry height="65" width="200" x="780" y="195" as="geometry" />
+        <mxCell id="fe_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#ffffff;strokeColor=#111827;strokeWidth=2;fontSize=14;fontColor=#111827;" value="«subsystem»&lt;br&gt;&lt;b&gt;Frontend - React 19 + Vite + TypeScript&lt;/b&gt;" vertex="1">
+          <mxGeometry height="1175" width="1900" x="40" y="160" as="geometry" />
         </mxCell>
-        <mxCell id="firebase_svc" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="«service»&lt;br&gt;&lt;b&gt;firebase.ts&lt;/b&gt;&lt;br&gt;FirebaseApp · getAuth()" vertex="1">
-          <mxGeometry height="60" width="185" x="80" y="200" as="geometry" />
+        <mxCell id="runtime_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#eef6ff;strokeColor=#6c8ebf;strokeWidth=1;fontSize=14;fontColor=#111827;" value="«composition root»&lt;br&gt;&lt;b&gt;Application shell&lt;/b&gt;" vertex="1">
+          <mxGeometry height="170" width="1840" x="70" y="205" as="geometry" />
         </mxCell>
-        <mxCell id="lp" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;LandingPage&lt;/b&gt;&lt;br&gt;route: /" vertex="1">
-          <mxGeometry height="60" width="175" x="60" y="410" as="geometry" />
+        <mxCell id="main" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«entry»&lt;br&gt;&lt;b&gt;main.tsx&lt;/b&gt;&lt;br&gt;StrictMode · createRoot" vertex="1">
+          <mxGeometry height="70" width="170" x="80" y="269" as="geometry" />
         </mxCell>
-        <mxCell id="lg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;Login&lt;/b&gt;&lt;br&gt;route: /login" vertex="1">
-          <mxGeometry height="60" width="155" x="280" y="410" as="geometry" />
+        <mxCell id="theme_provider" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«provider»&lt;br&gt;&lt;b&gt;ThemeProvider&lt;/b&gt;&lt;br&gt;light/dark · localStorage" vertex="1">
+          <mxGeometry height="70" width="190" x="340" y="270" as="geometry" />
         </mxCell>
-        <mxCell id="reg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;Register&lt;/b&gt;&lt;br&gt;route: /register" vertex="1">
-          <mxGeometry height="60" width="155" x="470" y="410" as="geometry" />
+        <mxCell id="session_provider" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«provider»&lt;br&gt;&lt;b&gt;UserSessionProvider&lt;/b&gt;&lt;br&gt;Firebase token -&gt; backend user" vertex="1">
+          <mxGeometry height="70" width="260" x="590" y="270" as="geometry" />
         </mxCell>
-        <mxCell id="acc" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;AccountPage&lt;/b&gt;&lt;br&gt;route: /account" vertex="1">
-          <mxGeometry height="60" width="185" x="660" y="410" as="geometry" />
+        <mxCell id="router_app" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«router»&lt;br&gt;&lt;b&gt;BrowserRouter + App.tsx&lt;/b&gt;&lt;br&gt;/ · /login · /register · /home · /account" vertex="1">
+          <mxGeometry height="58" width="210" x="900" y="310" as="geometry" />
         </mxCell>
-        <mxCell id="mah" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="«page»&lt;br&gt;&lt;b&gt;MainAppHome&lt;/b&gt;&lt;br&gt;route: /home" vertex="1">
-          <mxGeometry height="60" width="185" x="900" y="410" as="geometry" />
+        <mxCell id="toaster" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«feedback»&lt;br&gt;&lt;b&gt;Toaster / sonner&lt;/b&gt;&lt;br&gt;route + save/delete messages" vertex="1">
+          <mxGeometry height="70" width="160" x="1290" y="269" as="geometry" />
         </mxCell>
-        <mxCell id="lp_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=6;fillColor=#eff7ff;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;align=center;fontColor=#6c8ebf;" value="«subsystem»&lt;br&gt;&lt;b&gt;Landing Page Components&lt;/b&gt;" vertex="1">
-          <mxGeometry height="260" width="420" x="220" y="540" as="geometry" />
+        <mxCell id="shared" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#f5f5f5;strokeColor=#aaaaaa;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«shared modules»&lt;br&gt;&lt;b&gt;ui: Button · Input · Separator · Sonner&lt;/b&gt;&lt;br&gt;lib: api · text · utils" vertex="1">
+          <mxGeometry height="88" width="232.5" x="1580" y="251" as="geometry" />
         </mxCell>
-        <mxCell id="hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;Header&lt;/b&gt;&lt;br&gt;nav + logo" vertex="1">
-          <mxGeometry height="60" width="150" x="240" y="595" as="geometry" />
+        <mxCell id="landing_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#eef6ff;strokeColor=#6c8ebf;strokeWidth=1;fontSize=14;fontColor=#111827;" value="«subsystem»&lt;br&gt;&lt;b&gt;Landing page&lt;/b&gt;" vertex="1">
+          <mxGeometry height="260" width="390" x="70" y="425" as="geometry" />
         </mxCell>
-        <mxCell id="hero" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;HeroSection&lt;/b&gt;&lt;br&gt;CTA + intro" vertex="1">
-          <mxGeometry height="60" width="165" x="420" y="595" as="geometry" />
+        <mxCell id="landing" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«page»&lt;br&gt;&lt;b&gt;LandingPage&lt;/b&gt;&lt;br&gt;route: /" vertex="1">
+          <mxGeometry height="64" width="145" x="300" y="464.25" as="geometry" />
         </mxCell>
-        <mxCell id="feat" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;FeaturesSection&lt;/b&gt;&lt;br&gt;feature cards" vertex="1">
-          <mxGeometry height="60" width="180" x="420" y="685" as="geometry" />
+        <mxCell id="landing_components" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«components»&lt;br&gt;&lt;b&gt;Header · HeroSection&lt;/b&gt;&lt;br&gt;FeaturesSection · Footer&lt;br&gt;ThemeToggle" vertex="1">
+          <mxGeometry height="75.5" width="150" x="80" y="430" as="geometry" />
         </mxCell>
-        <mxCell id="ftr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;Footer&lt;/b&gt;" vertex="1">
-          <mxGeometry height="60" width="150" x="240" y="685" as="geometry" />
+        <mxCell id="auth_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#eef6ff;strokeColor=#6c8ebf;strokeWidth=1;fontSize=14;fontColor=#111827;" value="«subsystem»&lt;br&gt;&lt;b&gt;Authentication&lt;/b&gt;" vertex="1">
+          <mxGeometry height="260" width="410" x="500" y="425" as="geometry" />
         </mxCell>
-        <mxCell id="ma_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=6;fillColor=#eff7ff;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;align=center;fontColor=#6c8ebf;" value="«subsystem»&lt;br&gt;&lt;b&gt;Main App Components&lt;/b&gt;" vertex="1">
-          <mxGeometry height="450" width="840" x="740" y="630" as="geometry" />
+        <mxCell id="login" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«page»&lt;br&gt;&lt;b&gt;Login&lt;/b&gt;&lt;br&gt;route: /login" vertex="1">
+          <mxGeometry height="55" width="120" x="520" y="460" as="geometry" />
         </mxCell>
-        <mxCell id="api_prov" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;APIProvider&lt;/b&gt;&lt;br&gt;@vis.gl · region=SI" vertex="1">
-          <mxGeometry height="60" width="200" x="760" y="685" as="geometry" />
+        <mxCell id="register" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«page»&lt;br&gt;&lt;b&gt;Register&lt;/b&gt;&lt;br&gt;route: /register" vertex="1">
+          <mxGeometry height="54.5" width="130" x="720" y="464.25" as="geometry" />
         </mxCell>
-        <mxCell id="mm" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;MainMap&lt;/b&gt;&lt;br&gt;dark Google Map · origin&lt;br&gt;&amp; destination markers" vertex="1">
-          <mxGeometry height="75" width="200" x="760" y="797.5" as="geometry" />
+        <mxCell id="firebase_svc" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«service»&lt;br&gt;&lt;b&gt;firebase.ts&lt;/b&gt;&lt;br&gt;FirebaseApp · auth" vertex="1">
+          <mxGeometry height="55" width="170" x="635" y="610" as="geometry" />
         </mxCell>
-        <mxCell id="maco" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;MainAppControlOverlay&lt;/b&gt;&lt;br&gt;search · zoom · transport toggles&lt;br&gt;(bus/bike) · depart/arrive time" vertex="1">
-          <mxGeometry height="80" width="220" x="1000" y="685" as="geometry" />
+        <mxCell id="account_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#eef6ff;strokeColor=#6c8ebf;strokeWidth=1;fontSize=14;fontColor=#111827;" value="«subsystem»&lt;br&gt;&lt;b&gt;User account&lt;/b&gt;" vertex="1">
+          <mxGeometry height="260" width="440" x="1360" y="425" as="geometry" />
         </mxCell>
-        <mxCell id="ro" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;RouteOptions&lt;/b&gt;&lt;br&gt;fastest · greenest · no-bike" vertex="1">
-          <mxGeometry height="65" width="200" x="1260" y="685" as="geometry" />
+        <mxCell id="account" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«page»&lt;br&gt;&lt;b&gt;AccountPage&lt;/b&gt;&lt;br&gt;route: /account" vertex="1">
+          <mxGeometry height="64" width="150" x="1380" y="481" as="geometry" />
         </mxCell>
-        <mxCell id="ww" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;WeatherWidget&lt;/b&gt;&lt;br&gt;current conditions" vertex="1">
-          <mxGeometry height="60" width="185" x="1000" y="805" as="geometry" />
+        <mxCell id="saved_location_card" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«component»&lt;br&gt;&lt;b&gt;SavedLocationMapCard&lt;/b&gt;&lt;br&gt;mini map + delete" vertex="1">
+          <mxGeometry height="76" width="145" x="1630" y="475" as="geometry" />
         </mxCell>
-        <mxCell id="rlo" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="«component»&lt;br&gt;&lt;b&gt;RouteLoadingOverlay&lt;/b&gt;&lt;br&gt;spinner while routing" vertex="1">
-          <mxGeometry height="60" width="200" x="1260" y="805" as="geometry" />
+        <mxCell id="saved_route_card" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«component»&lt;br&gt;&lt;b&gt;SavedRouteMapCard&lt;/b&gt;&lt;br&gt;route preview + delete" vertex="1">
+          <mxGeometry height="76" width="175" x="1590" y="575" as="geometry" />
         </mxCell>
-        <mxCell id="usePAC" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="«hook»&lt;br&gt;&lt;b&gt;usePlacesAutocomplete&lt;/b&gt;&lt;br&gt;fetches + parses place suggestions" vertex="1">
-          <mxGeometry height="65" width="225" x="1000" y="915" as="geometry" />
+        <mxCell id="home_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#eef6ff;strokeColor=#6c8ebf;strokeWidth=1;fontSize=14;fontColor=#111827;" value="«subsystem»&lt;br&gt;&lt;b&gt;Main route planner&lt;/b&gt;" vertex="1">
+          <mxGeometry height="525" width="1820" x="70" y="735" as="geometry" />
         </mxCell>
-        <mxCell id="ui_note" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#aaaaaa;fontSize=9;fontColor=#666666;" value="«shared UI»&lt;br&gt;&lt;b&gt;Button · Input · Separator&lt;/b&gt;&lt;br&gt;shadcn/ui primitives" vertex="1">
-          <mxGeometry height="65" width="200" x="760" y="915" as="geometry" />
+        <mxCell id="home" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«page/controller»&lt;br&gt;&lt;b&gt;MainAppHome&lt;/b&gt;&lt;br&gt;state: location · routes · saved data&lt;br&gt;route following · active step" vertex="1">
+          <mxGeometry height="105" width="260" x="370" y="790" as="geometry" />
         </mxCell>
-        <mxCell id="a1" edge="1" parent="1" source="firebase_svc" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ext_fb" value="«SDK»">
+        <mxCell id="mainmap" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«map component»&lt;br&gt;&lt;b&gt;MainMap&lt;/b&gt;&lt;br&gt;Google Map · markers · fit bounds&lt;br&gt;context menu save location" vertex="1">
+          <mxGeometry height="105" width="260" x="440" y="990" as="geometry" />
+        </mxCell>
+        <mxCell id="polyline" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«map layer»&lt;br&gt;&lt;b&gt;RoutePolyline&lt;/b&gt;&lt;br&gt;walk/bike/bus styled legs&lt;br&gt;clickable route segments" vertex="1">
+          <mxGeometry height="95" width="260" x="360" y="1142" as="geometry" />
+        </mxCell>
+        <mxCell id="route_popup" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«popup»&lt;br&gt;&lt;b&gt;RoutePopup&lt;/b&gt;&lt;br&gt;leg details · bus delay&lt;br&gt;bike predictions" vertex="1">
+          <mxGeometry height="95" width="220" x="680" y="1140" as="geometry" />
+        </mxCell>
+        <mxCell id="location_popup" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«popup»&lt;br&gt;&lt;b&gt;MapLocationPopup&lt;/b&gt;&lt;br&gt;name · color · icon · save" vertex="1">
+          <mxGeometry height="95" width="220" x="95" y="1128.5" as="geometry" />
+        </mxCell>
+        <mxCell id="overlay" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«control surface»&lt;br&gt;&lt;b&gt;MainAppControlOverlay&lt;/b&gt;&lt;br&gt;search · directions · saved routes&lt;br&gt;transport/date/time controls" vertex="1">
+          <mxGeometry height="115" width="300" x="970" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="overlay_parts" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«overlay components»&lt;br&gt;&lt;b&gt;DestinationSearch · DirectionsInputs&lt;/b&gt;&lt;br&gt;SearchInputRow · RouteControls&lt;br&gt;MapControls · ProfileButton&lt;br&gt;MapZoomLocateButtons" vertex="1">
+          <mxGeometry height="155" width="300" x="950" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="weather" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«component»&lt;br&gt;&lt;b&gt;WeatherWidget&lt;/b&gt;&lt;br&gt;current conditions" vertex="1">
+          <mxGeometry height="72" width="190" x="1320" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="loading" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«component»&lt;br&gt;&lt;b&gt;RouteLoadingOverlay&lt;/b&gt;&lt;br&gt;cancel loading" vertex="1">
+          <mxGeometry height="72" width="190" x="1540" y="1163" as="geometry" />
+        </mxCell>
+        <mxCell id="route_options" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«bottom sheet»&lt;br&gt;&lt;b&gt;RouteOptions&lt;/b&gt;&lt;br&gt;route alternatives · instructions&lt;br&gt;save route · active step highlight" vertex="1">
+          <mxGeometry height="115" width="250" x="90" y="895" as="geometry" />
+        </mxCell>
+        <mxCell id="route_error" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«component»&lt;br&gt;&lt;b&gt;RouteErrorBox&lt;/b&gt;&lt;br&gt;compute errors" vertex="1">
+          <mxGeometry height="72" width="180" x="125" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="places_hook" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«hook»&lt;br&gt;&lt;b&gt;usePlacesAutocomplete&lt;/b&gt;&lt;br&gt;Maribor bounds · predictions" vertex="1">
+          <mxGeometry height="84" width="245" x="1630" y="832" as="geometry" />
+        </mxCell>
+        <mxCell id="assets" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=center;fillColor=#f5f5f5;strokeColor=#aaaaaa;strokeWidth=1;fontSize=10;fontColor=#111827;" value="«assets»&lt;br&gt;&lt;b&gt;logo.svg · landing images&lt;/b&gt;&lt;br&gt;pathIcons/mBajk · marprom&lt;br&gt;PWA icons" vertex="1">
+          <mxGeometry height="84" width="245" x="1617.5" y="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="e_main_theme" edge="1" parent="1" source="main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="theme_provider" value="wraps">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="a2" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="lp" value="«route /»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="290" y="210" />
-              <mxPoint x="290" y="360" />
-              <mxPoint x="148" y="360" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a3" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="lg" value="«route /login»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="380" y="228" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a4" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="reg" value="«route /register»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="548" y="240" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a5" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="acc" value="«route /account»">
+        <mxCell id="e_theme_session" edge="1" parent="1" source="theme_provider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="session_provider" value="wraps">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="a6" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="mah" value="«route /home»">
+        <mxCell id="e_session_router" edge="1" parent="1" source="session_provider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="router_app" value="wraps">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_router_toast" edge="1" parent="1" source="router_app" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="toaster" value="renders">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="890" y="335" />
-              <mxPoint x="992" y="335" />
+              <mxPoint x="1200" y="320" />
+              <mxPoint x="1200" y="304" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a7" edge="1" parent="1" source="lp" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="hdr" value="«use»">
+        <mxCell id="e_app_landing" edge="1" parent="1" source="router_app" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="landing" value="route /">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="180" y="560" />
-              <mxPoint x="315" y="560" />
+              <mxPoint x="1045" y="410" />
+              <mxPoint x="390" y="410" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a8" edge="1" parent="1" source="lp" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="hero" value="«use»">
+        <mxCell id="e_app_login" edge="1" parent="1" source="router_app" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="login" value="route /login">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="190" y="510" />
-              <mxPoint x="503" y="510" />
+              <mxPoint x="1010" y="390" />
+              <mxPoint x="630" y="390" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a9" edge="1" parent="1" source="lp" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="feat" value="«use»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="148" y="830" />
-              <mxPoint x="510" y="830" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a10" edge="1" parent="1" source="lp" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ftr" value="«use»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="170" y="715" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a11" edge="1" parent="1" source="lg" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="firebase_svc" value="«signIn · GoogleAuth»">
-          <mxGeometry relative="1" x="0.0714" as="geometry">
+        <mxCell id="e_app_register" edge="1" parent="1" source="router_app" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="register" value="route /register">
+          <mxGeometry relative="1" x="-0.1183" as="geometry">
             <mxPoint as="offset" />
             <Array as="points">
-              <mxPoint x="320" y="340" />
-              <mxPoint x="190" y="340" />
+              <mxPoint x="980" y="492" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a12" edge="1" parent="1" source="lg" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ext_backend" value="«POST /api/users/me»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="358" y="130" />
-              <mxPoint x="1440" y="130" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a13" edge="1" parent="1" source="reg" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="firebase_svc" value="«createUser»">
-          <mxGeometry relative="1" x="-0.2444" as="geometry">
+        <mxCell id="e_app_account" edge="1" parent="1" source="router_app" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="account" value="route /account">
+          <mxGeometry relative="1" x="0.1899" as="geometry">
             <mxPoint as="offset" />
             <Array as="points">
-              <mxPoint x="530" y="330" />
-              <mxPoint x="230" y="330" />
+              <mxPoint x="1240" y="350" />
+              <mxPoint x="1240" y="517" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a14" edge="1" parent="1" source="acc" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="firebase_svc" value="«onAuthStateChanged · signOut»">
-          <mxGeometry relative="1" x="-0.7145" as="geometry">
+        <mxCell id="e_app_home" edge="1" parent="1" source="router_app" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="home" value="route /home">
+          <mxGeometry relative="1" x="-0.2953" as="geometry">
             <mxPoint as="offset" />
             <Array as="points">
-              <mxPoint x="710" y="390" />
-              <mxPoint x="160" y="390" />
+              <mxPoint x="920" y="810" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a15" edge="1" parent="1" source="acc" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="hdr" value="«use»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="720" y="490" />
-              <mxPoint x="340" y="490" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a16" edge="1" parent="1" source="acc" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ftr" value="«use»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="730" y="790" />
-              <mxPoint x="315" y="790" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a17" edge="1" parent="1" source="mah" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="api_prov" value="«use»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="992" y="578" />
-              <mxPoint x="870" y="578" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a18" edge="1" parent="1" source="mah" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="maco" value="«use»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1000" y="578" />
-              <mxPoint x="1110" y="578" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a19" edge="1" parent="1" source="mah" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ro" value="«use»">
+        <mxCell id="e_landing_parts" edge="1" parent="1" source="landing" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="landing_components" value="uses">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="a20" edge="1" parent="1" source="api_prov" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="mm" value="«provides map context»">
+        <mxCell id="e_login_fb" edge="1" parent="1" source="login" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="firebase_svc" value="sign in">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_reg_fb" edge="1" parent="1" source="register" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;entryX=0.826;entryY=0.029;entryDx=0;entryDy=0;entryPerimeter=0;" target="firebase_svc" value="create user">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="580" />
+              <mxPoint x="775" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_fb_ext" edge="1" parent="1" source="firebase_svc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="ext_fb" value="SDK">
+          <mxGeometry relative="1" x="-0.1219" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="490" y="638" />
+              <mxPoint x="490" y="359" />
+              <mxPoint x="550" y="359" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_session_backend" edge="1" parent="1" source="session_provider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="ext_backend" value="GET/POST /api/users/me">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="240" />
+              <mxPoint x="1210" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_login_session" edge="1" parent="1" source="login" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="session_provider" value="syncUserSession">
+          <mxGeometry relative="1" x="-0.1765" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="580" y="360" />
+              <mxPoint x="630" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_reg_session" edge="1" parent="1" source="register" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="session_provider" value="syncUserSession">
+          <mxGeometry relative="1" x="0.6347" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="760" y="440" />
+              <mxPoint x="720" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_account_cards1" edge="1" parent="1" source="account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="saved_location_card" value="renders">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="a21" edge="1" parent="1" source="api_prov" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ext_gm" value="«load SDK»">
+        <mxCell id="e_account_cards2" edge="1" parent="1" source="account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="saved_route_card" value="renders">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1475" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_account_backend" edge="1" parent="1" source="account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="ext_backend" value="GET/DELETE /api/locations, /api/paths">
+          <mxGeometry relative="1" x="0.2377" y="5" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1475" y="190" />
+              <mxPoint x="1440" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_cards_maps" edge="1" parent="1" source="saved_location_card" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="ext_maps" value="mini maps">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1840" y="513" />
+              <mxPoint x="1840" y="140" />
+              <mxPoint x="810" y="140" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_home_map" edge="1" parent="1" source="home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="mainmap" value="props/callbacks">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="a22" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ww" value="«use»">
+        <mxCell id="e_home_overlay" edge="1" parent="1" source="home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="overlay" value="props/callbacks">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1093" y="766" />
-            </Array>
-            <mxPoint x="1093" y="766" as="sourcePoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="a23" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="rlo" value="«use»">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1130" y="780" />
-              <mxPoint x="1360" y="780" />
+              <mxPoint x="830" y="843" />
+              <mxPoint x="830" y="843" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a24" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="usePAC" value="«use»">
-          <mxGeometry relative="1" as="geometry">
+        <mxCell id="e_home_options" edge="1" parent="1" source="home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="route_options" value="routes + save">
+          <mxGeometry relative="1" x="0.0123" y="17" as="geometry">
+            <mxPoint x="10" y="-3" as="offset" />
             <Array as="points">
-              <mxPoint x="1110" y="790" />
-              <mxPoint x="1220" y="790" />
-              <mxPoint x="1220" y="880" />
-              <mxPoint x="1112" y="880" />
+              <mxPoint x="380" y="936" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a25" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" target="firebase_svc" value="«onAuthStateChanged»">
+        <mxCell id="e_map_poly" edge="1" parent="1" source="mainmap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="polyline" value="renders legs">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="980" y="725" />
-              <mxPoint x="980" y="890" />
-              <mxPoint x="50" y="890" />
-              <mxPoint x="50" y="360" />
-              <mxPoint x="126" y="360" />
+              <mxPoint x="490" y="1100" />
+              <mxPoint x="490" y="1100" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a26" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ext_backend" value="«POST /api/path»">
+        <mxCell id="e_map_route_popup" edge="1" parent="1" source="mainmap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="route_popup" value="selected leg">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1130" y="530" />
-              <mxPoint x="1470" y="530" />
+              <mxPoint x="790" y="1050" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a27" edge="1" parent="1" source="usePAC" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="ext_places" value="«HTTP»">
+        <mxCell id="e_map_location_popup" edge="1" parent="1" source="mainmap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="location_popup" value="map context">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_overlay_parts" edge="1" parent="1" source="overlay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;entryX=0.568;entryY=0.002;entryDx=0;entryDy=0;entryPerimeter=0;" target="overlay_parts" value="uses">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_overlay_weather" edge="1" parent="1" source="overlay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="weather" value="uses">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_overlay_loading" edge="1" parent="1" source="overlay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="loading" value="loading state">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1250" y="947" />
-              <mxPoint x="1250" y="150" />
-              <mxPoint x="1255" y="150" />
+              <mxPoint x="1160" y="940" />
+              <mxPoint x="1305" y="940" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a28" edge="1" parent="1" source="maco" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;" target="ui_note" value="«use»">
-          <mxGeometry relative="1" x="0.4822" as="geometry">
-            <mxPoint y="-1" as="offset" />
+        <mxCell id="e_overlay_places" edge="1" parent="1" source="overlay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="places_hook" value="origin/destination">
+          <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1060" y="780" />
-              <mxPoint x="990" y="780" />
-              <mxPoint x="990" y="948" />
+              <mxPoint x="1360" y="874" />
+              <mxPoint x="1360" y="874" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_places_ext" edge="1" parent="1" source="places_hook" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="ext_places" value="fetch predictions">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1860" y="470" />
+              <mxPoint x="1860" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_overlay_compute" edge="1" parent="1" source="overlay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="ext_backend" value="GET /compute">
+          <mxGeometry relative="1" x="-0.4226" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1120" y="439" />
+              <mxPoint x="1220" y="439" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_home_backend" edge="1" parent="1" source="home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="ext_backend" value="POST/GET/DELETE saved data">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="530" y="910" />
+              <mxPoint x="1550" y="910" />
+              <mxPoint x="1550" y="69" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_options_error" edge="1" parent="1" source="route_options" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="route_error" value="shows error">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_map_maps" edge="1" parent="1" source="mainmap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="ext_maps" value="Map · Marker · InfoWindow">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="1010" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_browser_home" edge="1" parent="1" source="ext_browser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="home" value="geolocation">
+          <mxGeometry relative="1" x="-0.0926" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="60" y="720" />
+              <mxPoint x="500" y="720" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_browser_theme" edge="1" parent="1" source="ext_browser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="theme_provider" value="localStorage">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="140" />
+              <mxPoint x="435" y="140" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_shared_all" edge="1" parent="1" source="shared" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="overlay_parts" value="ui primitives">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1780" y="710" />
+              <mxPoint x="1580" y="710" />
+              <mxPoint x="1580" y="1098" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_shared_account" edge="1" parent="1" source="shared" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;strokeColor=#374151;fontColor=#374151;" target="account" value="buildApiUrl/parseUuid">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1740" y="400" />
+              <mxPoint x="1520" y="400" />
             </Array>
           </mxGeometry>
         </mxCell>

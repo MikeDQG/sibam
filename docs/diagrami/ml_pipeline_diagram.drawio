@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
-  <diagram id="SRtp6WhxyNEhQHuMvqJs" name="Page-1">
-    <mxGraphModel dx="2211" dy="1426" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <diagram name="Page-1" id="_J9cPwgpJrlMgWeBwrZq">
+    <mxGraphModel dx="1407" dy="907" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -40,7 +40,7 @@
         <mxCell id="src_gtfs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#a07c00;fontSize=12;" value="&lt;b&gt;GTFS-RT&lt;/b&gt;&lt;br&gt;(Marprom podatki v živo)" vertex="1">
           <mxGeometry height="60" width="195" x="1000" y="28" as="geometry" />
         </mxCell>
-        <mxCell id="sched" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6c8ebf;strokeColor=#4a6fa5;fontColor=#ffffff;fontSize=13;" value="&lt;b&gt;SchedulerService&lt;/b&gt;  (vsakih 5 min)&lt;br&gt;MBajkDataService · WeatherDataService · GTFSRTDataService" vertex="1">
+        <mxCell id="sched" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6c8ebf;strokeColor=#4a6fa5;fontColor=#ffffff;fontSize=13;" value="&lt;b&gt;SchedulerService&lt;/b&gt;&amp;nbsp;&lt;br&gt;MBajkDataService (vsakih 5 min) · WeatherDataService (vsako 1 h) ·&amp;nbsp;&lt;div&gt;GTFSRTDataService (vsako 1 min)&lt;/div&gt;" vertex="1">
           <mxGeometry height="60" width="550" x="375" y="152" as="geometry" />
         </mxCell>
         <mxCell id="db_stations" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#9673a6;strokeColor=#6b4fa0;fontColor=#ffffff;fontSize=11;" value="bike_stations&#xa;(static)" vertex="1">

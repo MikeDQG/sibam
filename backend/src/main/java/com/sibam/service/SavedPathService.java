@@ -13,6 +13,12 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Servis za poslovna pravila shranjenih poti.
+ *
+ * Hrani izračunane Journey objekte in pred dostopom preveri ujemanje internega
+ * uporabnika s Firebase uid iz zahtevka.
+ */
 @Service
 public class SavedPathService {
     private final SavedPathRepository savedPathRepository;
@@ -23,12 +29,28 @@ public class SavedPathService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Vrne shranjene poti uporabnika po preverjanju lastništva.
+     *
+     * @param userId interni ID uporabnika
+     * @param uid Firebase uid iz zahtevka
+     * @return seznam shranjenih poti
+     */
     public List<SavedPath> getPathsForUser(UUID userId, String uid) {
         User user = findUserOrThrow(userId);
         if (!user.getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         return savedPathRepository.findByUserId(userId);
     }
 
+    /**
+     * Shrani poimenovano pot z že izračunanim Journey objektom.
+     *
+     * @param userId interni ID uporabnika
+     * @param name ime poti
+     * @param journey izračunana pot iz routing odgovora
+     * @param uid Firebase uid iz zahtevka
+     * @return shranjena pot
+     */
     public SavedPath savePath(UUID userId, String name, Journey journey, String uid) {
         User user = findUserOrThrow(userId);
         if (!user.getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -40,6 +62,12 @@ public class SavedPathService {
         return savedPathRepository.save(path);
     }
 
+    /**
+     * Izbriše shranjeno pot po preverjanju lastništva.
+     *
+     * @param pathId ID poti za brisanje
+     * @param uid Firebase uid iz zahtevka
+     */
     public void deletePath(UUID pathId, String uid) {
         SavedPath path = findPathOrThrow(pathId);
         if (!path.getUser().getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);

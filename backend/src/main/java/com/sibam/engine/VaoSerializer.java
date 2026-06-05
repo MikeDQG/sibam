@@ -40,6 +40,13 @@ import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/**
+ * Servis za pripravo in cacheiranje VAO podatkov za Marprom graf.
+ *
+ * Ob zagonu naloži statične postaje in trase iz lokalnega cache-a ali Marprom
+ * API-ja, vzdržuje večdnevni cache voznih redov ter artefakte po potrebi
+ * sinhronizira s Supabase Storage.
+ */
 @Service
 public class VaoSerializer {
 
@@ -109,6 +116,9 @@ public class VaoSerializer {
         this.scheduleManifestFile = cacheRoot.resolve("marprom").resolve("schedules").resolve("manifest.json");
     }
 
+    /**
+     * Ob zagonu aplikacije naloži statične VAO podatke in današnji vozni red.
+     */
     @EventListener(ApplicationReadyEvent.class)
     @Order(100)
     public void fetchData() {
@@ -125,6 +135,9 @@ public class VaoSerializer {
         saveTodayScheduleSnapshot();
     }
 
+    /**
+     * Nočno osveži večdnevni cache voznih redov, če je scheduler omogočen.
+     */
     @Scheduled(cron = "${schedules.refresh.cron:0 0 3 * * *}", zone = "${schedules.refresh.zone:Europe/Ljubljana}")
     public void refreshWeeklyScheduleCacheNightly() {
         if (!scheduledRefreshEnabled) {
@@ -146,6 +159,12 @@ public class VaoSerializer {
     public Map<Integer, StopScheduleVao> getSchedulesMap() {
         return schedulesMap;
     }
+    /**
+     * Vrne vozni red za podan datum iz večdnevnega cache-a.
+     *
+     * @param date datum routinga
+     * @return mapa voznih redov po stopId ali današnji fallback cache
+     */
     public Map<Integer, StopScheduleVao> getSchedulesMap(LocalDate date) {
         if (weeklyScheduleCache == null
                 || weeklyScheduleCache.dateToScheduleKey() == null
@@ -158,6 +177,11 @@ public class VaoSerializer {
         return schedule == null ? schedulesMap : schedule;
     }
 
+    /**
+     * Vrne datume, ki jih trenutno pokriva večdnevni cache.
+     *
+     * @return urejen seznam datumov voznih redov
+     */
     public List<LocalDate> getScheduleDates() {
         if (weeklyScheduleCache == null || weeklyScheduleCache.dates() == null) {
             return List.of();
@@ -172,6 +196,13 @@ public class VaoSerializer {
         return weeklyScheduleCache;
     }
 
+    /**
+     * Preveri, ali je Marprom trasa aktivna na izbran datum.
+     *
+     * @param routeId ID trase
+     * @param date datum routinga
+     * @return true, če je trasa aktivna ali če cache nima omejitve
+     */
     public boolean isRouteActiveOnDate(int routeId, LocalDate date) {
         if (weeklyScheduleCache == null || weeklyScheduleCache.activeRouteIdsByDate() == null) {
             return true;
@@ -181,7 +212,7 @@ public class VaoSerializer {
     }
 
     /**
-     * Persist current VAO maps to disk as JSON files.
+     * Shrani trenutne VAO mape na disk kot JSON cache.
      */
     public synchronized void saveToDisk() {
         saveStaticToDisk();
@@ -225,7 +256,9 @@ public class VaoSerializer {
     }
 
     /**
-     * Load VAO maps from disk if present. Returns true on success.
+     * Naloži VAO mape iz diska, če cache obstaja in je berljiv.
+     *
+     * @return true, če je nalaganje uspelo
      */
     public synchronized boolean loadFromDisk() {
         if (!staticCacheExists()) return false;
@@ -256,7 +289,9 @@ public class VaoSerializer {
     }
 
     /**
-     * Check whether cache files exist on disk.
+     * Preveri, ali obstajata statični cache in datumski schedule cache.
+     *
+     * @return true, če so potrebne cache datoteke prisotne
      */
     public boolean cacheExists() {
         return staticCacheExists() && hasDateScheduleFiles(currentSevenDayWindow());
@@ -271,10 +306,18 @@ public class VaoSerializer {
         return dates.stream().allMatch(date -> Files.exists(dailyScheduleFile(date)));
     }
 
+    /**
+     * Ročno osveži večdnevni Marprom schedule cache.
+     */
     public synchronized void refreshWeeklyScheduleCache() {
         refreshWeeklyScheduleCache("manual");
     }
 
+    /**
+     * Osveži večdnevni cache voznih redov iz lokalnih datotek, Supabase ali Marprom API-ja.
+     *
+     * @param mode oznaka vira klica za logiranje
+     */
     private synchronized void refreshWeeklyScheduleCache(String mode) {
         lastFetchedScheduleDateCount = 0;
         lastDeletedScheduleFileCount = 0;
@@ -294,7 +337,6 @@ public class VaoSerializer {
         try {
             Files.createDirectories(scheduleDatesDir);
             Files.createDirectories(scheduleVariantsDir);
-            deleteScheduleFilesOutsideWindow(dates);
 
             for (LocalDate date : dates) {
                 CachedSchedule cachedSchedule = loadValidCachedSchedule(date);
@@ -347,6 +389,7 @@ public class VaoSerializer {
             }
 
             deleteUnreferencedScheduleVariants(Set.copyOf(dateToScheduleKey.values()));
+            deleteScheduleFilesOutsideWindow(dates);
             weeklyScheduleCache = new WeeklyScheduleCacheVao(
                     dates.stream().map(LocalDate::toString).toList(),
                     dateToScheduleKey,
@@ -357,8 +400,85 @@ public class VaoSerializer {
             lastFetchedScheduleDates = List.copyOf(fetchedDates);
             writeScheduleManifest(dates, sourcesByDate);
             logWeeklyScheduleCache(mode, downloadedDates);
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             log.error("Failed to refresh dated Marprom schedule cache; keeping previous valid cache: {}", e.getMessage(), e);
+            fallbackToNewestCachedSchedule(dates);
+        }
+    }
+
+    /**
+     * Ob napaki osveževanja uporabi najnovejši veljaven lokalni schedule cache.
+     *
+     * @param dates datumsko okno, ki ga je treba pokriti
+     */
+    private void fallbackToNewestCachedSchedule(List<LocalDate> dates) {
+        if (weeklyScheduleCache != null
+                && weeklyScheduleCache.uniqueSchedules() != null
+                && !weeklyScheduleCache.uniqueSchedules().isEmpty()) {
+            return;
+        }
+
+        CachedSchedule cachedSchedule = loadNewestCachedSchedule();
+        if (cachedSchedule == null) {
+            log.warn("No cached Marprom schedule is available for fallback.");
+            return;
+        }
+
+        Map<String, String> dateToScheduleKey = new LinkedHashMap<>();
+        Map<String, Map<Integer, StopScheduleVao>> uniqueSchedules = new LinkedHashMap<>();
+        Map<String, List<Integer>> activeRouteIdsByDate = new LinkedHashMap<>();
+        for (LocalDate date : dates) {
+            dateToScheduleKey.put(date.toString(), cachedSchedule.daily().scheduleKey());
+            activeRouteIdsByDate.put(date.toString(), safeList(cachedSchedule.daily().activeRouteIds()));
+        }
+        uniqueSchedules.put(cachedSchedule.daily().scheduleKey(), cachedSchedule.schedule());
+
+        weeklyScheduleCache = new WeeklyScheduleCacheVao(
+                dates.stream().map(LocalDate::toString).toList(),
+                dateToScheduleKey,
+                uniqueSchedules,
+                activeRouteIdsByDate
+        );
+        schedulesMap = cachedSchedule.schedule();
+        log.warn("Using newest cached Marprom schedule from {} as fallback for requested dates {}.",
+                cachedSchedule.daily().date(),
+                dates);
+    }
+
+    private CachedSchedule loadNewestCachedSchedule() {
+        if (!Files.exists(scheduleDatesDir)) {
+            return null;
+        }
+
+        try (Stream<Path> files = Files.list(scheduleDatesDir)) {
+            List<LocalDate> availableDates = files
+                    .filter(Files::isRegularFile)
+                    .map(path -> path.getFileName().toString())
+                    .filter(name -> name.endsWith(".json"))
+                    .map(name -> name.substring(0, name.length() - ".json".length()))
+                    .map(this::parseDateOrNull)
+                    .filter(java.util.Objects::nonNull)
+                    .sorted(Comparator.reverseOrder())
+                    .toList();
+
+            for (LocalDate date : availableDates) {
+                CachedSchedule schedule = loadValidCachedSchedule(date);
+                if (schedule != null) {
+                    return schedule;
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            log.warn("Failed to inspect cached Marprom schedules for fallback: {}", e.getMessage());
+        }
+
+        return null;
+    }
+
+    private LocalDate parseDateOrNull(String value) {
+        try {
+            return LocalDate.parse(value);
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 

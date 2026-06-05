@@ -1,12 +1,14 @@
 package com.sibam.config;
 
-import com.sibam.api.SimpleController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
@@ -15,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
-@SpringJUnitWebConfig(classes = {WebConfig.class, SimpleController.class})
+@SpringJUnitWebConfig(classes = {WebConfig.class, WebConfigTest.CorsProbeController.class})
 @TestPropertySource(properties = "allowed.origins=https://app.example.com")
 @EnableWebMvc
 class WebConfigTest {
@@ -32,7 +34,7 @@ class WebConfigTest {
 
     @Test
     void corsPreflightWithAllowedOriginReturnsCorsHeaders() throws Exception {
-        mockMvc.perform(options("/simple-api/test")
+        mockMvc.perform(options("/cors-probe")
                         .header("Origin", "https://app.example.com")
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isOk())
@@ -42,9 +44,18 @@ class WebConfigTest {
 
     @Test
     void corsPreflightWithUnknownOriginIsForbidden() throws Exception {
-        mockMvc.perform(options("/simple-api/test")
+        mockMvc.perform(options("/cors-probe")
                         .header("Origin", "https://evil.example.com")
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isForbidden());
+    }
+
+    @RestController
+    @RequestMapping("/cors-probe")
+    static class CorsProbeController {
+        @GetMapping
+        String ok() {
+            return "ok";
+        }
     }
 }

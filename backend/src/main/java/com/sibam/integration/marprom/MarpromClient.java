@@ -12,6 +12,12 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Reactive odjemalec za Marprom OBA proxy.
+ *
+ * Uporablja se pri gradnji statičnega avtobusnega dela grafa: postajališča,
+ * linije, trase, vozni redi in vožnje za izbran datum.
+ */
 @Component
 public class MarpromClient {
 
@@ -25,6 +31,11 @@ public class MarpromClient {
                 .build();
     }
 
+    /**
+     * Vrne današnji datum v formatu, ki ga pričakuje Marprom proxy.
+     *
+     * @return datum v obliki yyyy-MM-dd
+     */
     private String getFormattedDateHelper() {
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

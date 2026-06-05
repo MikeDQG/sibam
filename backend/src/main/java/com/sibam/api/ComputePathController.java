@@ -16,6 +16,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 
+/**
+ * Controller za javni API izračuna poti med izvorom in ciljem.
+ *
+ * Sprejme koordinate, časovne nastavitve in dovoljene načine prevoza, po potrebi
+ * osveži graf z MBajk podatki ter vrne alternative v obliki, ki jo uporablja
+ * frontend zemljevid.
+ */
 @RestController
 @RequestMapping("/compute")
 public class ComputePathController {
@@ -37,6 +44,26 @@ public class ComputePathController {
         this.routeAlternativeService = routeAlternativeService;
     }
 
+    /**
+     * Izračuna alternativne multimodalne poti za podane koordinate.
+     *
+     * @param originLat zemljepisna širina izvora
+     * @param originLon zemljepisna dolžina izvora
+     * @param destinationLat zemljepisna širina cilja
+     * @param destinationLon zemljepisna dolžina cilja
+     * @param originAddress naslov izvora v camelCase obliki, če je podan
+     * @param destinationAddress naslov cilja v camelCase obliki, če je podan
+     * @param originAddressSnake naslov izvora v snake_case obliki, če je podan
+     * @param destinationAddressSnake naslov cilja v snake_case obliki, če je podan
+     * @param leaveNow ali naj se kot čas odhoda uporabi trenutni čas
+     * @param leaveAt čas odhoda v načinu DEPART_AT, če ni uporabljen leaveNow
+     * @param arriveBy želeni čas prihoda; ima prednost pred leaveAt
+     * @param date datum usmerjanja; privzeto je današnji datum v Europe/Ljubljana
+     * @param bike ali so dovoljene MBajk BIKE etape
+     * @param bus ali so dovoljene Marprom BUS etape
+     * @param userId identifikator uporabnika; trenutno ne vpliva na izračun poti
+     * @return HTTP odgovor z alternativami ali napako, če je izvor/cilj predaleč od grafa
+     */
     @GetMapping
     public ResponseEntity<?> computePath(
             @RequestParam double originLat,
@@ -104,7 +131,12 @@ public class ComputePathController {
         return ResponseEntity.ok(response);
     }
 
-
+    /**
+     * Razreši datum usmerjanja iz zahtevka ali uporabi današnji lokalni datum.
+     *
+     * @param date datum v ISO obliki yyyy-MM-dd
+     * @return datum, uporabljen pri iskanju voznih redov
+     */
     private LocalDate resolveRoutingDate(String date) {
         if (date == null || date.isBlank()) {
             return LocalDate.now(ROUTING_ZONE);
@@ -112,6 +144,14 @@ public class ComputePathController {
         return LocalDate.parse(date);
     }
 
+    /**
+     * Razreši časovni način zahtevka za routing.
+     *
+     * @param leaveNow ali naj se uporabi trenutni čas
+     * @param leaveAt čas odhoda v obliki HH:mm
+     * @param arriveBy želeni čas prihoda v obliki HH:mm
+     * @return čas in način DEPART_AT ali ARRIVE_BY
+     */
     private RoutingTimeRequest resolveRoutingTime(boolean leaveNow, String leaveAt, String arriveBy) {
         if (!leaveNow && arriveBy != null && !arriveBy.isBlank()) {
             return new RoutingTimeRequest(LocalTime.parse(arriveBy), RoutingTimeMode.ARRIVE_BY);
@@ -124,6 +164,13 @@ public class ComputePathController {
         return new RoutingTimeRequest(LocalTime.parse(leaveAt), RoutingTimeMode.DEPART_AT);
     }
 
+    /**
+     * Izbere naslov iz camelCase ali snake_case parametra.
+     *
+     * @param camelCaseAddress naslov iz novejšega API parametra
+     * @param snakeCaseAddress naslov iz kompatibilnega snake_case parametra
+     * @return izbran naslov ali null, če ni podan
+     */
     private String resolveAddress(String camelCaseAddress, String snakeCaseAddress) {
         if (camelCaseAddress != null && !camelCaseAddress.isBlank()) {
             return camelCaseAddress;

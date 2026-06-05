@@ -14,7 +14,7 @@ Potrebne okoljske spremenljivke:
 | `SUPABASE_URL`         | Supabase projekt URL                                |
 | `SUPABASE_SERVICE_KEY` | Supabase service key za Storage operacije           |
 
-Za backend zajem podatkov so potrebne še backend spremenljivke za zunanje API-je in bazo, opisane v [varnost-backend.md](../security/varnost-backend.md).
+Za backend zajem podatkov so potrebne še backend spremenljivke za zunanje API-je in bazo, opisane v [varnost-backend.md](../varnost/varnost-backend.md).
 
 ## Avtomatizirani nočni zagon
 

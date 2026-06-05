@@ -2,7 +2,7 @@
 
 Backend vsako uro pridobi trenutne vremenske podatke za Maribor in jih shrani v bazo. Vremenski posnetek se uporablja na dveh mestih: kot penalizacija v routing grafu (dežuje → višji strošek hoje in kolesarjenja) in kot vhodna značilka ML modelov za napoved zamud in razpoložljivosti koles.
 
-Za opis vpliva vremena na routing glej [`docs/vreme_integracija.md`](../../../docs/vreme_integracija.md).
+Za opis vpliva vremena na routing glej [`graf-in-algoritem/algoritem-usmerjanja.md`](../graf-in-algoritem/algoritem-usmerjanja.md).
 
 ---
 

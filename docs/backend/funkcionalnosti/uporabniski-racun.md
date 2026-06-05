@@ -2,7 +2,7 @@
 
 Backend ne upravlja gesel in ne izvaja lastne avtentikacije. Identiteta temelji na Firebase Authentication — backend samo verificira token in sinhronizira uporabnika z lastno bazo.
 
-Za HTTP vmesnik glej [`api/uporabniki.md`](../api/uporabniki.md). Za varnostni tok (filter, CORS) glej [`docs/security/varnost-backend.md`](../../security/varnost-backend.md).
+Za HTTP vmesnik glej [`api/uporabniki.md`](../api/uporabniki.md). Za varnostni tok (filter, CORS) glej [`docs/varnost/varnost-backend.md`](../../varnost/varnost-backend.md).
 
 ---
 

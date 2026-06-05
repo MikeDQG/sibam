@@ -6,13 +6,13 @@ Glavne implementacije:
 
 | Področje | Razred |
 | --- | --- |
-| A* iskanje in časovno odvisni avtobusni robovi | [`AStarRouter`](../../backend/src/main/java/com/sibam/graph/routing/AStarRouter.java) |
-| Osnovna stroškovna funkcija | [`WeightedCostFunction`](../../backend/src/main/java/com/sibam/graph/routing/WeightedCostFunction.java) |
-| Vremenske prilagoditve | [`WeatherRoutingAdjuster`](../../backend/src/main/java/com/sibam/graph/routing/WeatherRoutingAdjuster.java) |
-| Konfiguracija stroškov | [`RoutingConfig`](../../backend/src/main/java/com/sibam/graph/routing/RoutingConfig.java) |
-| Gradnja statičnega grafa | [`StaticGraphBuilder`](../../backend/src/main/java/com/sibam/graph/builder/StaticGraphBuilder.java) |
-| Hevristika A* | [`HeuristicService`](../../backend/src/main/java/com/sibam/graph/routing/HeuristicService.java) |
-| Alternativne poti | [`RouteAlternativeService`](../../backend/src/main/java/com/sibam/graph/routing/RouteAlternativeService.java) |
+| A* iskanje in časovno odvisni avtobusni robovi | [`AStarRouter`](../../../backend/src/main/java/com/sibam/graph/routing/AStarRouter.java) |
+| Osnovna stroškovna funkcija | [`WeightedCostFunction`](../../../backend/src/main/java/com/sibam/graph/routing/WeightedCostFunction.java) |
+| Vremenske prilagoditve | [`WeatherRoutingAdjuster`](../../../backend/src/main/java/com/sibam/graph/routing/WeatherRoutingAdjuster.java) |
+| Konfiguracija stroškov | [`RoutingConfig`](../../../backend/src/main/java/com/sibam/graph/routing/RoutingConfig.java) |
+| Gradnja statičnega grafa | [`StaticGraphBuilder`](../../../backend/src/main/java/com/sibam/graph/builder/StaticGraphBuilder.java) |
+| Hevristika A* | [`HeuristicService`](../../../backend/src/main/java/com/sibam/graph/routing/HeuristicService.java) |
+| Alternativne poti | [`RouteAlternativeService`](../../../backend/src/main/java/com/sibam/graph/routing/RouteAlternativeService.java) |
 
 ---
 
@@ -352,4 +352,3 @@ Vedno se vrne največ `3` alternativ, tudi če konfiguracija zahteva več.
 | MBajk ML napoved | ne | doda se v `bikePrediction`, ni strošek |
 | Napoved zamude busa | ne | doda se v `busDelayPrediction`, ni strošek |
 | Google Routes navigacija | ne | uporablja se za obogatitev etap, ne za izbiro poti |
-

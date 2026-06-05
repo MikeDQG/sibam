@@ -4,7 +4,7 @@ Osnovni URL: `/compute`
 
 Javen endpoint — ne zahteva avtentikacije. Izračuna alternativne poti med izvorom in ciljem z uporabo internega grafa. Podpira kombinacije hoje, kolesarjenja (MBajk) in avtobusa (Marprom).
 
-Podrobnosti o A* algoritmu, stroškovnih formulah in vremenskih utežeh so opisane v [`docs/backend/algoritem-usmerjanja.md`](../algoritem-usmerjanja.md).
+Pregled modela grafa je v [`graf-in-algoritem/graf.md`](../graf-in-algoritem/graf.md), tok izračuna poti v [`graf-in-algoritem/algoritem.md`](../graf-in-algoritem/algoritem.md), podrobnosti o A* algoritmu, stroškovnih formulah in vremenskih utežeh pa v [`graf-in-algoritem/algoritem-usmerjanja.md`](../graf-in-algoritem/algoritem-usmerjanja.md).
 
 ---
 

@@ -7,6 +7,12 @@ import com.sibam.graph.model.GeoPoint;
 
 import java.util.List;
 
+/**
+ * Javna etapa poti v odgovoru /compute.
+ *
+ * Etapa predstavlja WALK, BIKE, BUS ali TRANSFER del poti ter lahko vsebuje
+ * polilinijo, navigacijske korake, MBajk napoved ali napoved zamude avtobusa.
+ */
 public record Leg(
         String mode,
         GeoPoint origin,
@@ -28,6 +34,9 @@ public record Leg(
         @JsonInclude(JsonInclude.Include.NON_NULL)
         BusLegDelayVao busDelayPrediction
 ) {
+    /**
+     * Ustvari osnovno etapo brez navigacijskih korakov in ML napovedi.
+     */
     public Leg(
             String mode,
             GeoPoint origin,

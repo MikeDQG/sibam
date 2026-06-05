@@ -53,6 +53,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 
+/**
+ * Glavni usmerjevalnik za multimodalne poti po internem grafu.
+ *
+ * A* iskanje podpira WALK, BIKE, BUS in TRANSFER robove, časovno odvisne
+ * odhode avtobusov, vremenske uteži, prestopne kazni, arrive-by iskanje ter
+ * obogatitev etap z Google navigacijo in ML napovedmi.
+ */
 @Service
 public class AStarRouter {
 
@@ -142,6 +149,11 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Poišče pot z današnjim časom in privzeto dovoljenima BIKE ter BUS načinoma.
+     *
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -162,6 +174,12 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Poišče pot za podan čas odhoda na današnji datum.
+     *
+     * @param startTime lokalni čas odhoda
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -183,6 +201,14 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Poišče pot za podan čas odhoda in prikazna naslova.
+     *
+     * @param originAddress naslov izvora za odgovor
+     * @param destinationAddress naslov cilja za odgovor
+     * @param startTime lokalni čas odhoda
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -206,6 +232,15 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Poišče pot z možnostjo izklopa BIKE ali BUS etap.
+     *
+     * @param startTime lokalni čas odhoda
+     * @param startDate datum voznih redov
+     * @param allowBike ali so dovoljene MBajk etape
+     * @param allowBus ali so dovoljene avtobusne etape
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -235,6 +270,14 @@ public class AStarRouter {
         return candidate == null ? null : candidate.journey();
     }
 
+    /**
+     * Poišče pot v načinu DEPART_AT ali ARRIVE_BY.
+     *
+     * @param routingTime čas odhoda ali želeni čas prihoda
+     * @param routingDate datum voznih redov
+     * @param timeMode časovni način iskanja
+     * @return Journey z etapami ali null, če pot ni najdena
+     */
     public Journey findJourney(
             double originLat,
             double originLon,
@@ -265,6 +308,19 @@ public class AStarRouter {
         return candidate == null ? null : candidate.journey();
     }
 
+    /**
+     * Zgradi začasni graf z uporabnikovim izvorom/ciljem in izvede routing.
+     *
+     * Metoda najde najbližja vozlišča, preveri dostopno razdaljo, doda WALK
+     * povezave od/do uporabnikovih koordinat, uporabi vremenski kontekst ter
+     * vrne tudi PathResult za poznejše filtriranje alternativ.
+     *
+     * @param allowBike ali so dovoljene BIKE etape
+     * @param allowBus ali so dovoljene BUS etape
+     * @param timeMode DEPART_AT ali ARRIVE_BY
+     * @param searchOptions uteži in penalizirana vozlišča za alternative
+     * @return kandidat poti ali null, če pot ni najdena
+     */
     public RouteCandidate findJourneyCandidate(
             double originLat,
             double originLon,
@@ -356,6 +412,13 @@ public class AStarRouter {
         return new RouteCandidate(journey, realPathResult);
     }
 
+    /**
+     * Poišče najcenejšo pot med dvema vozliščema v trenutno naloženem grafu.
+     *
+     * @param startNodeId začetno vozlišče
+     * @param goalNodeId ciljno vozlišče
+     * @return PathResult ali null, če pot ni najdena
+     */
     public PathResult findPath(int startNodeId, int goalNodeId) {
         return findPath(
                 requireGraph(),
@@ -382,6 +445,12 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Z binarnim iskanjem poišče najpoznejši odhod, ki še prispe do arriveBy časa.
+     *
+     * @param arriveByMillis zahtevani čas prihoda v epoch milisekundah
+     * @return najboljša pot, ki prispe pravočasno
+     */
     private PathResult findArriveByPath(
             Graph graph,
             int startNodeId,
@@ -433,6 +502,18 @@ public class AStarRouter {
         return best;
     }
 
+    /**
+     * Izvede A* iskanje po grafu z dovoljenimi načini in časovno odvisnimi stroški.
+     *
+     * BUS robovi se sprostijo glede na vozni red in prestope, WALK/BIKE robovi pa
+     * glede na osnovno ceno, vremenske prilagoditve in uteži alternativ.
+     *
+     * @param graph graf za iskanje
+     * @param allowBike ali so dovoljeni BIKE robovi
+     * @param allowBus ali so dovoljeni BUS robovi
+     * @param startMillis čas začetka v epoch milisekundah
+     * @return rezultat poti ali null, če pot ni dosegljiva
+     */
     private PathResult findPath(
             Graph graph,
             int startNodeId,
@@ -510,6 +591,14 @@ public class AStarRouter {
         return null;
     }
 
+    /**
+     * Izračuna časovni in stroškovni prispevek enega roba.
+     *
+     * Za BUS rob upošteva naslednji odhod in prestopno kazen, za WALK/BIKE pa
+     * vremensko prilagojeno ceno ter profil alternativ.
+     *
+     * @return sprostitev roba ali null, če bus odhod ni več na voljo
+     */
     private EdgeRelaxation relaxEdge(
             Edge edge,
             Edge previousEdge,
@@ -562,6 +651,14 @@ public class AStarRouter {
         return adjusted;
     }
 
+    /**
+     * Ponovno ovrednoti najdeno pot z dejanskimi časi odhodov in prihodov.
+     *
+     * @param graph graf, po katerem je bila pot najdena
+     * @param pathResult grob rezultat A* iskanja
+     * @param startMillis začetni čas repricinga
+     * @return PathResult z realnimi timing podatki
+     */
     private PathResult repricePathResult(
             Graph graph,
             PathResult pathResult,
@@ -631,6 +728,13 @@ public class AStarRouter {
         return adjustedTransferPenaltySeconds(weatherContext);
     }
 
+    /**
+     * Poišče naslednji odhod za BUS rob glede na trenutni čas.
+     *
+     * @param edge BUS rob z RouteInfo podatki
+     * @param currentMillis trenutni čas na vozlišču
+     * @return epoch milisekunde naslednjega odhoda ali -1, če ga ni
+     */
     private long nextBusDepartureMillis(Edge edge, long currentMillis) {
         RouteInfo routeInfo = edge.getRouteInfo();
         if (routeInfo == null) {
@@ -786,6 +890,11 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Pridobi zadnji vremenski kontekst za prilagajanje WALK/BIKE stroškov.
+     *
+     * @return trenutni vremenski kontekst ali nevtralni kontekst ob napaki
+     */
     private WeatherRoutingContext currentWeatherContext() {
         if (weatherRoutingAdjuster == null) {
             return WeatherRoutingContext.neutral();
@@ -821,6 +930,14 @@ public class AStarRouter {
         return new PathResult(path, edges, timings, totalCost);
     }
 
+    /**
+     * Pretvori PathResult v javni Journey odgovor.
+     *
+     * Združi zaporedne robove v etape, doda transfer etape, obogati WALK/BIKE
+     * etape z Google navigacijo in vključi ML napovedi za BIKE/BUS.
+     *
+     * @return Journey za API odgovor
+     */
     private Journey toJourney(
             Graph graph,
             PathResult pathResult,
@@ -1001,6 +1118,13 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Pretvori osnutek etape v javni Leg model.
+     *
+     * @param draft osnutek etape iz robov grafa
+     * @param weatherContext vremenski kontekst za ML napovedi
+     * @return Leg z načinom, polilinijo, časi, navigacijo in napovedmi
+     */
     private Leg toLeg(
             Graph graph,
             LegDraft draft,
@@ -1030,6 +1154,14 @@ public class AStarRouter {
         );
     }
 
+    /**
+     * Izvede MBajk ML napoved za BIKE etapo.
+     *
+     * Napove razpoložljivost kolesa ob prevzemu in stojala ob vračilu; pri
+     * drugih načinih ali napaki vrne null.
+     *
+     * @return napoved za BIKE etapo ali null
+     */
     private BikeLegPredictionVao computeBikePrediction(
             Graph graph,
             Edge firstEdge,
@@ -1081,6 +1213,14 @@ public class AStarRouter {
         }
     }
 
+    /**
+     * Izvede obogatitev BUS etape z zamudo.
+     *
+     * Najprej uporabi svež GTFS-RT posnetek, če obstaja, sicer pokliče ONNX model
+     * za napoved zamude in ob napaki vrne nevtralno zamudo 0.
+     *
+     * @return zamuda za BUS etapo ali null za druge načine
+     */
     private BusLegDelayVao computeBusDelayPrediction(
             Edge firstEdge,
             Edge lastEdge,
@@ -1216,6 +1356,12 @@ public class AStarRouter {
         return new GeoPoint(node.getLat(), node.getLon());
     }
 
+    /**
+     * Združi zaporedne WALK/BIKE etape v skupine za en Google Routes zahtevek.
+     *
+     * @param graph graf poti
+     * @param legDrafts osnutki etap, ki se posodobijo z navigacijo
+     */
     private void enrichCoupledNavigation(Graph graph, List<LegDraft> legDrafts) {
         int index = 0;
         while (index < legDrafts.size()) {
@@ -1235,6 +1381,12 @@ public class AStarRouter {
         }
     }
 
+    /**
+     * Obogati eno skupino zaporednih WALK/BIKE etap z Google polilinijami.
+     *
+     * @param startInclusive prvi indeks skupine
+     * @param endExclusive indeks za zadnjim elementom skupine
+     */
     private void enrichNavigationGroup(List<LegDraft> legDrafts, int startInclusive, int endExclusive) {
         try {
             List<GeoPoint> points = new ArrayList<>();
@@ -1313,6 +1465,14 @@ public class AStarRouter {
         }
     }
 
+    /**
+     * Ustvari začasno kopijo grafa z izvorom in ciljem uporabnika.
+     *
+     * Dodani sta sintetični vozlišči in WALK robovi do najbližjih postaj oziroma
+     * neposredna hoja od izvora do cilja.
+     *
+     * @return graf, pripravljen za en routing zahtevek
+     */
     private Graph withUserWalkingEdges(
             Graph graph,
             double originLat,
@@ -1351,6 +1511,11 @@ public class AStarRouter {
         return new Graph(nodes, adjacencyList);
     }
 
+    /**
+     * Preveri, ali je izvor ali cilj dovolj blizu internemu grafu.
+     *
+     * @throws RouteAccessDistanceException če je razdalja večja od konfigurirane meje
+     */
     private void validateAccessDistance(String endpoint, double lat, double lon, Node nearestStop) {
         int maxDistanceMeters = routingConfig.getMaxAccessDistanceMeters();
         double distanceMeters = helperService.haversineMeters(
@@ -1496,6 +1661,14 @@ public class AStarRouter {
         }
     }
 
+    /**
+     * Nastavitve enega A* iskanja za ustvarjanje alternativ.
+     *
+     * @param bikeMultiplier množitelj stroškov BIKE robov
+     * @param busMultiplier množitelj stroškov BUS robov
+     * @param penalizedNodeIds vozlišča, ki dobijo dodatno kazen
+     * @param nodePenaltySeconds kazen za že uporabljena vozlišča
+     */
     public record SearchOptions(
             double bikeMultiplier,
             double busMultiplier,
@@ -1507,6 +1680,12 @@ public class AStarRouter {
         }
     }
 
+    /**
+     * Interni rezultat route iskanja, ki hrani odgovor in surov PathResult.
+     *
+     * @param journey javni model poti
+     * @param pathResult vozlišča in časi, uporabljeni za filtriranje alternativ
+     */
     public record RouteCandidate(
             Journey journey,
             PathResult pathResult

@@ -23,6 +23,12 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Servis za zajem, shranjevanje in branje MBajk postaj.
+ *
+ * Podatke pridobi iz MBajk API-ja, jih shrani kot postaje in časovne posnetke
+ * razpoložljivosti, pri zastarelih posnetkih pa lahko uporabi ML napoved.
+ */
 @Service
 public class MBajkDataService {
 
@@ -100,12 +106,23 @@ public class MBajkDataService {
         bikeStationSnapshotRepository.save(snapshot);
     }
 
+    /**
+     * Vrne MBajk postaje v VAO obliki za gradnjo grafa.
+     *
+     * @return seznam postaj z aktualno ali napovedano razpoložljivostjo
+     */
     public List<BikeStationVao> getBikeStationVaos() {
         return bikeStationRepository.findAll().stream()
                 .map(this::toVao)
                 .toList();
     }
 
+    /**
+     * Pretvori JPA entiteto postaje v grafni VAO.
+     *
+     * @param station shranjena MBajk postaja
+     * @return VAO postaje z razpoložljivostjo
+     */
     private BikeStationVao toVao(BikeStation station) {
         BikeAvailabilityVao availability = resolveAvailability(station);
 
@@ -120,6 +137,12 @@ public class MBajkDataService {
         );
     }
 
+    /**
+     * Izbere svež MBajk posnetek ali fallback napoved razpoložljivosti.
+     *
+     * @param station postaja, za katero se išče stanje
+     * @return razpoložljivost za uporabo pri BIKE robovih grafa
+     */
     private BikeAvailabilityVao resolveAvailability(BikeStation station) {
         Optional<BikeStationSnapshot> latest = bikeStationSnapshotRepository.findFirstByStationOrderByRecordedAtDesc(station);
         if (latest.isPresent() && isFresh(latest.get().getRecordedAt())) {
@@ -138,6 +161,12 @@ public class MBajkDataService {
                 .orElseGet(() -> new BikeAvailabilityVao(0, 0, 0, 0, null, null));
     }
 
+    /**
+     * Pretvori shranjen posnetek postaje v VAO razpoložljivosti.
+     *
+     * @param snapshot zadnji posnetek MBajk postaje
+     * @return VAO razpoložljivosti
+     */
     private BikeAvailabilityVao toAvailability(BikeStationSnapshot snapshot) {
         return new BikeAvailabilityVao(
                 snapshot.getBikes(),
@@ -149,6 +178,12 @@ public class MBajkDataService {
         );
     }
 
+    /**
+     * Izvede fallback ML napoved razpoložljivosti MBajk postaje.
+     *
+     * @param station postaja brez svežega posnetka
+     * @return napovedana razpoložljivost ali null, če napoved ni na voljo
+     */
     private BikeAvailabilityVao predictedAvailability(BikeStation station) {
         if (bikePredictionService == null) {
             return null;
@@ -176,6 +211,12 @@ public class MBajkDataService {
         }
     }
 
+    /**
+     * Preveri, ali je posnetek znotraj dovoljenega realtime okna.
+     *
+     * @param recordedAt čas shranjenega posnetka
+     * @return true, če se posnetek lahko uporabi kot svež podatek
+     */
     private boolean isFresh(OffsetDateTime recordedAt) {
         if (recordedAt == null) {
             return false;

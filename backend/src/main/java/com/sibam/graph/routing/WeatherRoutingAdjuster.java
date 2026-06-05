@@ -15,6 +15,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Locale;
 
+/**
+ * Prilagaja routing stroške glede na zadnje shranjeno vreme.
+ *
+ * Dež, mraz ali vročina lahko podražijo WALK/BIKE robove, dež pa lahko omeji
+ * predolge peš povezave in poveča prestopno kazen.
+ */
 @Component
 public class WeatherRoutingAdjuster {
 
@@ -50,10 +56,23 @@ public class WeatherRoutingAdjuster {
         );
     }
 
+    /**
+     * Prilagodi strošek roba z uporabo zadnjega svežega vremenskega posnetka.
+     *
+     * @return strošek v sekundah
+     */
     public int adjustedEdgeCost(EdgeType edgeType, int baseCostSeconds) {
         return adjustedEdgeCost(edgeType, baseCostSeconds, currentWeather());
     }
 
+    /**
+     * Prilagodi strošek roba glede na podan vremenski kontekst.
+     *
+     * @param edgeType tip roba WALK, BIKE, BUS ali TRANSFER
+     * @param baseCostSeconds osnovni strošek v sekundah
+     * @param weather vremenski kontekst
+     * @return prilagojen strošek v sekundah
+     */
     public int adjustedEdgeCost(
             EdgeType edgeType,
             int baseCostSeconds,
@@ -63,6 +82,12 @@ public class WeatherRoutingAdjuster {
         return (int) Math.max(1, Math.round(baseCostSeconds * multiplier));
     }
 
+    /**
+     * Prilagodi prestopno kazen z uporabo zadnjega svežega vremena.
+     *
+     * @param baseTransferPenaltySeconds osnovna prestopna kazen
+     * @return prilagojena kazen v sekundah
+     */
     public int adjustedTransferPenaltySeconds(int baseTransferPenaltySeconds) {
         return adjustedTransferPenaltySeconds(baseTransferPenaltySeconds, currentWeather());
     }
@@ -84,6 +109,11 @@ public class WeatherRoutingAdjuster {
         return isEdgeAllowed(edgeType, distanceMeters, currentWeather());
     }
 
+    /**
+     * Preveri, ali je rob dovoljen v podanih vremenskih razmerah.
+     *
+     * @return false predvsem za predolge WALK robove v dežju
+     */
     public boolean isEdgeAllowed(
             EdgeType edgeType,
             int distanceMeters,
@@ -96,6 +126,13 @@ public class WeatherRoutingAdjuster {
         return distanceMeters <= routingConfig.getRainMaxWalkDistanceMeters();
     }
 
+    /**
+     * Vrne zadnji svež vremenski posnetek kot routing kontekst.
+     *
+     * Če podatkov ni ali so zastareli, vrne nevtralni kontekst.
+     *
+     * @return vremenski kontekst za izračun stroškov
+     */
     public WeatherRoutingContext currentWeather() {
         try {
             return weatherSnapshotRepository.findFirstByOrderByRecordedAtDesc()

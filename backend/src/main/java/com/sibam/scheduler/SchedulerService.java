@@ -14,6 +14,12 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 
+/**
+ * Scheduler za periodični zajem zunanjih podatkov in osveževanje ML modelov.
+ *
+ * Zajema MBajk, OpenWeatherMap in Marprom GTFS-RT podatke v operativnem oknu
+ * ter ponoči sproži ponovni prenos ONNX modelov iz Supabase Storage.
+ */
 @Service
 public class SchedulerService {
     private static final Logger log = LoggerFactory.getLogger(SchedulerService.class);
@@ -54,6 +60,11 @@ public class SchedulerService {
         this.clock = clock;
     }
 
+    /**
+     * Preveri, ali se schedulerji trenutno smejo izvajati.
+     *
+     * @return true med 05:00 in 23:00 glede na injiciran Clock
+     */
     private boolean isWithinOperatingHours() {
         int hour = OffsetDateTime.now(clock).getHour();
         return hour >= 5 && hour < 23;

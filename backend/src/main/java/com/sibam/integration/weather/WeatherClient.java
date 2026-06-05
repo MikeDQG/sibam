@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+/**
+ * Reactive odjemalec za OpenWeatherMap trenutno vreme v Mariboru.
+ */
 @Component
 public class WeatherClient {
 
@@ -21,6 +24,11 @@ public class WeatherClient {
         this.webClient = webClientBuilder.baseUrl(BASE_URL).build();
     }
 
+    /**
+     * Pridobi trenutno vreme za koordinato Maribora.
+     *
+     * @return Mono z OpenWeatherMap DTO odgovorom v metričnih enotah
+     */
     public Mono<WeatherResponseDto> getCurrentWeather() {
         return this.webClient.get()
                 .uri(uriBuilder -> uriBuilder

@@ -29,6 +29,12 @@ public class BusDelayPredictionService {
         this.supabaseStorageClient = supabaseStorageClient;
     }
 
+    /**
+     * Ob zagonu aplikacije naloži ONNX model zamud in lokalno preslikavo smeri.
+     *
+     * @throws OrtException če ONNX seje ni mogoče ustvariti
+     * @throws IOException če preslikave stop_direction_mapping.json ni mogoče prebrati
+     */
     @PostConstruct
     public void load() throws OrtException, IOException {
         env = OrtEnvironment.getEnvironment();
@@ -40,6 +46,11 @@ public class BusDelayPredictionService {
         directionMapping = new ObjectMapper().readValue(is, new TypeReference<>() {});
     }
 
+    /**
+     * Sinhronizirano prenese nov model zamud iz Supabase Storage in zamenja sejo.
+     *
+     * @throws OrtException če prenos ali ustvarjanje nove seje spodleti
+     */
     public synchronized void reloadModel() throws OrtException {
         OrtSession newModel = env.createSession(
                 supabaseStorageClient.download("gold", "models/model_bus_delay.onnx"),
@@ -49,6 +60,23 @@ public class BusDelayPredictionService {
         model = newModel;
     }
 
+    /**
+     * Napove zamudo avtobusa za linijo, postajo, čas in vremenske pogoje.
+     *
+     * Če kombinacije routeId in stopId ni v preslikavi smeri, vrne nevtralno
+     * zamudo 0 brez klica ONNX modela.
+     *
+     * @param routeId identifikator Marprom linije
+     * @param stopSequence zaporedna številka postaje v vožnji
+     * @param hour ura odhoda oziroma opazovanja
+     * @param dayOfWeek dan v tednu, 1-7
+     * @param isWeekend 1 za vikend, sicer 0
+     * @param temperature temperatura v stopinjah Celzija
+     * @param rain količina padavin
+     * @param windSpeed hitrost vetra
+     * @param stopId identifikator vstopne postaje
+     * @return napovedana zamuda v sekundah
+     */
     public synchronized int predictDelay(int routeId, int stopSequence, int hour, int dayOfWeek,
                             int isWeekend, float temperature, float rain, float windSpeed,
                             int stopId) throws OrtException {

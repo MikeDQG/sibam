@@ -13,6 +13,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+/**
+ * Graditelj statičnega multimodalnega grafa.
+ *
+ * Iz Marprom VAO podatkov doda BUS vozlišča in robove, iz MBajk podatkov BIKE
+ * vozlišča in robove, med bližnjimi vozlišči pa še WALK povezave.
+ */
 @Component
 public class StaticGraphBuilder implements GraphBuilder {
 
@@ -38,6 +44,11 @@ public class StaticGraphBuilder implements GraphBuilder {
         this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
     }
 
+    /**
+     * Zgradi graf iz trenutno dostopnih Marprom in MBajk podatkov.
+     *
+     * @return graf z BUS, BIKE in WALK robovi
+     */
     @Override
     public Graph build() {
         // Ensure VAO data is present
@@ -64,6 +75,9 @@ public class StaticGraphBuilder implements GraphBuilder {
         return new Graph(nodes, adjacencyList);
     }
 
+    /**
+     * Doda MBajk postaje kot BikeNode vozlišča z aktualno razpoložljivostjo.
+     */
     private void addBikeNodes(Map<Integer, Node> nodes, Map<Integer, List<Edge>> adjacencyList) {
         List<BikeStationVao> bikeStations = mBajkDataService.getBikeStationVaos();
         for (BikeStationVao station : bikeStations) {
@@ -84,6 +98,9 @@ public class StaticGraphBuilder implements GraphBuilder {
         }
     }
 
+    /**
+     * Doda BIKE robove med postajami z razpoložljivimi kolesi in prostimi stojali.
+     */
     private void addBikeEdges(Map<Integer, Node> nodes, Map<Integer, List<Edge>> adjacencyList) {
         List<BikeNode> bikeNodes = nodes.values().stream()
                 .filter(BikeNode.class::isInstance)
@@ -117,6 +134,9 @@ public class StaticGraphBuilder implements GraphBuilder {
         }
     }
 
+    /**
+     * Doda dvosmerne WALK robove med vozlišči znotraj največje dovoljene razdalje.
+     */
     private void addWalkingEdges(Map<Integer, Node> nodes, Map<Integer, List<Edge>> adjacencyList) {
         List<Node> nodeList = new ArrayList<>(nodes.values());
         int maxWalkM = helperService.getMaxWalkingDistanceMeters();
@@ -135,6 +155,12 @@ public class StaticGraphBuilder implements GraphBuilder {
         }
     }
 
+    /**
+     * Doda BUS robove med zaporednimi postajami na Marprom trasah.
+     *
+     * Robovi vsebujejo RouteInfo, razdaljo, približen čas vožnje in shape
+     * polilinijo za prikaz avtobusne etape.
+     */
     private void addBusEdges(Map<Integer, Node> nodes, Map<Integer, List<Edge>> adjacencyList) {
         if (vaoSerializer.getRoutesMap() == null || vaoSerializer.getRoutesMap().isEmpty()) {
             return;

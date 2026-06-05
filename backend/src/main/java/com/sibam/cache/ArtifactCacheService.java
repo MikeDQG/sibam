@@ -9,6 +9,12 @@ import java.util.function.Supplier;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * Koordinira lokalni in Supabase cache za generirane artefakte.
+ *
+ * Najprej uporabi veljaven lokalni artefakt, nato poskusi Supabase, šele nato
+ * sproži generator in rezultat zapiše v oba cache sloja.
+ */
 @Service
 public class ArtifactCacheService {
 
@@ -28,6 +34,16 @@ public class ArtifactCacheService {
         return supabaseStorage;
     }
 
+    /**
+     * Zagotovi veljaven artefakt na podani poti.
+     *
+     * @param path pot artefakta znotraj cache-a
+     * @param contentType MIME tip pri nalaganju v Supabase
+     * @param validator validator bajtov artefakta
+     * @param generator generator, če lokalni in oddaljeni cache nista uporabna
+     * @param generatedSource oznaka vira za novo generiran artefakt
+     * @return bajti artefakta in vir, iz katerega so prišli
+     */
     public ArtifactResult ensure(
             String path,
             MediaType contentType,
@@ -58,6 +74,12 @@ public class ArtifactCacheService {
         return new ArtifactResult(path, generated, generatedSource);
     }
 
+    /**
+     * Poskusi obnoviti artefakt iz Supabase v lokalni cache.
+     *
+     * @param path pot artefakta
+     * @return true, če je bil artefakt najden in zapisan lokalno
+     */
     public boolean restoreFromSupabase(String path) throws IOException {
         byte[] remote = supabaseStorage.download(path);
         if (remote == null || remote.length == 0) {
@@ -68,10 +90,24 @@ public class ArtifactCacheService {
         return true;
     }
 
+    /**
+     * Naloži artefakt v Supabase cache, če je oddaljeni cache omogočen.
+     *
+     * @param path pot artefakta
+     * @param bytes vsebina artefakta
+     * @param contentType MIME tip vsebine
+     */
     public void upload(String path, byte[] bytes, MediaType contentType) {
         supabaseStorage.upload(path, bytes, contentType);
     }
 
+    /**
+     * Rezultat pridobivanja cache artefakta.
+     *
+     * @param path pot artefakta
+     * @param bytes vsebina artefakta
+     * @param source vir podatkov, ki je bil uporabljen
+     */
     public record ArtifactResult(
         String path,
         byte[] bytes,

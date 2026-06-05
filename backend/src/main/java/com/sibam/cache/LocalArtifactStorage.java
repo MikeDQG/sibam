@@ -9,6 +9,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
+/**
+ * Lokalna datotečna shramba za cache artefakte.
+ *
+ * Zapisi potekajo prek začasne datoteke in atomskega premika, da cache ne ostane
+ * v delno zapisani obliki.
+ */
 @Component
 public class LocalArtifactStorage {
 
@@ -27,6 +33,12 @@ public class LocalArtifactStorage {
         return root;
     }
 
+    /**
+     * Razreši relativno cache pot glede na lokalni root.
+     *
+     * @param path relativna pot artefakta
+     * @return normalizirana datotečna pot
+     */
     public Path resolve(String path) {
         return root.resolve(path).normalize();
     }
@@ -35,10 +47,22 @@ public class LocalArtifactStorage {
         return Files.exists(resolve(path));
     }
 
+    /**
+     * Prebere artefakt iz lokalnega cache-a.
+     *
+     * @param path relativna pot artefakta
+     * @return vsebina datoteke
+     */
     public byte[] read(String path) throws IOException {
         return Files.readAllBytes(resolve(path));
     }
 
+    /**
+     * Zapiše artefakt v lokalni cache prek začasne datoteke.
+     *
+     * @param path relativna pot artefakta
+     * @param bytes vsebina za zapis
+     */
     public void write(String path, byte[] bytes) throws IOException {
         Path target = resolve(path);
         Files.createDirectories(target.getParent());
@@ -51,6 +75,12 @@ public class LocalArtifactStorage {
         Files.deleteIfExists(resolve(path));
     }
 
+    /**
+     * Preveri, ali lokalni artefakt obstaja in ni prazen.
+     *
+     * @param path relativna pot artefakta
+     * @return true, če je datoteka uporabna
+     */
     public boolean validate(String path) {
         Path target = resolve(path);
         try {

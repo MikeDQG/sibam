@@ -9,6 +9,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Controller za shranjene poti uporabnika.
+ *
+ * Endpointi uporabljajo Firebase uid iz request atributa, servisni sloj pa
+ * preveri, ali zahteva dostopa do podatkov pravega uporabnika.
+ */
 @RestController
 @RequestMapping("/api/paths")
 public class SavedPathController {
@@ -18,6 +24,13 @@ public class SavedPathController {
         this.savedPathService = savedPathService;
     }
 
+    /**
+     * Vrne vse shranjene poti izbranega uporabnika.
+     *
+     * @param userId interni ID uporabnika
+     * @param uid Firebase uid iz request atributa
+     * @return seznam shranjenih poti
+     */
     @GetMapping("/{userId}")
     public ResponseEntity<List<SavedPath>> getPaths(
             @PathVariable UUID userId,
@@ -25,6 +38,13 @@ public class SavedPathController {
         return ResponseEntity.ok(savedPathService.getPathsForUser(userId, uid));
     }
 
+    /**
+     * Shrani pot, ki jo je frontend izračunal oziroma prikazal uporabniku.
+     *
+     * @param request ime poti, uporabnik in serializiran Journey
+     * @param uid Firebase uid iz request atributa
+     * @return shranjena pot
+     */
     @PostMapping
     public ResponseEntity<SavedPath> savePath(
             @RequestBody SavedPathRequest request,
@@ -34,6 +54,13 @@ public class SavedPathController {
         ));
     }
 
+    /**
+     * Izbriše shranjeno pot uporabnika.
+     *
+     * @param pathId ID poti za brisanje
+     * @param uid Firebase uid iz request atributa
+     * @return prazen 204 odgovor
+     */
     @DeleteMapping("/{pathId}")
     public ResponseEntity<Void> deletePath(
             @PathVariable UUID pathId,

@@ -8,6 +8,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+/**
+ * Oddaljena cache shramba prek Supabase Storage REST API-ja.
+ *
+ * Uporablja service-role ključ in se tiho degradira, kadar cache ni omogočen ali
+ * je oddaljeni prenos neuspešen.
+ */
 @Component
 public class SupabaseArtifactStorage {
 
@@ -35,6 +41,11 @@ public class SupabaseArtifactStorage {
         return bucket;
     }
 
+    /**
+     * Preveri, ali je Supabase cache operativno omogočen.
+     *
+     * @return true, če je v konfiguraciji omogočen in ima service-role ključ
+     */
     public boolean enabled() {
         return enabled && !serviceRoleKey.isBlank();
     }
@@ -43,6 +54,12 @@ public class SupabaseArtifactStorage {
         return download(path) != null;
     }
 
+    /**
+     * Prenese artefakt iz Supabase cache bucketa.
+     *
+     * @param path pot objekta znotraj bucketa
+     * @return bajti artefakta ali null, če ni na voljo
+     */
     public byte[] download(String path) {
         if (!enabled()) {
             return null;
@@ -63,6 +80,11 @@ public class SupabaseArtifactStorage {
         }
     }
 
+    /**
+     * Naloži artefakt v Supabase cache bucket.
+     *
+     * Če oddaljena vsebina že ima enak SHA-256 hash, upload preskoči.
+     */
     public void upload(String path, byte[] bytes, MediaType contentType) {
         if (!enabled()) {
             return;
@@ -90,6 +112,11 @@ public class SupabaseArtifactStorage {
         }
     }
 
+    /**
+     * Izbriše artefakt iz Supabase cache bucketa, če je cache omogočen.
+     *
+     * @param path pot objekta znotraj bucketa
+     */
     public void delete(String path) {
         if (!enabled()) {
             return;

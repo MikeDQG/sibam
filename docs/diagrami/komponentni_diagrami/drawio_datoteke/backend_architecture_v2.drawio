@@ -1,0 +1,395 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Backend Architecture v2" id="backend-arch-v2">
+    <mxGraphModel dx="2000" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- External: Frontend -->
+        <mxCell id="fe" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;"
+          value="«external system»&lt;br&gt;&lt;b&gt;Frontend&lt;/b&gt;&lt;br&gt;origin · destination · departure time">
+          <mxGeometry x="60" y="30" width="210" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ComputePathController -->
+        <mxCell id="cpc" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;ComputePathController&lt;/b&gt;&lt;br&gt;GET /compute · bike · bus · leaveNow / leaveAt">
+          <mxGeometry x="540" y="20" width="250" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- GraphBootstrap -->
+        <mxCell id="gbs" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;GraphBootstrap&lt;/b&gt;&lt;br&gt;build() · refresh() when bike=true · ensureInitialized() when bus-only">
+          <mxGeometry x="540" y="135" width="250" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Subsystem: Multi-Modal Routing Engine -->
+        <mxCell id="re_bg" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=6;fillColor=#f9fff9;strokeColor=#006400;strokeWidth=2;fontSize=11;align=center;fontColor=#006400;"
+          value="«subsystem»&lt;br&gt;&lt;b&gt;Multi-Modal Routing Engine&lt;/b&gt;">
+          <mxGeometry x="40" y="275" width="1560" height="455" as="geometry" />
+        </mxCell>
+
+        <!-- Row A: StaticGraphBuilder -->
+        <mxCell id="sgb" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;StaticGraphBuilder&lt;/b&gt;&lt;br&gt;builds BusNodes + BikeNodes&lt;br&gt;skips bike edges when freeBikes = 0">
+          <mxGeometry x="60" y="305" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row A: InMemoryGraphStore -->
+        <mxCell id="imgs" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;InMemoryGraphStore&lt;/b&gt;&lt;br&gt;holds live Graph&lt;br&gt;nodes + adjacency list">
+          <mxGeometry x="305" y="305" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row A: KryoGraphSerializer -->
+        <mxCell id="kgs" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;KryoGraphSerializer&lt;/b&gt;&lt;br&gt;serialize live Graph&lt;br&gt;to / from local disk">
+          <mxGeometry x="545" y="305" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row A: AStarRouter -->
+        <mxCell id="asr" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;AStarRouter&lt;/b&gt;&lt;br&gt;time-dependent A* · State = {nodeId, lastBusRoute}&lt;br&gt;transfer penalty on bus line change · assembles Journey">
+          <mxGeometry x="810" y="295" width="265" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Row A: WeightedCostFunction -->
+        <mxCell id="wcf" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;WeightedCostFunction&lt;/b&gt;&lt;br&gt;mode penalties: short / long walk&lt;br&gt;delegates weather cost to WeatherRoutingAdjuster">
+          <mxGeometry x="1195" y="305" width="235" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row B: BusEdgeBuilder -->
+        <mxCell id="beb" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;BusEdgeBuilder&lt;/b&gt;&lt;br&gt;bus edges from shape nodes&lt;br&gt;travel time + RouteInfo">
+          <mxGeometry x="60" y="440" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row B: WalkingEdgeBuilder -->
+        <mxCell id="web" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;WalkingEdgeBuilder&lt;/b&gt;&lt;br&gt;walking edges ≤ maxWalkDist&lt;br&gt;haversine distance">
+          <mxGeometry x="305" y="440" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row B: VaoSerializer -->
+        <mxCell id="vas" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;VaoSerializer&lt;/b&gt;&lt;br&gt;in-memory cache: bus stops · routes&lt;br&gt;daily + weekly schedule maps">
+          <mxGeometry x="545" y="440" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row B: HeuristicService -->
+        <mxCell id="hs" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;HeuristicService&lt;/b&gt;&lt;br&gt;corrected dist / mode speed&lt;br&gt;walk 2 m/s · bike 6 m/s · bus 30 m/s">
+          <mxGeometry x="875" y="440" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row B: WeatherRoutingAdjuster -->
+        <mxCell id="wra" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;WeatherRoutingAdjuster&lt;/b&gt;&lt;br&gt;rain / temp → edge cost multipliers&lt;br&gt;rain → max walk limit · T transfer penalty">
+          <mxGeometry x="1195" y="440" width="235" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row C: BikeEdgeBuilder -->
+        <mxCell id="bikeb" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;BikeEdgeBuilder&lt;/b&gt;&lt;br&gt;bike edges between stations&lt;br&gt;only if freeBikes &gt; 0">
+          <mxGeometry x="60" y="575" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row C: GoogleRoutesService -->
+        <mxCell id="grs" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;GoogleRoutesService&lt;/b&gt;&lt;br&gt;polyline + NavigationSteps&lt;br&gt;for WALK and BIKE legs">
+          <mxGeometry x="435" y="575" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row C: SpatialSearchService -->
+        <mxCell id="sss" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;SpatialSearchService&lt;/b&gt;&lt;br&gt;RTreeIndex&lt;br&gt;5 nearest nodes to origin / dest">
+          <mxGeometry x="685" y="575" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row C: BikePredictionService -->
+        <mxCell id="bps" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;BikePredictionService&lt;/b&gt;&lt;br&gt;ONNX: predicted bikes / stands&lt;br&gt;per BIKE leg (pickup + return)">
+          <mxGeometry x="950" y="575" width="220" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Row C: BusDelayPredictionService -->
+        <mxCell id="bdps" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;BusDelayPredictionService&lt;/b&gt;&lt;br&gt;ONNX: predicted delay seconds&lt;br&gt;per BUS leg at boarding stop">
+          <mxGeometry x="1195" y="575" width="235" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- MBajkDataService -->
+        <mxCell id="mds" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;MBajkDataService&lt;/b&gt;&lt;br&gt;live bike station availability">
+          <mxGeometry x="60" y="830" width="210" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- TransitDataService -->
+        <mxCell id="tds" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;TransitDataService&lt;/b&gt;&lt;br&gt;stops · routes · trips · schedules">
+          <mxGeometry x="360" y="830" width="200" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ArtifactCacheService -->
+        <mxCell id="acs" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;ArtifactCacheService&lt;/b&gt;&lt;br&gt;local disk + Supabase fallback&lt;br&gt;schedule cache + ONNX models">
+          <mxGeometry x="635" y="825" width="210" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- WeatherSnapshotRepository -->
+        <mxCell id="wsr" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;"
+          value="«component»&lt;br&gt;&lt;b&gt;WeatherSnapshotRepository&lt;/b&gt;&lt;br&gt;weather_snapshots">
+          <mxGeometry x="1195" y="830" width="235" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- External: MBajk API -->
+        <mxCell id="mbajk_api" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;"
+          value="«external system»&lt;br&gt;&lt;b&gt;MBajk API&lt;/b&gt;&lt;br&gt;station availability">
+          <mxGeometry x="60" y="990" width="210" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- External: Marprom API -->
+        <mxCell id="marprom_api" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;"
+          value="«external system»&lt;br&gt;&lt;b&gt;Marprom API&lt;/b&gt;&lt;br&gt;bus stops · routes · schedules">
+          <mxGeometry x="360" y="990" width="200" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- External: Supabase Storage -->
+        <mxCell id="sup_storage" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;"
+          value="«external system»&lt;br&gt;&lt;b&gt;Supabase Storage&lt;/b&gt;&lt;br&gt;gold bucket: ONNX models">
+          <mxGeometry x="635" y="990" width="210" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- External: Google Routes API -->
+        <mxCell id="gra_api" parent="1" vertex="1"
+          style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=4;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=10;"
+          value="«external system»&lt;br&gt;&lt;b&gt;Google Routes API&lt;/b&gt;&lt;br&gt;polyline · turn-by-turn steps">
+          <mxGeometry x="930" y="990" width="200" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Database: PostgreSQL -->
+        <mxCell id="db" parent="1" vertex="1"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;verticalAlign=top;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;"
+          value="«database»&lt;br&gt;&lt;b&gt;PostgreSQL&lt;/b&gt;&lt;br&gt;(Supabase)">
+          <mxGeometry x="1195" y="985" width="160" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES -->
+
+        <mxCell id="e1" edge="1" parent="1" source="fe" target="cpc"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="HTTP GET /compute→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2" edge="1" parent="1" source="cpc" target="gbs"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="«startup»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e3" edge="1" parent="1" source="cpc" target="asr"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="findJourney()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e4" edge="1" parent="1" source="gbs" target="sgb"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="build()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e5" edge="1" parent="1" source="gbs" target="imgs"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="replaceGraph()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e6" edge="1" parent="1" source="gbs" target="kgs"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="load / save">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e7" edge="1" parent="1" source="sgb" target="beb"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="build→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e8" edge="1" parent="1" source="sgb" target="web"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="build→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e9" edge="1" parent="1" source="sgb" target="bikeb"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="build→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e10" edge="1" parent="1" source="sgb" target="vas"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="getBusStopsMap() / getRoutesMap()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e11" edge="1" parent="1" source="imgs" target="asr"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="getGraph()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e12" edge="1" parent="1" source="asr" target="vas"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="getSchedulesMap()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e13" edge="1" parent="1" source="asr" target="sss"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="findNearest(5)→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e14" edge="1" parent="1" source="asr" target="wcf"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="calculateCost()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e15" edge="1" parent="1" source="asr" target="hs"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="estimate()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e16" edge="1" parent="1" source="asr" target="grs"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="fetchRouteDetails()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e17" edge="1" parent="1" source="asr" target="bps"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="predict() per bike leg→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e18" edge="1" parent="1" source="asr" target="bdps"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="predictDelay() per bus leg→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e19" edge="1" parent="1" source="wcf" target="wra"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="currentWeather() · isEdgeAllowed()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e20" edge="1" parent="1" source="vas" target="tds"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="fetchRouteDetails()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e21" edge="1" parent="1" source="beb" target="tds"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="fetch bus data→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e22" edge="1" parent="1" source="bikeb" target="mds"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="getBikeStationVaos()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e23" edge="1" parent="1" source="tds" target="acs"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="schedule cache→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e24" edge="1" parent="1" source="bps" target="acs"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="load ONNX model→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e25" edge="1" parent="1" source="bdps" target="acs"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="load ONNX model→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e26" edge="1" parent="1" source="wra" target="wsr"
+          style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="findFirstByOrderByRecordedAtDesc()→">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e27" edge="1" parent="1" source="mds" target="mbajk_api"
+          style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e28" edge="1" parent="1" source="tds" target="marprom_api"
+          style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e29" edge="1" parent="1" source="acs" target="sup_storage"
+          style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e30" edge="1" parent="1" source="grs" target="gra_api"
+          style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e31" edge="1" parent="1" source="wsr" target="db"
+          style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;fontSize=9;html=1;"
+          value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

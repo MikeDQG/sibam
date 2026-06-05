@@ -31,6 +31,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
         "supabase.cache.enabled=false",
         "mbajk.api.key=dummy",
         "openweathermap.api.key=dummy",
+        "routes.google.api-key=dummy",
         "spring.task.scheduling.enabled=false",
         "schedulers.fetch-bike-ingestion.on=false",
         "schedulers.fetch-weather-ingestion.on=false",

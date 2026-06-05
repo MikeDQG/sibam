@@ -559,10 +559,6 @@ Nekatere datoteke so namerno izključene iz analize ali pokritosti (Spring Data 
 
 Posnetek zadnjega poročila je shranjen v [docs/sonarqube/](docs/sonarqube/).
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=MikeDQG_sibam&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=MikeDQG_sibam)
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=MikeDQG_sibam_frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=MikeDQG_sibam_frontend)
-
 Posnetek zadnjega poročila je shranjen v [docs/sonarqube/](docs/sonarqube/).
 
 ---

@@ -1,11 +1,11 @@
 <p align="center">
-  <picture>
   <a href="https://sibam.si">
-    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-celi-belo-besedilo.svg">
-    <source media="(prefers-color-scheme: light)" srcset="assets/logo-celi-crno-besedilo.svg">
-    <img alt="ŠibaM logo" src="assets/logo-celi-crno-besedilo.svg" width="300"/>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/logo-celi-belo-besedilo.svg">
+      <source media="(prefers-color-scheme: light)" srcset="assets/logo-celi-crno-besedilo.svg">
+      <img alt="ŠibaM logo" src="assets/logo-celi-crno-besedilo.svg" width="300"/>
+    </picture>
   </a>
-  </picture>
   <br>
   <em>
   <a href="https://sibam.si">sibam.si</a></em>

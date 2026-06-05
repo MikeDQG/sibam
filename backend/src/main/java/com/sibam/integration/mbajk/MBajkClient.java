@@ -9,6 +9,12 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+/**
+ * Reactive odjemalec za JCDecaux MBajk API.
+ *
+ * Vir uporablja pogodbo maribor in vrača trenutno stanje vseh kolesarskih
+ * postaj, ki se pozneje shrani v staging tabele in vgradi v graf.
+ */
 @Component
 public class MBajkClient {
 
@@ -22,6 +28,11 @@ public class MBajkClient {
         this.webClient = webClientBuilder.baseUrl(BASE_URL).build();
     }
 
+    /**
+     * Pridobi vse MBajk postaje iz JCDecaux API-ja.
+     *
+     * @return Mono s seznamom postaj in trenutno razpoložljivostjo
+     */
     public Mono<List<BikeStopDto>> getAllBikes() {
         return this.webClient.get()
                 .uri(uriBuilder -> uriBuilder

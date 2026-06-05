@@ -12,6 +12,12 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Servis za poslovna pravila shranjenih lokacij.
+ *
+ * Pred branjem ali spremembo podatkov preveri, da Firebase uid iz zahtevka
+ * pripada uporabniku, na katerega se zapis nanaša.
+ */
 @Service
 public class SavedLocationService {
     private final SavedLocationRepository savedLocationRepository;
@@ -23,12 +29,24 @@ public class SavedLocationService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Vrne lokacije uporabnika po preverjanju lastništva.
+     *
+     * @param userId interni ID uporabnika
+     * @param uid Firebase uid iz zahtevka
+     * @return seznam shranjenih lokacij
+     */
     public List<SavedLocation> getLocationsForUser(UUID userId, String uid) {
         User user = findUserOrThrow(userId);
         if (!user.getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         return savedLocationRepository.findByUserId(userId);
     }
 
+    /**
+     * Ustvari novo shranjeno lokacijo za uporabnika.
+     *
+     * @return shranjena JPA entiteta lokacije
+     */
     public SavedLocation saveLocation(UUID userId, String name, String address, Double latitude, Double longitude, String color, String logo, String uid) {
         User user = findUserOrThrow(userId);
         if (!user.getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -44,6 +62,11 @@ public class SavedLocationService {
         return savedLocationRepository.save(location);
     }
 
+    /**
+     * Posodobi shranjeno lokacijo, če pripada trenutnemu Firebase uporabniku.
+     *
+     * @return posodobljena JPA entiteta lokacije
+     */
     public SavedLocation updateLocation(UUID locationId, String name, String address, Double latitude, Double longitude, String color, String logo, String uid) {
         SavedLocation location = findLocationOrThrow(locationId);
         if (!location.getUser().getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -56,6 +79,12 @@ public class SavedLocationService {
         return savedLocationRepository.save(location);
     }
 
+    /**
+     * Izbriše shranjeno lokacijo po preverjanju lastništva.
+     *
+     * @param locationId ID lokacije za brisanje
+     * @param uid Firebase uid iz zahtevka
+     */
     public void deleteLocation(UUID locationId, String uid) {
         SavedLocation location = findLocationOrThrow(locationId);
         if (!location.getUser().getFirebaseUid().equals(uid)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);

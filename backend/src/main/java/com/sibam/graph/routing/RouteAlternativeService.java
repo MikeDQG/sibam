@@ -18,6 +18,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Servis za izdelavo in filtriranje alternativnih poti.
+ *
+ * A* požene z različnimi profili uteži, penalizira že uporabljena vozlišča,
+ * odstrani preveč podobne ali prepočasne poti in rezultat pretvori v javni
+ * RouteAlternative odgovor.
+ */
 @Service
 public class RouteAlternativeService {
 
@@ -43,6 +50,14 @@ public class RouteAlternativeService {
         this.nodePenaltySeconds = nodePenaltySeconds;
     }
 
+    /**
+     * Poišče do konfiguriranega števila alternativ med izvorom in ciljem.
+     *
+     * @param allowBike ali so dovoljene MBajk BIKE etape
+     * @param allowBus ali so dovoljene Marprom BUS etape
+     * @param timeMode DEPART_AT ali ARRIVE_BY način routinga
+     * @return odgovor z najdenimi alternativami ali statusom not_found
+     */
     public RouteAlternativesResponse findAlternatives(
             double originLat,
             double originLon,
@@ -127,6 +142,12 @@ public class RouteAlternativeService {
         );
     }
 
+    /**
+     * Odstrani alternative, ki so bistveno počasnejše od najhitrejše.
+     *
+     * @param candidates kandidati, sortirani po trajanju
+     * @return filtriran seznam, vedno vsaj z najhitrejšim kandidatom
+     */
     private List<Candidate> filterQuality(List<Candidate> candidates) {
         if (candidates.size() <= 1) {
             return candidates;
@@ -139,6 +160,11 @@ public class RouteAlternativeService {
         return filtered.isEmpty() ? List.of(candidates.getFirst()) : filtered;
     }
 
+    /**
+     * Preveri, ali pot uporablja način, ki ga je zahtevek izključil.
+     *
+     * @return true, če pot vsebuje nedovoljen BIKE ali BUS leg
+     */
     private boolean violatesModes(Journey journey, boolean allowBike, boolean allowBus) {
         for (Leg leg : journey.legs()) {
             if (!allowBike && EdgeType.BIKE.name().equals(leg.mode())) {
@@ -151,6 +177,13 @@ public class RouteAlternativeService {
         return false;
     }
 
+    /**
+     * Preveri podobnost kandidata z že sprejetimi alternativami po skupnih vozliščih.
+     *
+     * @param candidate nov kandidat
+     * @param accepted že sprejete alternative
+     * @return true, če kandidat preseže konfiguriran prag podobnosti
+     */
     private boolean isTooSimilar(Candidate candidate, List<Candidate> accepted) {
         Set<Integer> nodes = new LinkedHashSet<>(candidate.routeCandidate().pathResult().getNodeIds());
         if (nodes.isEmpty()) {
@@ -174,6 +207,13 @@ public class RouteAlternativeService {
         return false;
     }
 
+    /**
+     * Pretvori interni kandidat v javni RouteAlternative model.
+     *
+     * @param rank vrstni red alternative po kakovosti
+     * @param candidate interni kandidat poti
+     * @return javni model alternative
+     */
     private RouteAlternative toAlternative(int rank, Candidate candidate) {
         Journey journey = candidate.routeCandidate().journey();
         List<String> modes = journey.legs().stream().map(Leg::mode).toList();
@@ -189,6 +229,11 @@ public class RouteAlternativeService {
         );
     }
 
+    /**
+     * Določi oznake alternative glede na rang, profil iskanja in uporabljene načine.
+     *
+     * @return seznam oznak za frontend
+     */
     private List<String> labelsFor(int rank, Candidate candidate, List<String> modes) {
         LinkedHashSet<RouteAlternativeLabel> labels = new LinkedHashSet<>();
         if (rank == 1) {

@@ -5,6 +5,12 @@ import com.sibam.graph.model.EdgeType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Stroškovna funkcija za robove grafa.
+ *
+ * Osnovne čase prilagodi glede na preferenčne uteži WALK/BIKE in vremenski
+ * kontekst, ki lahko poveča ceno hoje ali kolesarjenja.
+ */
 @Component
 public class WeightedCostFunction implements CostFunction {
 
@@ -24,11 +30,24 @@ public class WeightedCostFunction implements CostFunction {
         this(routingConfig, null);
     }
 
+    /**
+     * Izračuna strošek roba z nevtralnim vremenskim kontekstom.
+     *
+     * @param edge rob grafa
+     * @return strošek v sekundah
+     */
     @Override
     public int calculateCost(Edge edge) {
         return calculateCost(edge, WeatherRoutingContext.neutral());
     }
 
+    /**
+     * Izračuna strošek roba z upoštevanjem vremena.
+     *
+     * @param edge rob grafa
+     * @param weatherContext trenutno vreme za routing
+     * @return prilagojen strošek v sekundah
+     */
     @Override
     public int calculateCost(Edge edge, WeatherRoutingContext weatherContext) {
         return applyModePenalty(
@@ -39,6 +58,11 @@ public class WeightedCostFunction implements CostFunction {
         );
     }
 
+    /**
+     * Uporabi preferenčno kazen za način brez vremenskega vpliva.
+     *
+     * @return utežen strošek v sekundah
+     */
     @Override
     public int applyModePenalty(EdgeType edgeType, double distanceMeters, int baseCostSeconds) {
         return applyModePenalty(edgeType, distanceMeters, baseCostSeconds, WeatherRoutingContext.neutral());

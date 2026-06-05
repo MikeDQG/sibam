@@ -21,6 +21,12 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Servis za zajem Marprom GTFS-RT podatkov.
+ *
+ * Združi vehicle positions in trip updates, jih preslika v interne Trip modele
+ * ter shrani posnetke voženj in zamud po postajah za realtime routing in ML.
+ */
 @Service
 public class GTFSRTDataService {
     private static final Logger log = LoggerFactory.getLogger(GTFSRTDataService.class);
@@ -38,6 +44,14 @@ public class GTFSRTDataService {
         this.stopDelaySnapshotRepository = stopDelaySnapshotRepository;
     }
 
+    /**
+     * Pridobi trenutne GTFS-RT vožnje iz Marprom vira.
+     *
+     * VehiclePosition podatke poveže s TripUpdate podatki prek ključa tripId in
+     * vehicleId, pri podvojenih update zapisih pa obdrži novejši timestamp.
+     *
+     * @return seznam internih Trip modelov z zamudami po postajah
+     */
     public List<Trip> getRealtimeTrips() {
 
         List<VehiclePosition> vehicles = gtfsRTClient.getVehiclePositions().getEntityList().stream().filter(FeedEntity::hasVehicle).map(FeedEntity::getVehicle).toList();
@@ -72,6 +86,12 @@ public class GTFSRTDataService {
         return trips;
     }
 
+    /**
+     * Sestavi povezovalni ključ za GTFS-RT TripUpdate.
+     *
+     * @param update GTFS-RT posodobitev vožnje
+     * @return ključ tripId_vehicleId
+     */
     private String createKey(TripUpdate update) {
 
         String tripId = update.getTrip().getTripId();
@@ -81,6 +101,12 @@ public class GTFSRTDataService {
         return tripId + "_" + vehicleId;
     }
 
+    /**
+     * Sestavi povezovalni ključ za GTFS-RT VehiclePosition.
+     *
+     * @param vehicle GTFS-RT položaj vozila
+     * @return ključ tripId_vehicleId
+     */
     private String createKey(VehiclePosition vehicle) {
 
         String tripId = vehicle.hasTrip() ? vehicle.getTrip().getTripId() : "UNKNOWN";
@@ -90,6 +116,11 @@ public class GTFSRTDataService {
         return tripId + "_" + vehicleId;
     }
 
+    /**
+     * Shrani trenutne GTFS-RT vožnje in zamude po postajah v staging tabele.
+     *
+     * @param fetchedAt čas zajema podatkov iz Marprom GTFS-RT vira
+     */
     public void ingestRealtimeTrips(OffsetDateTime fetchedAt) {
        List<Trip> allTrips= getRealtimeTrips();
 

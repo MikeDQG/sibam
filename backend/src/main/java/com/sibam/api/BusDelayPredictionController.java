@@ -20,6 +20,12 @@ public class BusDelayPredictionController {
         this.service = service;
     }
 
+    /**
+     * Izvede ONNX inferenco zamude za eno vstopno postajo.
+     *
+     * @param req vhodne značilke vožnje, postaje in vremena
+     * @return napovedana zamuda v sekundah
+     */
     @PostMapping("/predict")
     public BusDelayPredictionResponse predict(@RequestBody BusDelayPredictionRequest req) throws OrtException {
         int delay = service.predictDelay(

@@ -9,6 +9,12 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+/**
+ * Inicializira graf ob zagonu aplikacije in ga hrani v GraphStore.
+ *
+ * Najprej poskusi naložiti serializiran graf, ob manjkajočem ali neveljavnem
+ * cache-u pa graf zgradi iz VAO podatkov in ga ponovno shrani.
+ */
 @Component
 public class GraphBootstrap {
 
@@ -26,6 +32,9 @@ public class GraphBootstrap {
         this.graphSerializer = graphSerializer;
     }
 
+    /**
+     * Ob ApplicationReadyEvent naloži ali zgradi graf za routing.
+     */
     @Order(200)
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
@@ -48,12 +57,21 @@ public class GraphBootstrap {
         System.out.println("Graph initialized successfully.");
     }
 
+    /**
+     * Zagotovi, da je graf naložen pred obdelavo zahtevka.
+     */
     public void ensureInitialized() {
         if (graphStore.getGraph() == null) {
             init();
         }
     }
 
+    /**
+     * Na novo zgradi graf in zamenja aktivno instanco.
+     *
+     * Uporablja se pri zahtevkih z BIKE načinom, da so MBajk podatki čim bolj
+     * sveži pred izračunom poti.
+     */
     public void refresh() {
         Graph graph = graphBuilder.build();
         graphSerializer.save(graph);

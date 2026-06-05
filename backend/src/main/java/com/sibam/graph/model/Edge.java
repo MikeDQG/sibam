@@ -3,6 +3,12 @@ package com.sibam.graph.model;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Usmerjen rob v internem routing grafu.
+ *
+ * Rob nosi tip načina, razdaljo, osnovni strošek, opcijske RouteInfo podatke za
+ * BUS etape in polilinijo za prikaz poti.
+ */
 public class Edge implements Serializable {
     private final int fromNodeId;
     private final int toNodeId;
@@ -14,6 +20,9 @@ public class Edge implements Serializable {
     private final int distanceMeters;
     private final int costSeconds;
 
+    /**
+     * Ustvari osnovni rob brez route metapodatkov in polilinije.
+     */
     public Edge(
             int fromNodeId,
             int toNodeId,
@@ -24,6 +33,9 @@ public class Edge implements Serializable {
         this(fromNodeId, toNodeId, edgeType, distanceMeters, costSeconds, null, List.of());
     }
 
+    /**
+     * Ustvari rob z route metapodatki, na primer za BUS etapo.
+     */
     public Edge(
             int fromNodeId,
             int toNodeId,
@@ -35,6 +47,9 @@ public class Edge implements Serializable {
         this(fromNodeId, toNodeId, edgeType, distanceMeters, costSeconds, routeInfo, List.of());
     }
 
+    /**
+     * Ustvari rob z route metapodatki in polilinijo.
+     */
     public Edge(
             int fromNodeId,
             int toNodeId,
@@ -47,6 +62,9 @@ public class Edge implements Serializable {
         this(fromNodeId, toNodeId, edgeType, distanceMeters, costSeconds, routeInfo, polyline, null);
     }
 
+    /**
+     * Ustvari rob z vsemi metapodatki, vključno s postajo za vozni red.
+     */
     public Edge(
             int fromNodeId,
             int toNodeId,

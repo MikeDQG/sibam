@@ -146,7 +146,6 @@ Naslednji endpointi so dostopni brez avtentikacije, ker ne zahtevajo `@RequestAt
 | `/compute`               | GET    | Izračun prometnih alternativ | Storitev je namenjena vsem, brez uporabniških podatkov |
 | `/predict/bikes`         | POST   | Napoved zasedenih koles      | Statistična predikcija, brez vezave na uporabnika      |
 | `/api/bus-delay/predict` | POST   | Napoved zamude avtobusa      | Statistična predikcija, brez vezave na uporabnika      |
-| `/simple-api/test`       | GET    | Test endpoint                | Razvojni artefakt - **v produkciji odstraniti**        |
 | `/actuator/health`       | GET    | Health check                 | Izpostavljen prek Spring Boot Actuator konfiguracije   |
 
 Javni endpointi sprejemajo nepreverjene vnose (koordinate, čas, ID postaje). Obliko parametrov delno preverja Spring, vsebinska validacija (obseg koordinat, veljavnost postaje, smiselnost časa) pa je omejena oziroma ni sistematično implementirana (gl. razdelek Validacija).
@@ -461,7 +460,6 @@ Razred: [WebConfigTest.java](../../backend/src/test/java/com/sibam/config/WebCon
 | -------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
 | Lokalni kredenciali na disku                 | `application-local.properties` in `firebase-service-account.json` lokalno vsebujeta skrivnosti; trenutno sta ignorirana in nista sledena v gitu | Ohraniti v `.gitignore`, ne vključiti v PR; ob izpostavitvi rotirati vrednosti       |
 | Brez validacije vhodnih podatkov             | DTO-ji nimajo `@Valid` anotacij; koordinate in drugi parametri niso preverjeni | Dodati Bean Validation (`@NotNull`, `@Min`, `@Max`, `@Size`)                         |
-| Test endpoint v produkciji                   | `GET /simple-api/test` je javen in dostopen brez avtentikacije                 | Razred `SimpleController` odstraniti pred produkcijsko namestitvijo                  |
 | Brez rate limitinga                          | Ni omejevanja ponovnih klicev na nobenem endpointu                             | Dodati rate limiting (npr. Bucket4j ali infrastrukturni reverse proxy)               |
 | `allowedHeaders("*")`                        | CORS dovoljuje vse glave, vključno s potencialno nevarnimi                     | Omejiti na konkretno potrebne glave (`Authorization`, `Content-Type`, `X-Full-Name`) |
 | Logiranje koordinat                          | `/compute` logira izhodiščne koordinate, ki lahko pomenijo lokacijski podatek  | V produkciji odstraniti ali anonimizirati koordinatne loge                           |

@@ -4,6 +4,8 @@ Osnovni URL: `/compute`
 
 Javen endpoint — ne zahteva avtentikacije. Izračuna alternativne poti med izvorom in ciljem z uporabo internega grafa. Podpira kombinacije hoje, kolesarjenja (MBajk) in avtobusa (Marprom).
 
+Podrobnosti o A* algoritmu, stroškovnih formulah in vremenskih utežeh so opisane v [`docs/backend/algoritem-usmerjanja.md`](../algoritem-usmerjanja.md).
+
 ---
 
 ## GET `/compute` — izračun alternativnih poti

@@ -5,6 +5,8 @@ import com.sibam.graph.model.GeoPoint;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GoogleRoutesServiceTest {
@@ -192,6 +194,99 @@ class GoogleRoutesServiceTest {
         GeoPoint dest   = new GeoPoint(46.56, 15.65);
 
         assertThat(service.fetchPolyline(origin, dest)).containsExactly(origin, dest);
+    }
+
+    @Test
+    void fetchCoupledRouteDetailsReturnsEmptyForTooFewPoints() {
+        GoogleRoutesService service = new GoogleRoutesService();
+
+        assertThat(service.fetchRouteDetails(List.of(), com.sibam.graph.model.EdgeType.WALK)).isEmpty();
+        assertThat(service.fetchRouteDetails(
+                List.of(new GeoPoint(46.55, 15.64)),
+                com.sibam.graph.model.EdgeType.WALK
+        )).isEmpty();
+    }
+
+    @Test
+    void fetchCoupledRouteDetailsFallsBackPerSegmentWhenApiKeyIsBlank() {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "apiKey", "");
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        GeoPoint first = new GeoPoint(46.55, 15.64);
+        GeoPoint second = new GeoPoint(46.56, 15.65);
+        GeoPoint third = new GeoPoint(46.57, 15.66);
+
+        List<GoogleRoutesService.RouteDetails> result = service.fetchRouteDetails(
+                List.of(first, second, third),
+                com.sibam.graph.model.EdgeType.BIKE
+        );
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).polyline()).containsExactly(first, second);
+        assertThat(result.get(0).steps()).isNull();
+        assertThat(result.get(1).polyline()).containsExactly(second, third);
+        assertThat(result.get(1).steps()).isNull();
+    }
+
+    @Test
+    void parseCoupledRouteDetailsSplitsLegsIntoSegmentDetails() throws Exception {
+        GoogleRoutesService service = new GoogleRoutesService();
+        ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
+
+        GeoPoint first = new GeoPoint(46.55, 15.64);
+        GeoPoint second = new GeoPoint(46.56, 15.65);
+        GeoPoint third = new GeoPoint(46.57, 15.66);
+        String response = """
+                {"routes":[{"legs":[
+                  {"steps":[{
+                    "distanceMeters": 10,
+                    "duration": "3s",
+                    "polyline":{"geoJsonLinestring":{"coordinates":[[15.64,46.55],[15.65,46.56]]}},
+                    "navigationInstruction":{"maneuver":"DEPART","instructions":"First leg"}
+                  }]},
+                  {"steps":[{
+                    "distanceMeters": 20,
+                    "staticDuration": "4s",
+                    "polyline":{"geoJsonLinestring":{"coordinates":[[15.65,46.56],[15.66,46.57]]}},
+                    "navigationInstruction":{"maneuver":"TURN_RIGHT","instructions":"Second leg"}
+                  }]}
+                ]}]}
+                """;
+
+        List<GoogleRoutesService.RouteDetails> result = service.parseRouteDetails(
+                response,
+                List.of(first, second, third)
+        );
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).polyline()).containsExactly(first, second);
+        assertThat(result.get(0).steps()).hasSize(1);
+        assertThat(result.get(0).steps().getFirst().instruction()).isEqualTo("First leg");
+        assertThat(result.get(0).steps().getFirst().durationSeconds()).isEqualTo(3);
+        assertThat(result.get(1).polyline()).containsExactly(second, third);
+        assertThat(result.get(1).steps()).hasSize(1);
+        assertThat(result.get(1).steps().getFirst().instruction()).isEqualTo("Second leg");
+        assertThat(result.get(1).steps().getFirst().durationSeconds()).isEqualTo(4);
+    }
+
+    @Test
+    void routeDetailsDefensivelyCopiesPolylineAndSteps() {
+        GeoPoint origin = new GeoPoint(46.55, 15.64);
+        GeoPoint destination = new GeoPoint(46.56, 15.65);
+        List<GeoPoint> polyline = new java.util.ArrayList<>(List.of(origin, destination));
+        List<com.sibam.graph.model.output.NavigationStep> steps = new java.util.ArrayList<>(List.of(
+                new com.sibam.graph.model.output.NavigationStep("Go", "DEPART", 1, 1, 0, 1)
+        ));
+
+        GoogleRoutesService.RouteDetails details = new GoogleRoutesService.RouteDetails(polyline, steps);
+        polyline.clear();
+        steps.clear();
+
+        assertThat(details.polyline()).containsExactly(origin, destination);
+        assertThat(details.steps()).hasSize(1);
+        assertThat(new GoogleRoutesService.RouteDetails(null, null).polyline()).isEmpty();
+        assertThat(new GoogleRoutesService.RouteDetails(null, null).steps()).isNull();
     }
 
     @Test

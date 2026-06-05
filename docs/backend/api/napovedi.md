@@ -1,6 +1,6 @@
 # API – Napovedi
 
-Javna endpointa — ne zahtevata avtentikacije. Oba vračata napovedi na podlagi ONNX modelov, naloženih ob zagonu backenda. Za podrobnosti o inferenčni plasti glej [`napovedi/ml-inference.md`](../napovedi/ml-inference.md). Za opis treninga modelov glej [`docs/ml/`](../../ml/kazalo.md).
+Javna endpointa — ne zahtevata avtentikacije. Oba vračata napovedi na podlagi ONNX modelov, naloženih ob zagonu backenda. Za podrobnosti o inferenčni plasti glej [`napovedi/ml-inference.md`](../napovedi/ml-inference.md). Za opis treninga modelov glej [`docs/strojno-ucenje/`](../../strojno-ucenje/kazalo.md).
 
 ---
 

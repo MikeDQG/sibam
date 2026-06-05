@@ -2,7 +2,7 @@
 
 Backend naloži vnaprej natrenirane ONNX modele ob zagonu in jih uporablja za napovedi v realnem času. Modeli se prenesejo iz Supabase Storage bucket `gold/models/` — backend sam ne trenira modelov.
 
-Za opis treninga, podatkovnega toka in evaluacije modelov glej [`docs/ml/`](../../ml/kazalo.md). Za HTTP vmesnik napovedi glej [`api/napovedi.md`](../api/napovedi.md).
+Za opis treninga, podatkovnega toka in evaluacije modelov glej [`docs/strojno-ucenje/`](../../strojno-ucenje/kazalo.md). Za HTTP vmesnik napovedi glej [`api/napovedi.md`](../api/napovedi.md).
 
 ---
 

@@ -17,7 +17,7 @@ Zunanji API-ji
   -> Java backend ONNX inference
 ```
 
-Obstoječi diagram je shranjen tudi kot slika: [ml_pipeline_diagram.drawio.png](../diagrami/ml_pipeline_diagram.drawio.png).
+Obstoječi diagram je shranjen tudi kot slika: [ml_pipeline_diagram.drawio-2.png](../diagrami/ml_pipeline_diagram.drawio-2.png).
 
 ## 1. Zajem podatkov v backendu
 

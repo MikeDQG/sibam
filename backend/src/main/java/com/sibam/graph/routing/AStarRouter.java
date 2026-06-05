@@ -1,5 +1,6 @@
 package com.sibam.graph.routing;
 
+import com.sibam.config.FallbackProperties;
 import com.sibam.graph.model.BikeNode;
 import com.sibam.graph.model.Edge;
 import com.sibam.graph.model.EdgeType;
@@ -24,17 +25,21 @@ import com.sibam.dto.prediction.BikePredictionRequest;
 import com.sibam.engine.vao.BusLegDelayVao;
 import com.sibam.engine.vao.BusStopVao;
 import com.sibam.engine.vao.RouteVao;
+import com.sibam.persistence.StopDelayEntity;
+import com.sibam.repository.StopDelaySnapshotRepository;
 import com.sibam.service.BikePredictionService;
 import com.sibam.service.BusDelayPredictionService;
 import com.sibam.service.GoogleRoutesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -72,6 +77,40 @@ public class AStarRouter {
     private final WeatherRoutingAdjuster weatherRoutingAdjuster;
     private final BikePredictionService bikePredictionService;
     private final BusDelayPredictionService busDelayPredictionService;
+    private final StopDelaySnapshotRepository stopDelaySnapshotRepository;
+    private final FallbackProperties fallbackProperties;
+
+    @Autowired
+    public AStarRouter(
+            GraphStore graphStore,
+            SpatialSearchService spatialSearchService,
+            HelperService helperService,
+            VaoSerializer vaoSerializer,
+            GoogleRoutesService googleRoutesService,
+            HeuristicService heuristicService,
+            CostFunction costFunction,
+            RoutingConfig routingConfig,
+            WeatherRoutingAdjuster weatherRoutingAdjuster,
+            BikePredictionService bikePredictionService,
+            BusDelayPredictionService busDelayPredictionService,
+            StopDelaySnapshotRepository stopDelaySnapshotRepository,
+            FallbackProperties fallbackProperties
+    ) {
+        this.graphStore = graphStore;
+        this.spatialSearchService = spatialSearchService;
+        this.helperService = helperService;
+        this.vaoSerializer = vaoSerializer;
+        this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
+        this.googleRoutesService = googleRoutesService;
+        this.heuristicService = heuristicService;
+        this.costFunction = costFunction;
+        this.routingConfig = routingConfig;
+        this.weatherRoutingAdjuster = weatherRoutingAdjuster;
+        this.bikePredictionService = bikePredictionService;
+        this.busDelayPredictionService = busDelayPredictionService;
+        this.stopDelaySnapshotRepository = stopDelaySnapshotRepository;
+        this.fallbackProperties = fallbackProperties;
+    }
 
     public AStarRouter(
             GraphStore graphStore,
@@ -86,18 +125,21 @@ public class AStarRouter {
             BikePredictionService bikePredictionService,
             BusDelayPredictionService busDelayPredictionService
     ) {
-        this.graphStore = graphStore;
-        this.spatialSearchService = spatialSearchService;
-        this.helperService = helperService;
-        this.vaoSerializer = vaoSerializer;
-        this.walkingEdgeBuilder = new WalkingEdgeBuilder(helperService);
-        this.googleRoutesService = googleRoutesService;
-        this.heuristicService = heuristicService;
-        this.costFunction = costFunction;
-        this.routingConfig = routingConfig;
-        this.weatherRoutingAdjuster = weatherRoutingAdjuster;
-        this.bikePredictionService = bikePredictionService;
-        this.busDelayPredictionService = busDelayPredictionService;
+        this(
+                graphStore,
+                spatialSearchService,
+                helperService,
+                vaoSerializer,
+                googleRoutesService,
+                heuristicService,
+                costFunction,
+                routingConfig,
+                weatherRoutingAdjuster,
+                bikePredictionService,
+                busDelayPredictionService,
+                null,
+                new FallbackProperties(60)
+        );
     }
 
     public Journey findJourney(
@@ -793,7 +835,7 @@ public class AStarRouter {
             return new Journey("success", origin, originAddress, destination, destinationAddress, "0", "0", List.of());
         }
 
-        List<Leg> legs = new ArrayList<>();
+        List<LegDraft> legDrafts = new ArrayList<>();
         Edge legStartEdge = pathResult.getEdges().getFirst();
         Edge previousEdge = legStartEdge;
         int legDistanceMeters = previousEdge.getDistanceMeters();
@@ -810,7 +852,7 @@ public class AStarRouter {
 
             PathStepTiming firstTiming = pathResult.getTimings().get(legStartIndex);
             PathStepTiming lastTiming = pathResult.getTimings().get(i - 1);
-            legs.add(toLeg(
+            legDrafts.add(toLegDraft(
                     graph,
                     pathResult.getEdges().subList(legStartIndex, i),
                     legStartEdge,
@@ -821,9 +863,9 @@ public class AStarRouter {
                     lastTiming.arrivalMillis(),
                     weatherContext
             ));
-            addSameStopTransferLegIfNeeded(
+            addSameStopTransferDraftIfNeeded(
                     graph,
-                    legs,
+                    legDrafts,
                     previousEdge,
                     currentEdge,
                     lastTiming.arrivalMillis(),
@@ -838,7 +880,7 @@ public class AStarRouter {
 
         PathStepTiming firstTiming = pathResult.getTimings().get(legStartIndex);
         PathStepTiming lastTiming = pathResult.getTimings().getLast();
-        legs.add(toLeg(
+        legDrafts.add(toLegDraft(
                 graph,
                 pathResult.getEdges().subList(legStartIndex, pathResult.getEdges().size()),
                 legStartEdge,
@@ -849,6 +891,10 @@ public class AStarRouter {
                 lastTiming.arrivalMillis(),
                 weatherContext
         ));
+        enrichCoupledNavigation(graph, legDrafts);
+        List<Leg> legs = legDrafts.stream()
+                .map(draft -> toLeg(graph, draft, weatherContext))
+                .toList();
 
         int totalDistanceMeters = pathResult.getEdges().stream()
                 .mapToInt(Edge::getDistanceMeters)
@@ -880,9 +926,9 @@ public class AStarRouter {
         return true;
     }
 
-    private void addSameStopTransferLegIfNeeded(
+    private void addSameStopTransferDraftIfNeeded(
             Graph graph,
-            List<Leg> legs,
+            List<LegDraft> legs,
             Edge previousEdge,
             Edge currentEdge,
             long previousArrivalMillis,
@@ -897,19 +943,12 @@ public class AStarRouter {
                 (currentDepartureMillis - previousArrivalMillis) / 1000.0
         ));
 
-        legs.add(new Leg(
-                "TRANSFER",
+        legs.add(LegDraft.transfer(
                 stopPoint,
                 stopPoint,
-                String.valueOf(secondsToMillis(transferSeconds)),
-                "0",
-                List.of(stopPoint),
-                null,
-                null,
-                null,
-                null,
-                String.valueOf(previousArrivalMillis),
-                String.valueOf(currentDepartureMillis)
+                transferSeconds,
+                previousArrivalMillis,
+                currentDepartureMillis
         ));
     }
 
@@ -937,7 +976,7 @@ public class AStarRouter {
         return (int) Math.max(0, Math.round((lastTiming.arrivalMillis() - firstTiming.departureMillis()) / 1000.0));
     }
 
-    private Leg toLeg(
+    private LegDraft toLegDraft(
             Graph graph,
             List<Edge> edges,
             Edge firstEdge,
@@ -948,26 +987,46 @@ public class AStarRouter {
             long arrivalMillis,
             WeatherRoutingContext weatherContext
     ) {
-        RouteInfo routeInfo = firstEdge.getRouteInfo();
-        LegNavigation navigation = legNavigation(graph, edges, firstEdge, lastEdge);
-
-        return new Leg(
-                toMode(firstEdge.getEdgeType()),
+        return LegDraft.normal(
+                List.copyOf(edges),
+                firstEdge,
+                lastEdge,
+                durationSeconds,
+                distanceMeters,
+                departureMillis,
+                arrivalMillis,
                 nodePoint(graph, firstEdge.getFromNodeId()),
                 nodePoint(graph, lastEdge.getToNodeId()),
-                String.valueOf(secondsToMillis(durationSeconds)),
-                String.valueOf(distanceMeters),
+                localNavigation(graph, edges, firstEdge, lastEdge)
+        );
+    }
+
+    private Leg toLeg(
+            Graph graph,
+            LegDraft draft,
+            WeatherRoutingContext weatherContext
+    ) {
+        RouteInfo routeInfo = draft.firstEdge() == null ? null : draft.firstEdge().getRouteInfo();
+        EdgeType edgeType = draft.firstEdge() == null ? EdgeType.TRANSFER : draft.firstEdge().getEdgeType();
+        LegNavigation navigation = draft.navigation();
+
+        return new Leg(
+                draft.transfer() ? "TRANSFER" : toMode(edgeType),
+                draft.origin(),
+                draft.destination(),
+                String.valueOf(secondsToMillis(draft.durationSeconds())),
+                String.valueOf(draft.distanceMeters()),
                 navigation.polyline(),
                 routeInfo == null ? null : routeInfo.lineCode(),
                 routeInfo == null ? null : routeInfo.headsignName(),
-                freeStands(graph, firstEdge, lastEdge),
-                freeBikes(graph, firstEdge),
-                String.valueOf(departureMillis),
-                String.valueOf(arrivalMillis),
+                draft.transfer() ? null : freeStands(graph, draft.firstEdge(), draft.lastEdge()),
+                draft.transfer() ? null : freeBikes(graph, draft.firstEdge()),
+                String.valueOf(draft.departureMillis()),
+                String.valueOf(draft.arrivalMillis()),
                 navigation.navigationAvailable(),
                 navigation.steps(),
-                computeBikePrediction(graph, firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext),
-                computeBusDelayPrediction(firstEdge, lastEdge, departureMillis, arrivalMillis, weatherContext)
+                draft.transfer() ? null : computeBikePrediction(graph, draft.firstEdge(), draft.lastEdge(), draft.departureMillis(), draft.arrivalMillis(), weatherContext),
+                draft.transfer() ? null : computeBusDelayPrediction(draft.firstEdge(), draft.lastEdge(), draft.departureMillis(), draft.arrivalMillis(), weatherContext)
         );
     }
 
@@ -1043,6 +1102,12 @@ public class AStarRouter {
         int boardStopId = firstEdge.getScheduleStopPointId() != null
                 ? firstEdge.getScheduleStopPointId()
                 : firstEdge.getFromNodeId();
+        int boardSeq = lookupStopSequence(lineId, boardStopId);
+
+        StopDelayEntity latestDelay = latestFreshDelay(routeInfo, boardSeq);
+        if (latestDelay != null) {
+            return new BusLegDelayVao(latestDelay.getDelaySeconds());
+        }
 
         float temperature = weatherContext.temperatureCelsius() != null ? weatherContext.temperatureCelsius().floatValue() : 15f;
         float rain = weatherContext.rainMm() != null ? weatherContext.rainMm() : 0f;
@@ -1051,7 +1116,6 @@ public class AStarRouter {
         try {
             LocalDateTime boardTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(departureMillis), ROUTING_ZONE);
             int boardDow = boardTime.getDayOfWeek().getValue();
-            int boardSeq = lookupStopSequence(lineId, boardStopId);
             int boardingDelay = busDelayPredictionService.predictDelay(
                     lineId, boardSeq,
                     boardTime.getHour(), boardDow, boardDow >= 6 ? 1 : 0,
@@ -1059,11 +1123,42 @@ public class AStarRouter {
                     boardStopId
             );
 
+            log.info("Using predicted bus delay for line {} stop {} because fresh snapshot is unavailable.", lineId, boardStopId);
             return new BusLegDelayVao(boardingDelay);
         } catch (Exception e) {
-            log.warn("Bus delay prediction unavailable, skipping enrichment: {}", e.getMessage());
+            log.warn("Bus delay prediction unavailable for line {} stop {}; using neutral delay 0: {}",
+                    lineId, boardStopId, e.getMessage());
+            return new BusLegDelayVao(0);
+        }
+    }
+
+    private StopDelayEntity latestFreshDelay(RouteInfo routeInfo, int stopSequence) {
+        if (stopDelaySnapshotRepository == null || routeInfo == null) {
             return null;
         }
+
+        try {
+            return stopDelaySnapshotRepository
+                    .findFirstByTrip_RouteIdAndStopSequenceOrderByTrip_RecordedAtDesc(
+                            String.valueOf(routeInfo.lineId()),
+                            stopSequence
+                    )
+                    .filter(delay -> delay.getTrip() != null && isFresh(delay.getTrip().getRecordedAt()))
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("Could not load latest bus delay snapshot for line {} stop sequence {}; falling back: {}",
+                    routeInfo.lineId(), stopSequence, e.getMessage());
+            return null;
+        }
+    }
+
+    private boolean isFresh(OffsetDateTime recordedAt) {
+        if (recordedAt == null || fallbackProperties == null) {
+            return false;
+        }
+
+        OffsetDateTime oldestFresh = OffsetDateTime.now(ROUTING_ZONE).minus(fallbackProperties.realtimeMaxAge());
+        return !recordedAt.isBefore(oldestFresh);
     }
 
     private int lookupStopSequence(int lineId, int stopId) {
@@ -1121,29 +1216,67 @@ public class AStarRouter {
         return new GeoPoint(node.getLat(), node.getLon());
     }
 
-    private LegNavigation legNavigation(Graph graph, List<Edge> edges, Edge firstEdge, Edge lastEdge) {
-        GeoPoint from = nodePoint(graph, firstEdge.getFromNodeId());
-        GeoPoint to = nodePoint(graph, lastEdge.getToNodeId());
-
-        if (navigationSupported(firstEdge)) {
-            try {
-                GoogleRoutesService.RouteDetails routeDetails =
-                        googleRoutesService.fetchRouteDetails(from, to, firstEdge.getEdgeType());
-                if (routeDetails != null) {
-                    List<GeoPoint> polyline = routeDetails.polyline().isEmpty()
-                            ? localPolyline(graph, edges, firstEdge, lastEdge)
-                            : routeDetails.polyline();
-                    List<NavigationStep> steps = routeDetails.steps();
-                    return new LegNavigation(polyline, !steps.isEmpty(), steps.isEmpty() ? null : steps);
-                }
-            } catch (Exception e) {
-                log.warn("Google navigation details unavailable for {} leg: {}", firstEdge.getEdgeType(), e.toString());
+    private void enrichCoupledNavigation(Graph graph, List<LegDraft> legDrafts) {
+        int index = 0;
+        while (index < legDrafts.size()) {
+            LegDraft draft = legDrafts.get(index);
+            if (!navigationSupported(draft)) {
+                index++;
+                continue;
             }
 
-            return new LegNavigation(localPolyline(graph, edges, firstEdge, lastEdge), false, null);
-        }
+            int endExclusive = index + 1;
+            while (endExclusive < legDrafts.size() && navigationSupported(legDrafts.get(endExclusive))) {
+                endExclusive++;
+            }
 
-        return new LegNavigation(localPolyline(graph, edges, firstEdge, lastEdge), null, null);
+            enrichNavigationGroup(legDrafts, index, endExclusive);
+            index = endExclusive;
+        }
+    }
+
+    private void enrichNavigationGroup(List<LegDraft> legDrafts, int startInclusive, int endExclusive) {
+        try {
+            List<GeoPoint> points = new ArrayList<>();
+            points.add(legDrafts.get(startInclusive).origin());
+            for (int i = startInclusive; i < endExclusive; i++) {
+                points.add(legDrafts.get(i).destination());
+            }
+
+            List<GoogleRoutesService.RouteDetails> routeDetails = googleRoutesService.fetchRouteDetails(points, EdgeType.WALK);
+            for (int i = startInclusive; i < endExclusive; i++) {
+                int detailsIndex = i - startInclusive;
+                if (detailsIndex >= routeDetails.size()) {
+                    continue;
+                }
+                GoogleRoutesService.RouteDetails details = routeDetails.get(detailsIndex);
+                LegDraft draft = legDrafts.get(i);
+                List<GeoPoint> polyline = details.polyline().isEmpty()
+                        ? draft.navigation().polyline()
+                        : details.polyline();
+                List<NavigationStep> steps = details.steps();
+                legDrafts.set(i, draft.withNavigation(new LegNavigation(
+                        polyline,
+                        steps != null && !steps.isEmpty(),
+                        steps
+                )));
+            }
+        } catch (Exception e) {
+            log.warn("Google coupled navigation details unavailable for {} route legs: {}",
+                    endExclusive - startInclusive,
+                    e.toString());
+        }
+    }
+
+    private LegNavigation localNavigation(Graph graph, List<Edge> edges, Edge firstEdge, Edge lastEdge) {
+        Boolean navigationAvailable = navigationSupported(firstEdge) ? false : null;
+        return new LegNavigation(localPolyline(graph, edges, firstEdge, lastEdge), navigationAvailable, null);
+    }
+
+    private boolean navigationSupported(LegDraft draft) {
+        return !draft.transfer()
+                && draft.firstEdge() != null
+                && navigationSupported(draft.firstEdge());
     }
 
     private boolean navigationSupported(Edge firstEdge) {
@@ -1282,6 +1415,85 @@ public class AStarRouter {
             Boolean navigationAvailable,
             List<NavigationStep> steps
     ) {
+    }
+
+    private record LegDraft(
+            List<Edge> edges,
+            Edge firstEdge,
+            Edge lastEdge,
+            int durationSeconds,
+            int distanceMeters,
+            long departureMillis,
+            long arrivalMillis,
+            GeoPoint origin,
+            GeoPoint destination,
+            boolean transfer,
+            LegNavigation navigation
+    ) {
+        static LegDraft normal(
+                List<Edge> edges,
+                Edge firstEdge,
+                Edge lastEdge,
+                int durationSeconds,
+                int distanceMeters,
+                long departureMillis,
+                long arrivalMillis,
+                GeoPoint origin,
+                GeoPoint destination,
+                LegNavigation navigation
+        ) {
+            return new LegDraft(
+                    edges,
+                    firstEdge,
+                    lastEdge,
+                    durationSeconds,
+                    distanceMeters,
+                    departureMillis,
+                    arrivalMillis,
+                    origin,
+                    destination,
+                    false,
+                    navigation
+            );
+        }
+
+        static LegDraft transfer(
+                GeoPoint origin,
+                GeoPoint destination,
+                int durationSeconds,
+                long departureMillis,
+                long arrivalMillis
+        ) {
+            return new LegDraft(
+                    List.of(),
+                    null,
+                    null,
+                    durationSeconds,
+                    0,
+                    departureMillis,
+                    arrivalMillis,
+                    origin,
+                    destination,
+                    true,
+                    new LegNavigation(List.of(origin, destination), null, null)
+            );
+        }
+
+        LegDraft withNavigation(LegNavigation navigation) {
+            return new LegDraft(
+                    edges,
+                    firstEdge,
+                    lastEdge,
+                    durationSeconds,
+                    distanceMeters,
+                    departureMillis,
+                    arrivalMillis,
+                    origin,
+                    destination,
+                    transfer,
+                    navigation
+            );
+        }
     }
 
     public record SearchOptions(

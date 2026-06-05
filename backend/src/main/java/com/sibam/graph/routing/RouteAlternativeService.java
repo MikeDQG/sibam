@@ -21,6 +21,8 @@ import java.util.Set;
 @Service
 public class RouteAlternativeService {
 
+    private static final int MAX_ALLOWED_ROUTES = 3;
+
     private final AStarRouter aStarRouter;
     private final int maxRoutes;
     private final double maxSimilarity;
@@ -29,13 +31,13 @@ public class RouteAlternativeService {
 
     public RouteAlternativeService(
             AStarRouter aStarRouter,
-            @Value("${routing.alternatives.max-routes:3}") int maxRoutes,
+            @Value("${compute.path.max-alternatives:${routing.alternatives.max-routes:3}}") int maxRoutes,
             @Value("${routing.alternatives.max-similarity:0.8}") double maxSimilarity,
             @Value("${routing.alternatives.max-slowdown-multiplier:1.4}") double maxSlowdownMultiplier,
             @Value("${routing.alternatives.node-penalty-seconds:180}") int nodePenaltySeconds
     ) {
         this.aStarRouter = aStarRouter;
-        this.maxRoutes = maxRoutes;
+        this.maxRoutes = Math.max(1, Math.min(MAX_ALLOWED_ROUTES, maxRoutes));
         this.maxSimilarity = maxSimilarity;
         this.maxSlowdownMultiplier = maxSlowdownMultiplier;
         this.nodePenaltySeconds = nodePenaltySeconds;

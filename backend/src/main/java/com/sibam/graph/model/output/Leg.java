@@ -22,7 +22,6 @@ public record Leg(
         String arrival,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         Boolean navigationAvailable,
-        @JsonInclude(JsonInclude.Include.NON_NULL)
         List<NavigationStep> steps,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         BikeLegPredictionVao bikePrediction,

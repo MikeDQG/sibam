@@ -105,7 +105,7 @@ class GoogleRoutesServiceTest {
         );
 
         assertThat(result.polyline()).containsExactly(origin, dest);
-        assertThat(result.steps()).isEmpty();
+        assertThat(result.steps()).isNull();
     }
 
     @Test
@@ -167,16 +167,19 @@ class GoogleRoutesServiceTest {
     }
 
     @Test
-    void fetchRouteDetailsReturnsNullWhenApiKeyIsBlank() {
+    void fetchRouteDetailsReturnsFallbackWhenApiKeyIsBlank() {
         GoogleRoutesService service = new GoogleRoutesService();
         ReflectionTestUtils.setField(service, "apiKey", "");
         ReflectionTestUtils.setField(service, "polylineEncoding", "GEO_JSON_LINESTRING");
 
+        GeoPoint origin = new GeoPoint(46.55, 15.64);
+        GeoPoint dest = new GeoPoint(46.56, 15.65);
         GoogleRoutesService.RouteDetails result = service.fetchRouteDetails(
-                new GeoPoint(46.55, 15.64), new GeoPoint(46.56, 15.65), com.sibam.graph.model.EdgeType.WALK
+                origin, dest, com.sibam.graph.model.EdgeType.WALK
         );
 
-        assertThat(result).isNull();
+        assertThat(result.polyline()).containsExactly(origin, dest);
+        assertThat(result.steps()).isNull();
     }
 
     @Test

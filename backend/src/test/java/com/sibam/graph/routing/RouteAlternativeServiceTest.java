@@ -142,6 +142,36 @@ class RouteAlternativeServiceTest {
     }
 
     @Test
+    void configuredMaxRoutesIsCappedAtThree() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = new RouteAlternativeService(router, 10, 0.8, 2.0, 180);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
+                .thenReturn(candidate(journey(1000, "BUS"), 1, 2))
+                .thenReturn(candidate(journey(1100, "BUS"), 3, 4))
+                .thenReturn(candidate(journey(1200, "BUS"), 5, 6))
+                .thenReturn(candidate(journey(1300, "BUS"), 7, 8));
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
+
+        assertThat(response.routes()).hasSize(3);
+    }
+
+    @Test
+    void configuredMaxRoutesIsAtLeastOne() {
+        AStarRouter router = mock(AStarRouter.class);
+        RouteAlternativeService service = new RouteAlternativeService(router, 0, 0.8, 2.0, 180);
+        when(router.findJourneyCandidate(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                any(), any(), any(LocalTime.class), any(LocalDate.class), anyBoolean(), anyBoolean(), any(), any()))
+                .thenReturn(candidate(journey(1000, "BUS"), 1, 2))
+                .thenReturn(candidate(journey(1100, "BUS"), 3, 4));
+
+        RouteAlternativesResponse response = service.findAlternatives(1, 1, 2, 2, null, null, LocalTime.NOON, TEST_DATE, true, true, RoutingTimeMode.DEPART_AT);
+
+        assertThat(response.routes()).hasSize(1);
+    }
+
+    @Test
     void qualityFilterDropsRoutesTooMuchSlowerThanFastest() {
         AStarRouter router = mock(AStarRouter.class);
         // maxSlowdownMultiplier = 1.4 → fastest=1000s, cutoff=1400s → 3000s route is dropped

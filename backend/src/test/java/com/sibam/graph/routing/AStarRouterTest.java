@@ -1,5 +1,6 @@
 package com.sibam.graph.routing;
 
+import com.sibam.config.FallbackProperties;
 import com.sibam.engine.VaoSerializer;
 import com.sibam.engine.vao.BusStopVao;
 import com.sibam.engine.vao.LineScheduleVao;
@@ -7,6 +8,7 @@ import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.RouteVao;
 import com.sibam.engine.vao.StopScheduleVao;
 import com.sibam.graph.model.BusNode;
+import com.sibam.graph.model.BikeNode;
 import com.sibam.graph.model.Edge;
 import com.sibam.graph.model.EdgeType;
 import com.sibam.graph.model.Graph;
@@ -18,6 +20,9 @@ import com.sibam.graph.model.output.NavigationStep;
 import com.sibam.graph.spatial.HelperService;
 import com.sibam.graph.spatial.SpatialSearchService;
 import com.sibam.graph.storage.InMemoryGraphStore;
+import com.sibam.persistence.StopDelayEntity;
+import com.sibam.persistence.TripEntity;
+import com.sibam.repository.StopDelaySnapshotRepository;
 import com.sibam.service.BusDelayPredictionService;
 import com.sibam.service.GoogleRoutesService;
 import org.junit.jupiter.api.Test;
@@ -26,10 +31,12 @@ import org.mockito.ArgumentCaptor;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,6 +47,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 class AStarRouterTest {
 
@@ -211,8 +220,8 @@ class AStarRouterTest {
         );
 
         GoogleRoutesService googleRoutesService = mock(GoogleRoutesService.class);
-        when(googleRoutesService.fetchRouteDetails(any(), any(), eq(EdgeType.WALK)))
-                .thenReturn(new GoogleRoutesService.RouteDetails(
+        when(googleRoutesService.fetchRouteDetails(any(List.class), eq(EdgeType.WALK)))
+                .thenReturn(List.of(new GoogleRoutesService.RouteDetails(
                         List.of(
                                 new com.sibam.graph.model.GeoPoint(originLat, originLon),
                                 new com.sibam.graph.model.GeoPoint(destinationLat, destinationLon)
@@ -225,7 +234,7 @@ class AStarRouterTest {
                                 0,
                                 1
                         ))
-                ));
+                )));
 
         Journey journey = routerFor(graph, googleRoutesService).findJourney(
                 originLat,
@@ -247,6 +256,57 @@ class AStarRouterTest {
         assertThat(journey.legs().getFirst().steps().getFirst().instruction())
                 .isEqualTo("Head east on Maroltova ulica toward Pohorska ulica");
         assertThat(journey.legs().getFirst().steps().getFirst().maneuver()).isEqualTo("DEPART");
+    }
+
+    @Test
+    void adjacentWalkBikeWalkLegsUseOneCoupledGoogleRequest() {
+        double originLat = 46.0000;
+        double originLon = 15.0000;
+        double destinationLat = 46.0000;
+        double destinationLon = 15.0300;
+
+        BikeNode pickup = new BikeNode(1_000_001, 46.0000, 15.0010, "Pickup", 1, 4, 2);
+        BikeNode dropoff = new BikeNode(1_000_002, 46.0000, 15.0290, "Dropoff", 2, 0, 5);
+        Graph graph = new Graph(
+                Map.of(pickup.getId(), pickup, dropoff.getId(), dropoff),
+                Map.of(
+                        pickup.getId(), List.of(new Edge(pickup.getId(), dropoff.getId(), EdgeType.BIKE, 10, 10)),
+                        dropoff.getId(), List.of()
+                )
+        );
+
+        GoogleRoutesService googleRoutesService = mock(GoogleRoutesService.class);
+        when(googleRoutesService.fetchRouteDetails(any(List.class), eq(EdgeType.WALK)))
+                .thenAnswer(invocation -> {
+                    List<com.sibam.graph.model.GeoPoint> points = invocation.getArgument(0);
+                    List<GoogleRoutesService.RouteDetails> details = new ArrayList<>();
+                    for (int i = 0; i < points.size() - 1; i++) {
+                        details.add(new GoogleRoutesService.RouteDetails(
+                                List.of(points.get(i), points.get(i + 1)),
+                                List.of(new NavigationStep("segment " + i, "DEPART", 1, 1, 0, 1))
+                        ));
+                    }
+                    return details;
+                });
+
+        Journey journey = routerFor(graph, googleRoutesService).findJourney(
+                originLat,
+                originLon,
+                destinationLat,
+                destinationLon,
+                null,
+                null,
+                LocalTime.NOON,
+                TEST_DATE,
+                true,
+                false
+        );
+
+        assertThat(journey.legs()).extracting(Leg::mode).containsExactly("WALK", "BIKE", "WALK");
+        ArgumentCaptor<List<com.sibam.graph.model.GeoPoint>> pointsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(googleRoutesService, times(1)).fetchRouteDetails(pointsCaptor.capture(), eq(EdgeType.WALK));
+        assertThat(pointsCaptor.getValue()).hasSize(4);
+        assertThat(journey.legs()).allSatisfy(leg -> assertThat(leg.navigationAvailable()).isTrue());
     }
 
     @Test
@@ -345,7 +405,79 @@ class AStarRouterTest {
     }
 
     @Test
-    void busLegOmitsBoardingDelayWhenServiceThrows() throws Exception {
+    void busLegUsesPredictionWhenStoredDelayIsOlderThanOneHour() throws Exception {
+        RouteInfo route = new RouteInfo(84, 1001, "Pekre", "P18");
+        Node start = new BusNode(1, 46.0, 15.0, "Start");
+        Node end = new BusNode(2, 46.0, 15.001, "End");
+        Graph graph = new Graph(
+                Map.of(1, start, 2, end),
+                Map.of(1, List.of(bus(1, 2, 60, route)), 2, List.of())
+        );
+
+        TripEntity staleTrip = new TripEntity();
+        staleTrip.setRouteId("84");
+        staleTrip.setRecordedAt(OffsetDateTime.now(ROUTING_ZONE).minusMinutes(61));
+        StopDelayEntity staleDelay = new StopDelayEntity();
+        staleDelay.setTrip(staleTrip);
+        staleDelay.setStopSequence(1);
+        staleDelay.setDelaySeconds(30);
+
+        StopDelaySnapshotRepository delayRepository = mock(StopDelaySnapshotRepository.class);
+        when(delayRepository.findFirstByTrip_RouteIdAndStopSequenceOrderByTrip_RecordedAtDesc("84", 1))
+                .thenReturn(Optional.of(staleDelay));
+
+        BusDelayPredictionService predService = mock(BusDelayPredictionService.class);
+        when(predService.predictDelay(anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
+                anyFloat(), anyFloat(), anyFloat(), anyInt())).thenReturn(90);
+
+        Journey journey = routerWithBusFallback(graph, predService, delayRepository).findJourney(
+                start.getLat(), start.getLon(), end.getLat(), end.getLon(),
+                null, null, LocalTime.NOON, TEST_DATE, true, true
+        );
+
+        Leg busLeg = journey.legs().stream()
+                .filter(l -> "BUS".equals(l.mode())).findFirst().orElseThrow();
+        assertThat(busLeg.busDelayPrediction().predictedBoardingDelaySeconds()).isEqualTo(90);
+    }
+
+    @Test
+    void busLegUsesFreshStoredDelayBeforePrediction() throws Exception {
+        RouteInfo route = new RouteInfo(84, 1001, "Pekre", "P18");
+        Node start = new BusNode(1, 46.0, 15.0, "Start");
+        Node end = new BusNode(2, 46.0, 15.001, "End");
+        Graph graph = new Graph(
+                Map.of(1, start, 2, end),
+                Map.of(1, List.of(bus(1, 2, 60, route)), 2, List.of())
+        );
+
+        TripEntity freshTrip = new TripEntity();
+        freshTrip.setRouteId("84");
+        freshTrip.setRecordedAt(OffsetDateTime.now(ROUTING_ZONE).minusMinutes(30));
+        StopDelayEntity freshDelay = new StopDelayEntity();
+        freshDelay.setTrip(freshTrip);
+        freshDelay.setStopSequence(1);
+        freshDelay.setDelaySeconds(45);
+
+        StopDelaySnapshotRepository delayRepository = mock(StopDelaySnapshotRepository.class);
+        when(delayRepository.findFirstByTrip_RouteIdAndStopSequenceOrderByTrip_RecordedAtDesc("84", 1))
+                .thenReturn(Optional.of(freshDelay));
+
+        BusDelayPredictionService predService = mock(BusDelayPredictionService.class);
+
+        Journey journey = routerWithBusFallback(graph, predService, delayRepository).findJourney(
+                start.getLat(), start.getLon(), end.getLat(), end.getLon(),
+                null, null, LocalTime.NOON, TEST_DATE, true, true
+        );
+
+        Leg busLeg = journey.legs().stream()
+                .filter(l -> "BUS".equals(l.mode())).findFirst().orElseThrow();
+        assertThat(busLeg.busDelayPrediction().predictedBoardingDelaySeconds()).isEqualTo(45);
+        verify(predService, never()).predictDelay(anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
+                anyFloat(), anyFloat(), anyFloat(), anyInt());
+    }
+
+    @Test
+    void busLegUsesNeutralBoardingDelayWhenServiceThrows() throws Exception {
         RouteInfo route = new RouteInfo(84, 1001, "Pekre", "P18");
         Node start = new BusNode(1, 46.0, 15.0, "Start");
         Node end   = new BusNode(2, 46.0, 15.001, "End");
@@ -366,7 +498,8 @@ class AStarRouterTest {
 
         Leg busLeg = journey.legs().stream()
                 .filter(l -> "BUS".equals(l.mode())).findFirst().orElseThrow();
-        assertThat(busLeg.busDelayPrediction()).isNull();
+        assertThat(busLeg.busDelayPrediction()).isNotNull();
+        assertThat(busLeg.busDelayPrediction().predictedBoardingDelaySeconds()).isZero();
     }
 
     @Test
@@ -438,6 +571,37 @@ class AStarRouterTest {
                 vaoSerializer, mock(GoogleRoutesService.class), new HeuristicService(),
                 new WeightedCostFunction(routingConfig()), routingConfig(),
                 null, null, predService
+        );
+    }
+
+    private AStarRouter routerWithBusFallback(
+            Graph graph,
+            BusDelayPredictionService predService,
+            StopDelaySnapshotRepository delayRepository
+    ) {
+        InMemoryGraphStore graphStore = new InMemoryGraphStore();
+        graphStore.replaceGraph(graph);
+        HelperService helperService = new HelperService();
+        VaoSerializer vaoSerializer = mock(VaoSerializer.class);
+        when(vaoSerializer.getSchedulesMap()).thenReturn(Map.of());
+        when(vaoSerializer.getSchedulesMap(any(LocalDate.class))).thenReturn(Map.of());
+        when(vaoSerializer.getScheduleDates()).thenReturn(List.of());
+        when(vaoSerializer.isRouteActiveOnDate(anyInt(), any(LocalDate.class))).thenReturn(true);
+        when(vaoSerializer.getRoutesMap()).thenReturn(Map.of());
+        return new AStarRouter(
+                graphStore,
+                new SpatialSearchService(helperService),
+                helperService,
+                vaoSerializer,
+                mock(GoogleRoutesService.class),
+                new HeuristicService(),
+                new WeightedCostFunction(routingConfig()),
+                routingConfig(),
+                null,
+                null,
+                predService,
+                delayRepository,
+                new FallbackProperties(60)
         );
     }
 

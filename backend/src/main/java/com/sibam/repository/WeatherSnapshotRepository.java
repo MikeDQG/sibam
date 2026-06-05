@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface WeatherSnapshotRepository extends JpaRepository<WeatherSnapshot, UUID> {
     Optional<WeatherSnapshot> findFirstByOrderByRecordedAtDesc();
+    Optional<WeatherSnapshot> findFirstByRecordedAtAfterOrderByRecordedAtDesc(java.time.OffsetDateTime recordedAfter);
 }

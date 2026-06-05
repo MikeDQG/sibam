@@ -130,6 +130,17 @@ class WeatherRoutingAdjusterTest {
         assertThat(adjuster.adjustedTransferPenaltySeconds(300)).isEqualTo(300);
     }
 
+    @Test
+    void staleWeatherFallsBackToNeutralRouting() {
+        WeatherSnapshot stale = snapshot(5.0, 2.0, "Rain");
+        stale.setRecordedAt(OffsetDateTime.now().minusMinutes(61));
+        WeatherRoutingAdjuster adjuster = adjusterFor(stale);
+
+        assertThat(adjuster.adjustedEdgeCost(EdgeType.WALK, 100)).isEqualTo(100);
+        assertThat(adjuster.adjustedEdgeCost(EdgeType.BIKE, 100)).isEqualTo(100);
+        assertThat(adjuster.adjustedTransferPenaltySeconds(300)).isEqualTo(300);
+    }
+
     private WeatherRoutingAdjuster adjusterFor(WeatherSnapshot snapshot) {
         WeatherSnapshotRepository repository = mock(WeatherSnapshotRepository.class);
         when(repository.findFirstByOrderByRecordedAtDesc()).thenReturn(Optional.of(snapshot));

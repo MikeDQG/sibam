@@ -1,9 +1,11 @@
 package com.sibam.service;
 
+import com.sibam.config.FallbackProperties;
 import com.sibam.dto.mbajk.AvailabilitiesDto;
 import com.sibam.dto.mbajk.BikeStopDto;
 import com.sibam.dto.mbajk.PositionDto;
 import com.sibam.dto.mbajk.TotalStandsDto;
+import com.sibam.dto.prediction.BikePredictionResponse;
 import com.sibam.engine.vao.BikeStationVao;
 import com.sibam.integration.mbajk.MBajkClient;
 import com.sibam.persistence.BikeStation;
@@ -14,7 +16,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -25,6 +30,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class MBajkDataServiceTest {
+    private static final Clock FIXED_CLOCK = Clock.fixed(
+            Instant.parse("2026-06-04T10:00:00Z"),
+            ZoneId.of("Europe/Ljubljana")
+    );
+
     private MBajkClient mbajkClient;
     private BikeStationRepository bikeStationRepository;
     private BikeStationSnapshotRepository bikeStationSnapshotRepository;
@@ -54,7 +64,7 @@ class MBajkDataServiceTest {
         snapshot.setMechanicalBikes(3);
         snapshot.setElectricalBikes(2);
         snapshot.setStatus("OPEN");
-        snapshot.setRecordedAt(OffsetDateTime.now());
+        snapshot.setRecordedAt(OffsetDateTime.now(FIXED_CLOCK));
 
         when(bikeStationRepository.findAll()).thenReturn(List.of(station));
         when(bikeStationSnapshotRepository.findFirstByStationOrderByRecordedAtDesc(station))
@@ -70,6 +80,58 @@ class MBajkDataServiceTest {
         assertThat(vao.availability().freeBikes()).isEqualTo(5);
         assertThat(vao.availability().freeStands()).isEqualTo(7);
         assertThat(vao.availability().status()).isEqualTo("OPEN");
+    }
+
+    @Test
+    void getBikeStationVaosUsesRealSnapshotYoungerThanOneHour() throws Exception {
+        BikePredictionService predictionService = mock(BikePredictionService.class);
+        MBajkDataService fallbackService = new MBajkDataService(
+                mbajkClient,
+                bikeStationRepository,
+                bikeStationSnapshotRepository,
+                predictionService,
+                new FallbackProperties(60),
+                FIXED_CLOCK
+        );
+        BikeStation station = station(15);
+        BikeStationSnapshot snapshot = snapshot(6, 4, OffsetDateTime.now(FIXED_CLOCK).minusMinutes(30));
+
+        when(bikeStationRepository.findAll()).thenReturn(List.of(station));
+        when(bikeStationSnapshotRepository.findFirstByStationOrderByRecordedAtDesc(station))
+                .thenReturn(Optional.of(snapshot));
+
+        BikeStationVao result = fallbackService.getBikeStationVaos().getFirst();
+
+        assertThat(result.availability().freeBikes()).isEqualTo(6);
+        assertThat(result.availability().freeStands()).isEqualTo(4);
+        verify(predictionService, never()).predict(any());
+    }
+
+    @Test
+    void getBikeStationVaosUsesPredictionWhenLatestSnapshotIsOlderThanOneHour() throws Exception {
+        BikePredictionService predictionService = mock(BikePredictionService.class);
+        when(predictionService.predict(any()))
+                .thenReturn(new BikePredictionResponse(8, 2, 0.9, 0.8));
+        MBajkDataService fallbackService = new MBajkDataService(
+                mbajkClient,
+                bikeStationRepository,
+                bikeStationSnapshotRepository,
+                predictionService,
+                new FallbackProperties(60),
+                FIXED_CLOCK
+        );
+        BikeStation station = station(15);
+        BikeStationSnapshot snapshot = snapshot(1, 9, OffsetDateTime.now(FIXED_CLOCK).minusMinutes(61));
+
+        when(bikeStationRepository.findAll()).thenReturn(List.of(station));
+        when(bikeStationSnapshotRepository.findFirstByStationOrderByRecordedAtDesc(station))
+                .thenReturn(Optional.of(snapshot));
+
+        BikeStationVao result = fallbackService.getBikeStationVaos().getFirst();
+
+        assertThat(result.availability().freeBikes()).isEqualTo(8);
+        assertThat(result.availability().freeStands()).isEqualTo(2);
+        assertThat(result.availability().status()).isEqualTo("PREDICTED");
     }
 
     @Test
@@ -106,6 +168,28 @@ class MBajkDataServiceTest {
     }
 
     // --- ingestBikesData ---
+
+    private BikeStation station(int number) {
+        BikeStation station = new BikeStation();
+        station.setNumber(number);
+        station.setName("Postaja " + number);
+        station.setAddress("Partizanska " + number);
+        station.setLatitude(46.556);
+        station.setLongitude(15.646);
+        station.setCapacity(12);
+        return station;
+    }
+
+    private BikeStationSnapshot snapshot(int bikes, int stands, OffsetDateTime recordedAt) {
+        BikeStationSnapshot snapshot = new BikeStationSnapshot();
+        snapshot.setBikes(bikes);
+        snapshot.setStands(stands);
+        snapshot.setMechanicalBikes(bikes);
+        snapshot.setElectricalBikes(0);
+        snapshot.setStatus("OPEN");
+        snapshot.setRecordedAt(recordedAt);
+        return snapshot;
+    }
 
     private BikeStopDto bikeStopDto(int number) {
         return new BikeStopDto(

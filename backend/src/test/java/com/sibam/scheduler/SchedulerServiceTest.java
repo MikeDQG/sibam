@@ -1,5 +1,8 @@
 package com.sibam.scheduler;
 
+import ai.onnxruntime.OrtException;
+import com.sibam.service.BikePredictionService;
+import com.sibam.service.BusDelayPredictionService;
 import com.sibam.service.GTFSRTDataService;
 import com.sibam.service.MBajkDataService;
 import com.sibam.service.WeatherDataService;
@@ -31,14 +34,18 @@ class SchedulerServiceTest {
     private MBajkDataService mbajkDataService;
     private WeatherDataService weatherDataService;
     private GTFSRTDataService gtfsRTDataService;
+    private BikePredictionService bikePredictionService;
+    private BusDelayPredictionService busDelayPredictionService;
     private SchedulerService scheduler;
 
     @BeforeEach
     void setUp() {
-        mbajkDataService    = mock(MBajkDataService.class);
-        weatherDataService  = mock(WeatherDataService.class);
-        gtfsRTDataService   = mock(GTFSRTDataService.class);
-        scheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, MIDDAY);
+        mbajkDataService         = mock(MBajkDataService.class);
+        weatherDataService       = mock(WeatherDataService.class);
+        gtfsRTDataService        = mock(GTFSRTDataService.class);
+        bikePredictionService    = mock(BikePredictionService.class);
+        busDelayPredictionService = mock(BusDelayPredictionService.class);
+        scheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, bikePredictionService, busDelayPredictionService, MIDDAY);
     }
 
     // fetchBikeIngestion
@@ -105,7 +112,7 @@ class SchedulerServiceTest {
 
     @Test
     void fetchBikeIngestionSkipsOutsideOperatingHours() {
-        SchedulerService nightScheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, NIGHT);
+        SchedulerService nightScheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, bikePredictionService, busDelayPredictionService, NIGHT);
         ReflectionTestUtils.setField(nightScheduler, "fetchBikeIngestion", true);
 
         nightScheduler.fetchBikeIngestion();
@@ -115,7 +122,7 @@ class SchedulerServiceTest {
 
     @Test
     void fetchWeatherIngestionSkipsOutsideOperatingHours() {
-        SchedulerService nightScheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, NIGHT);
+        SchedulerService nightScheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, bikePredictionService, busDelayPredictionService, NIGHT);
         ReflectionTestUtils.setField(nightScheduler, "fetchWeatherIngestion", true);
 
         nightScheduler.fetchWeatherIngestion();
@@ -125,7 +132,7 @@ class SchedulerServiceTest {
 
     @Test
     void fetchBusIngestionSkipsOutsideOperatingHours() {
-        SchedulerService nightScheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, NIGHT);
+        SchedulerService nightScheduler = new SchedulerService(mbajkDataService, weatherDataService, gtfsRTDataService, bikePredictionService, busDelayPredictionService, NIGHT);
         ReflectionTestUtils.setField(nightScheduler, "fetchBusIngestion", true);
 
         nightScheduler.fetchBusIngestion();
@@ -157,5 +164,35 @@ class SchedulerServiceTest {
         doThrow(new RuntimeException("network error")).when(gtfsRTDataService).ingestRealtimeTrips(any());
 
         assertThatCode(() -> scheduler.fetchBusIngestion()).doesNotThrowAnyException();
+    }
+
+    // reloadMlModels
+
+    @Test
+    void reloadMlModelsSkipsWhenFlagIsFalse() throws Exception {
+        ReflectionTestUtils.setField(scheduler, "reloadMlModels", false);
+
+        scheduler.reloadMlModels();
+
+        verify(bikePredictionService, never()).reloadModels();
+        verify(busDelayPredictionService, never()).reloadModel();
+    }
+
+    @Test
+    void reloadMlModelsCallsBothServicesWhenFlagIsTrue() throws Exception {
+        ReflectionTestUtils.setField(scheduler, "reloadMlModels", true);
+
+        scheduler.reloadMlModels();
+
+        verify(bikePredictionService).reloadModels();
+        verify(busDelayPredictionService).reloadModel();
+    }
+
+    @Test
+    void reloadMlModelsDoesNotPropagateException() throws Exception {
+        ReflectionTestUtils.setField(scheduler, "reloadMlModels", true);
+        doThrow(new OrtException("download failed")).when(bikePredictionService).reloadModels();
+
+        assertThatCode(() -> scheduler.reloadMlModels()).doesNotThrowAnyException();
     }
 }

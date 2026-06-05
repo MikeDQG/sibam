@@ -5,8 +5,10 @@ import com.sibam.dto.location.SavedLocationRequest;
 import com.sibam.persistence.SavedLocation;
 import com.sibam.service.SavedLocationService;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,6 +48,17 @@ class SavedLocationControllerTest {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].name").value("Home"))
                 .andExpect(jsonPath("$[1].name").value("Work"));
+    }
+
+    @Test
+    void getLocationsForForeignUserReturns403() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(service.getLocationsForUser(eq(userId), eq("uid-1")))
+                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+
+        mockMvc.perform(get("/api/locations/{userId}", userId)
+                        .requestAttr("uid", "uid-1"))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -90,5 +103,16 @@ class SavedLocationControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(service).deleteLocation(eq(locationId), eq("uid-1"));
+    }
+
+    @Test
+    void deleteForeignLocationReturns403() throws Exception {
+        UUID locationId = UUID.randomUUID();
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
+                .when(service).deleteLocation(eq(locationId), eq("uid-1"));
+
+        mockMvc.perform(delete("/api/locations/{locationId}", locationId)
+                        .requestAttr("uid", "uid-1"))
+                .andExpect(status().isForbidden());
     }
 }

@@ -40,7 +40,28 @@ public class BikePredictionService {
     }
 
 
-    public BikePredictionResponse predict(BikePredictionRequest req) throws OrtException {
+    public synchronized void reloadModels() throws OrtException {
+        OrtSession newBikes          = loadFromGold("model_bikes.onnx");
+        OrtSession newStands         = loadFromGold("model_stands.onnx");
+        OrtSession newBikeAvailable  = loadFromGold("model_available_bike.onnx");
+        OrtSession newStandAvailable = loadFromGold("model_available_stand.onnx");
+
+        closeQuietly(modelBikes);
+        closeQuietly(modelStands);
+        closeQuietly(modelBikeAvailable);
+        closeQuietly(modelStandAvailable);
+
+        modelBikes          = newBikes;
+        modelStands         = newStands;
+        modelBikeAvailable  = newBikeAvailable;
+        modelStandAvailable = newStandAvailable;
+    }
+
+    private void closeQuietly(OrtSession session) {
+        try { session.close(); } catch (OrtException e) { /* best-effort close before reload */ }
+    }
+
+    public synchronized BikePredictionResponse predict(BikePredictionRequest req) throws OrtException {
         float[] features = {
                 req.stationNumber(),
                 req.hour(),

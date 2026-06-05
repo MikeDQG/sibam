@@ -12,7 +12,7 @@
   <a href="https://sibam.atlassian.net/jira/software/projects/SCRUM/boards/1?atlOrigin=eyJpIjoiZGJkYjM2NDQxN2I1NDdlZDkxNDlmNjM0MzJmNGFmNDUiLCJwIjoiaiJ9">Jira projekt</a>
 </p>
 
-šibaM je spletna aplikacija za načrtovanje multimodalnih poti po Mariboru in okolici. Združuje podatke o avtobusnih prevozih (Marprom/GTFS), mestnih kolesih (mBajk) in vremenskih razmerah ter uporabniku predlaga optimalno pot glede na čas, vreme in zelene površine.
+šibaM je spletna aplikacija za načrtovanje multimodalnih poti po Mariboru in okolici. Združuje podatke o avtobusnih prevozih (Marprom/GTFS), mestnih kolesih (mBajk) in vremenskih razmerah ter uporabniku predlaga optimalno pot glede na čas in vreme.
 
 ---
 
@@ -22,9 +22,13 @@ Aplikacija pokriva območje mestnega potniškega prometa Marprom — Mestno obč
 
 **Glavne funkcionalnosti:**
 
-- Načrtovanje multimodalne poti (avtobus + kolo + peš),
+- Registracija in prijava,
+- načrtovanje multimodalne poti (avtobus + kolo + peš),
 - prilagajanje poti glede na vremenske razmere,
-- načrtovanje zelene poti po mestu,
+- ogled navodil za pot korak-za-korakom,
+- sledenje navodilom za pot v realnem času,
+- shranjevanje priljubljenih poti,
+- shranjevanje priljubljenih lokacij
 - uporabniški račun s shranjenimi lokacijami.
 
 ---

@@ -6,6 +6,7 @@ import com.sibam.integration.supabase.SupabaseStorageClient;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.util.Map;
@@ -29,7 +30,7 @@ public class BusDelayPredictionService {
     }
 
     @PostConstruct
-    public void load() throws Exception {
+    public void load() throws OrtException, IOException {
         env = OrtEnvironment.getEnvironment();
 
         byte[] bytes = supabaseStorageClient.download("gold", "models/model_bus_delay.onnx");
@@ -39,7 +40,16 @@ public class BusDelayPredictionService {
         directionMapping = new ObjectMapper().readValue(is, new TypeReference<>() {});
     }
 
-    public int predictDelay(int routeId, int stopSequence, int hour, int dayOfWeek,
+    public synchronized void reloadModel() throws OrtException {
+        OrtSession newModel = env.createSession(
+                supabaseStorageClient.download("gold", "models/model_bus_delay.onnx"),
+                new OrtSession.SessionOptions()
+        );
+        try { model.close(); } catch (OrtException e) { /* best-effort close before reload */ }
+        model = newModel;
+    }
+
+    public synchronized int predictDelay(int routeId, int stopSequence, int hour, int dayOfWeek,
                             int isWeekend, float temperature, float rain, float windSpeed,
                             int stopId) throws OrtException {
 

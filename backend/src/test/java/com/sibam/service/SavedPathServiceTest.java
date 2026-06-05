@@ -6,6 +6,7 @@ import com.sibam.persistence.SavedPath;
 import com.sibam.persistence.User;
 import com.sibam.repository.SavedPathRepository;
 import com.sibam.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
@@ -79,6 +80,22 @@ class SavedPathServiceTest {
         verify(savedPathRepository, never()).save(any());
     }
 
+    @Test
+    void savePathThrowsNotFoundWhenUserDoesNotExist() {
+        UUID userId = UUID.randomUUID();
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        Journey journey = dummyJourney();
+
+        assertThatThrownBy(() ->
+                service.savePath(userId, "Trip", journey, "uid-ok")
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+
+        verify(savedPathRepository, never()).save(any());
+    }
+
     // --- getPathsForUser ---
 
     @Test
@@ -103,6 +120,21 @@ class SavedPathServiceTest {
         assertThatThrownBy(() ->
                 service.getPathsForUser(userId, "wrong-uid")
         ).isInstanceOf(ResponseStatusException.class);
+
+        verify(savedPathRepository, never()).findByUserId(any());
+    }
+
+    @Test
+    void getPathsForUserThrowsNotFoundWhenUserDoesNotExist() {
+        UUID userId = UUID.randomUUID();
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                service.getPathsForUser(userId, "uid-ok")
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
 
         verify(savedPathRepository, never()).findByUserId(any());
     }
@@ -133,6 +165,21 @@ class SavedPathServiceTest {
         assertThatThrownBy(() ->
                 service.deletePath(pathId, "wrong-uid")
         ).isInstanceOf(ResponseStatusException.class);
+
+        verify(savedPathRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void deletePathThrowsNotFoundWhenPathDoesNotExist() {
+        UUID pathId = UUID.randomUUID();
+        when(savedPathRepository.findById(pathId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                service.deletePath(pathId, "uid-ok")
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
 
         verify(savedPathRepository, never()).deleteById(any());
     }

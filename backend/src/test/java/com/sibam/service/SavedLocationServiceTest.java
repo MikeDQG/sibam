@@ -4,6 +4,7 @@ import com.sibam.persistence.SavedLocation;
 import com.sibam.persistence.User;
 import com.sibam.repository.SavedLocationRepository;
 import com.sibam.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
@@ -69,6 +70,21 @@ class SavedLocationServiceTest {
         verify(savedLocationRepository, never()).save(any());
     }
 
+    @Test
+    void saveLocationThrowsNotFoundWhenUserDoesNotExist() {
+        UUID userId = UUID.randomUUID();
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                service.saveLocation(userId, "Dom", "Partizanska 1", 46.556, 15.646, "#FF5733", null, "uid-ok")
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+
+        verify(savedLocationRepository, never()).save(any());
+    }
+
     // updateLocation
 
     @Test
@@ -109,6 +125,21 @@ class SavedLocationServiceTest {
         verify(savedLocationRepository, never()).save(any());
     }
 
+    @Test
+    void updateLocationThrowsNotFoundWhenLocationDoesNotExist() {
+        UUID locationId = UUID.randomUUID();
+        when(savedLocationRepository.findById(locationId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                service.updateLocation(locationId, "New", "Addr", 46.0, 15.0, "#000", null, "uid-ok")
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+
+        verify(savedLocationRepository, never()).save(any());
+    }
+
     // deleteLocation
 
     @Test
@@ -139,6 +170,21 @@ class SavedLocationServiceTest {
         assertThatThrownBy(() ->
                 service.deleteLocation(locationId, "wrong-uid")
         ).isInstanceOf(ResponseStatusException.class);
+
+        verify(savedLocationRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void deleteLocationThrowsNotFoundWhenLocationDoesNotExist() {
+        UUID locationId = UUID.randomUUID();
+        when(savedLocationRepository.findById(locationId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                service.deleteLocation(locationId, "uid-ok")
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
 
         verify(savedLocationRepository, never()).deleteById(any());
     }
@@ -174,6 +220,21 @@ class SavedLocationServiceTest {
         assertThatThrownBy(() ->
                 service.getLocationsForUser(userId, "wrong-uid")
         ).isInstanceOf(ResponseStatusException.class);
+
+        verify(savedLocationRepository, never()).findByUserId(any());
+    }
+
+    @Test
+    void getLocationsForUserThrowsNotFoundWhenUserDoesNotExist() {
+        UUID userId = UUID.randomUUID();
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                service.getLocationsForUser(userId, "uid-ok")
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
 
         verify(savedLocationRepository, never()).findByUserId(any());
     }

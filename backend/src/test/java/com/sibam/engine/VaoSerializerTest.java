@@ -1,8 +1,10 @@
 package com.sibam.engine;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sibam.engine.vao.BusStopVao;
 import com.sibam.engine.vao.DailyScheduleCacheVao;
 import com.sibam.engine.vao.LineScheduleVao;
+import com.sibam.engine.vao.RouteVao;
 import com.sibam.engine.vao.RouteScheduleVao;
 import com.sibam.engine.vao.StopScheduleVao;
 import org.junit.jupiter.api.Test;
@@ -267,6 +269,79 @@ class VaoSerializerTest {
         serializer.refreshWeeklyScheduleCacheNightly();
 
         verify(mapper, never()).mapSchedules(any(LocalDate.class));
+    }
+
+    @Test
+    void saveToDiskWritesStaticAndTodayScheduleSnapshots() {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+        ReflectionTestUtils.setField(serializer, "busStopsMap", Map.of(
+                1, new BusStopVao(1, "Stop", "Address", 46.55, 15.64)
+        ));
+        ReflectionTestUtils.setField(serializer, "routesMap", Map.of(
+                10, new RouteVao(10, 1, "1", "Center", "Center", List.of(), List.of())
+        ));
+        ReflectionTestUtils.setField(serializer, "schedulesMap", schedule(7));
+
+        serializer.saveToDisk();
+
+        Path vaoDir = tempDir.resolve("marprom").resolve("vao");
+        assertThat(vaoDir.resolve("busStops.json")).exists();
+        assertThat(vaoDir.resolve("routes.json")).exists();
+        assertThat(vaoDir.resolve("schedules.json")).exists();
+        assertThat(serializer.cacheExists()).isFalse();
+    }
+
+    @Test
+    void loadFromDiskLoadsStaticCacheAndScheduleForToday() throws Exception {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer writer = serializer(mapper, tempDir);
+        BusStopVao stop = new BusStopVao(1, "Stop", "Address", 46.55, 15.64);
+        RouteVao route = new RouteVao(10, 1, "1", "Center", "Center", List.of(), List.of(stop));
+        Map<Integer, StopScheduleVao> todaySchedule = schedule(44);
+
+        ReflectionTestUtils.setField(writer, "busStopsMap", Map.of(1, stop));
+        ReflectionTestUtils.setField(writer, "routesMap", Map.of(10, route));
+        writer.saveToDisk();
+        writeCachedSchedule(tempDir, TODAY, "today-key", todaySchedule, List.of(10));
+
+        VaoSerializer reader = serializer(mapper, tempDir);
+        ReflectionTestUtils.setField(reader, "refreshDaysAhead", 0);
+
+        assertThat(reader.loadFromDisk()).isTrue();
+        assertThat(reader.getBusStopsMap()).containsEntry(1, stop);
+        assertThat(reader.getRoutesMap()).containsEntry(10, route);
+        assertThat(reader.getSchedulesMap()).isEqualTo(todaySchedule);
+        verify(mapper, never()).mapBusStops();
+        verify(mapper, never()).mapRoutes();
+        verify(mapper, never()).mapSchedules(any(LocalDate.class));
+    }
+
+    @Test
+    void loadFromDiskReturnsFalseWhenStaticCacheIsMissing() {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+
+        assertThat(serializer.loadFromDisk()).isFalse();
+        assertThat(serializer.cacheExists()).isFalse();
+    }
+
+    @Test
+    void refreshWeeklyScheduleCacheFallsBackToNewestCachedScheduleWhenGenerationFails() throws Exception {
+        MarpromDtoToVaoMapper mapper = mock(MarpromDtoToVaoMapper.class);
+        VaoSerializer serializer = serializer(mapper, tempDir);
+        ReflectionTestUtils.setField(serializer, "refreshDaysAhead", 0);
+
+        Map<Integer, StopScheduleVao> cachedSchedule = schedule(77);
+        writeCachedSchedule(tempDir, TODAY.minusDays(2), "old-key", cachedSchedule, List.of(123));
+        when(mapper.mapSchedules(TODAY)).thenThrow(new IllegalStateException("Marprom unavailable"));
+
+        serializer.refreshWeeklyScheduleCache();
+
+        assertThat(serializer.getSchedulesMap()).isEqualTo(cachedSchedule);
+        assertThat(serializer.getSchedulesMap(TODAY)).isEqualTo(cachedSchedule);
+        assertThat(serializer.isRouteActiveOnDate(123, TODAY)).isTrue();
+        assertThat(serializer.isRouteActiveOnDate(999, TODAY)).isFalse();
     }
 
     private Map<Integer, StopScheduleVao> schedule(int stopId) {

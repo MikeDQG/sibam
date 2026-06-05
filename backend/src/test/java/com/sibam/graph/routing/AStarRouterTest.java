@@ -372,6 +372,28 @@ class AStarRouterTest {
                 .hasMessageContaining("Izhodišče");
     }
 
+    @Test
+    void findPathThrowsWhenGraphIsNotInitialized() {
+        HelperService helperService = new HelperService();
+        AStarRouter router = new AStarRouter(
+                new InMemoryGraphStore(),
+                new SpatialSearchService(helperService),
+                helperService,
+                mock(VaoSerializer.class),
+                mock(GoogleRoutesService.class),
+                new HeuristicService(),
+                new WeightedCostFunction(routingConfig()),
+                routingConfig(),
+                null,
+                null,
+                null
+        );
+
+        assertThatThrownBy(() -> router.findPath(1, 2))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Graph is not initialized");
+    }
+
     // Bus delay prediction
 
     @Test

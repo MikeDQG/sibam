@@ -31,4 +31,41 @@ class HeuristicServiceTest {
                         org.assertj.core.data.Offset.offset(0.000001)
                 );
     }
+
+    @Test
+    void estimatesDefaultHeuristicWithHaversineDistanceAndMaxSpeed() {
+        Node current = new BusNode(1, 46.55, 15.64, "Current");
+        Node goal = new BusNode(2, 46.57, 15.60, "Goal");
+
+        double haversine = DistanceCalculator.haversineMeters(
+                current.getLat(),
+                current.getLon(),
+                goal.getLat(),
+                goal.getLon()
+        );
+
+        assertThat(heuristicService.estimateDistanceMeters(current, goal, null))
+                .isCloseTo(haversine, org.assertj.core.data.Offset.offset(0.000001));
+        assertThat(heuristicService.estimate(current, goal))
+                .isCloseTo(haversine / 30.0, org.assertj.core.data.Offset.offset(0.000001));
+    }
+
+    @Test
+    void estimatesWalkAndBikeTimeWithModeSpecificSpeeds() {
+        Node current = new BusNode(1, 46.55, 15.64, "Current");
+        Node goal = new BusNode(2, 46.57, 15.60, "Goal");
+        GeoPoint currentPoint = new GeoPoint(current.getLat(), current.getLon());
+        GeoPoint goalPoint = new GeoPoint(goal.getLat(), goal.getLon());
+
+        assertThat(heuristicService.estimate(current, goal, EdgeType.WALK))
+                .isCloseTo(
+                        DistanceCalculator.correctedDistanceMeters(currentPoint, goalPoint, EdgeType.WALK) / 2.0,
+                        org.assertj.core.data.Offset.offset(0.000001)
+                );
+        assertThat(heuristicService.estimate(current, goal, EdgeType.BIKE))
+                .isCloseTo(
+                        DistanceCalculator.correctedDistanceMeters(currentPoint, goalPoint, EdgeType.BIKE) / 6.0,
+                        org.assertj.core.data.Offset.offset(0.000001)
+                );
+    }
 }

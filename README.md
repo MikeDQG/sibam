@@ -93,6 +93,11 @@ Registrirani uporabniki si lahko shranijo priljubljene lokacije (npr. Dom, Služ
 
 ![Diagram primerov uporabe](docs/diagrami/DPU/DPU.png)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrami/DPU/DPUdark.png">
+  <img alt="Diagram primerov uporabe" src="docs/diagrami/DPU/DPU.png">
+</picture>
+
 ---
 
 ## Arhitektura
@@ -107,7 +112,6 @@ Sistem je sestavljen iz štirih ločenih procesov, ki si delijo skupno infrastru
 | **ML pipeline**    | Python 3.11, scikit-learn, pandas, ONNX           | GitHub Actions (nočni cron) |
 
 ```mermaid
-%%{init: {'themeVariables': {'clusterBkg': '#dbeafe', 'clusterBorder': '#93c5fd'}}}%%
 flowchart LR
     User([Browser / PWA])
 

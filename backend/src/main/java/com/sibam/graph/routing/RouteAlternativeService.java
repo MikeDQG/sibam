@@ -228,7 +228,7 @@ public class RouteAlternativeService {
                 originAddress,
                 destination,
                 destinationAddress,
-                labelFor(rank, candidate),
+                labelFor(rank, modes),
                 candidate.durationSeconds(),
                 parseInt(journey.distance()),
                 modes,
@@ -236,12 +236,30 @@ public class RouteAlternativeService {
         );
     }
 
-    private String labelFor(int rank, Candidate candidate) {
+    private String labelFor(int rank, List<String> modes) {
         if (rank == 1) {
             return RouteAlternativeLabel.FASTEST.displayName();
         }
 
-        return candidate.label().displayName();
+        Set<String> uniqueModes = new LinkedHashSet<>(modes);
+        boolean hasBus = uniqueModes.contains(EdgeType.BUS.name());
+        boolean hasBike = uniqueModes.contains(EdgeType.BIKE.name());
+        boolean hasWalk = uniqueModes.contains(EdgeType.WALK.name());
+
+        if (hasBus && hasBike) {
+            return RouteAlternativeLabel.MULTIMODAL.displayName();
+        }
+        if (hasBus) {
+            return RouteAlternativeLabel.TRANSIT_FRIENDLY.displayName();
+        }
+        if (hasBike) {
+            return RouteAlternativeLabel.BIKE_FRIENDLY.displayName();
+        }
+        if (hasWalk) {
+            return RouteAlternativeLabel.WALK_FRIENDLY.displayName();
+        }
+
+        return RouteAlternativeLabel.ALTERNATIVE.displayName();
     }
 
     private int parseInt(String value) {

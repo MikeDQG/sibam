@@ -183,6 +183,7 @@ export const MainMap = ({
             <RoutePolyline
               legs={legs}
               fitBoundsTrigger={routeFitBoundsTrigger}
+              theme={theme === "dark" ? "dark" : "light"}
               onLegClick={onLegClick}
             />
           )}

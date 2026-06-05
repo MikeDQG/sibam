@@ -112,19 +112,33 @@ type RoutePolylineProps = {
   legs: RouteLeg[];
   fitBoundsTrigger?: number;
   interactive?: boolean;
+  theme?: "light" | "dark";
   onLegClick?: (leg: RouteLeg, position: MapPoint) => void;
 };
 
-const legColors: Record<string, string> = {
-  WALK: "#FBFFB9",
-  BIKE: "#FF9B42",
-  BUS: "#721121",
+const routeColors: Record<"light" | "dark", Record<string, string>> = {
+  light: {
+    WALK: "#2563EB",
+    BIKE: "#FF9B42",
+    BUS: "#721121",
+  },
+  dark: {
+    WALK: "#FBFFB9",
+    BIKE: "#FF9B42",
+    BUS: "#721121",
+  },
 };
+
+const fallbackRouteColor = "#ffffff";
+
+const getLegColor = (mode: string, theme: "light" | "dark") =>
+  routeColors[theme][mode] ?? fallbackRouteColor;
 
 export const RoutePolyline = ({
   legs,
   fitBoundsTrigger = 0,
   interactive = true,
+  theme = "dark",
   onLegClick,
 }: RoutePolylineProps) => {
   const map = useMap();
@@ -184,7 +198,7 @@ export const RoutePolyline = ({
     if (!map || legs.length === 0) return;
 
     const polylines = legs.map((leg) => {
-      const color = legColors[leg.mode] ?? "#ffffff";
+      const color = getLegColor(leg.mode, theme);
 
       const polyline = new google.maps.Polyline({
         map,
@@ -241,7 +255,7 @@ export const RoutePolyline = ({
         polyline.setMap(null);
       });
     };
-  }, [fitBoundsTrigger, interactive, map, legs]);
+  }, [fitBoundsTrigger, interactive, map, legs, theme]);
 
   return null;
 };

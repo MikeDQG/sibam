@@ -60,6 +60,10 @@ const formatBusDelay = (delaySeconds?: number) => {
     return null;
   }
 
+  if (delaySeconds < 0) {
+    return `${Math.ceil(Math.abs(delaySeconds) / 60)} min prej`;
+  }
+
   return Math.floor(delaySeconds / 60).toString();
 };
 

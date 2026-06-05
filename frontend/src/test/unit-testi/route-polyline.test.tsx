@@ -22,6 +22,10 @@ const polylineState = vi.hoisted(() => ({
   handlers: [] as ClickHandler[],
   removeListeners: [] as ReturnType<typeof vi.fn>[],
   setMapCalls: [] as unknown[],
+  polylineOptions: [] as {
+    icons?: { icon: { fillColor?: string } }[];
+    strokeColor?: string;
+  }[],
 }));
 
 vi.mock("@vis.gl/react-google-maps", () => ({
@@ -35,8 +39,10 @@ describe("RoutePolyline", () => {
     polylineState.handlers = [];
     polylineState.removeListeners = [];
     polylineState.setMapCalls = [];
+    polylineState.polylineOptions = [];
 
-    (globalThis as typeof globalThis & GoogleMapsMock).google.maps.Polyline = vi.fn(function Polyline() {
+    (globalThis as typeof globalThis & GoogleMapsMock).google.maps.Polyline = vi.fn(function Polyline(options) {
+      polylineState.polylineOptions.push(options);
       return {
         setMap: vi.fn((map: unknown) => polylineState.setMapCalls.push(map)),
         addListener: vi.fn((_eventName: string, handler: ClickHandler) => {
@@ -93,5 +99,14 @@ describe("RoutePolyline", () => {
     render(<RoutePolyline legs={routeLegs} interactive={false} />);
 
     expect(polylineState.handlers).toHaveLength(0);
+  });
+
+  it("za pes pot v light temi uporabi bolj kontrastno barvo", () => {
+    render(<RoutePolyline legs={routeLegs} theme='light' />);
+
+    expect(polylineState.polylineOptions[0].strokeColor).toBe("#2563EB");
+    expect(polylineState.polylineOptions[0].icons?.[0].icon.fillColor).toBe(
+      "#2563EB",
+    );
   });
 });

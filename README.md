@@ -58,7 +58,6 @@
     - [Frontend — Firebase Hosting](#frontend--firebase-hosting)
     - [ML pipeline — GitHub Actions](#ml-pipeline--github-actions-1)
     - [Startup sekvenca — Railway `prod`](#startup-sekvenca--railway-prod)
- 
 
 Podrobnejša dokumentacija projekta je znotraj mape /docs
 
@@ -147,7 +146,7 @@ flowchart LR
     FE --> Auth
     BE --> Auth
     BE --> DB
-    BE -->|bere ONNX modele| Storage
+    Storage -->|ONNX modeli| BE
     COLLECT -->|shranjuje surove podatke| DB
     DB -->|podatki za učenje| BRONZE
     BRONZE -->|shrani| Storage
@@ -170,6 +169,8 @@ Ključni sklopi:
 - **Avtentikacija** — Firebase Authentication (Google Sign-In in e-pošta/geslo); JWT žeton se pošilja v `Authorization` glavi vsakega zahtevka.
 
 Ob vsakem merge v `main` se frontend samodejno deploya na Firebase Hosting prek GitHub Actions. Odprti PR-ji dobijo preview kanal.
+
+![Frontend komponentni diagram](docs/diagrami/komponentni_diagrami/frontend_component_diagram.drawio.png)
 
 ---
 
@@ -198,6 +199,8 @@ Graf vsebuje dve vrsti vozlišč (`BUS_STOP`, `BIKE_STATION`) in tri vrste robov
 | `BikeEdge`    | Kolesarska etapa med dvema mBajk postajama                          |
 
 Iskanje poti poteka z algoritmom **A\***. Stroški robov se dinamično prilagajajo vremenu: dež podraži kolesarjenje in hojo, mraz poveča strošek daljših peš etap, vročina zmanjša privlačnost hoje. Algoritem vrne do tri najprimernejše poti.
+
+![Algoritem komponentni diagram](docs/diagrami/komponentni_diagrami/algorithm_component_diagram.png)
 
 #### ML inferenca
 
@@ -249,6 +252,8 @@ Združi bronze Parquet datoteke v učna dataseta. Za kolesa poveže snapshote po
 **3. `train_bikes.py` + `train_buses.py` — Gold plast**
 Trenirata modele iz silver dataseta in shranita ONNX datoteke v `gold/models/`. Vhodni tenzor za kolesarske modele je oblike `[1, 7]`, za avtobusni model `[1, 9]` — vrstni red značilk mora biti enak pri treningu in ONNX inferenci v backendu.
 
+![ML pipeline diagram](docs/diagrami/ml_pipeline_diagram.drawio-2.png)
+
 ---
 
 ### Skupna infrastruktura
@@ -269,6 +274,10 @@ Trenirata modele iz silver dataseta in shranita ONNX datoteke v `gold/models/`. 
 | `gold`   | Natrenirani ONNX modeli, ki jih backend naloži ob zagonu |
 
 **Firebase Authentication** — Google Sign-In in e-pošta/geslo. Backend verificira JWT žeton ob vsaki zahtevi prek Firebase Admin SDK.
+
+#### ER diagram
+
+![ER diagram](docs/diagrami/ER/er_diagram.png)
 
 ---
 
@@ -515,40 +524,50 @@ Status se sledi prek Jira statusa: To Do → In Progress → In Review → Done.
 
 ### Testiranje
 
-**Backend** uporablja JUnit 5 + Mockito + AssertJ za unit teste in Testcontainers za integracijske teste z bazo. Podrobnosti:
+#### Backend
 
-- [Testni načrt backenda](docs/backend/testing/testni-nacrt-backenda.md) — ogrodja, vrste testov, zagon
-- [Unit testi](docs/backend/testing/unit-testi.md) — strategija po domenah
-- [Integracijski testi](docs/backend/testing/integracijski-testi.md) — DB IT in ONNX IT
+Ogrodje: JUnit 5, Mockito, AssertJ, Testcontainers.
 
-**Frontend** uporablja Vitest za unit/integracijske teste in Playwright za E2E.
+Unit testi pokrivajo vse ključne domene:
 
-- [Testni načrt frontenda](docs/frontend/testiranje/testni-nacrt-frontenda.md)
-- [Integracijski testi frontenda](docs/frontend/testiranje/integracijski-testi-frontenda.md)
+| Domena         | Kaj se testira                                                                     |
+| -------------- | ---------------------------------------------------------------------------------- |
+| Routing graf   | Gradnja grafa, serializacija z Kryo, shranjevanje v pomnilnik                      |
+| API sloj       | Vsi kontrolerji — pravilni HTTP odgovori, validacija, napake                       |
+| Servisi        | Poslovna logika za vse servise (uporabniki, lokacije, poti, vreme, zajem podatkov) |
+| Integracija    | Parsiranje GTFS-RT in JCDecaux odgovorov, mapiranje v VAO                          |
+| Infrastruktura | Firebase filter, CORS konfiguracija, artifact cache, SHA-256                       |
+
+Integracijski testi (`it/`) zaganjajo pravo PostgreSQL instanco prek Testcontainers in preverjajo celoten tok od klica servisa do baze: `UserServiceIT`, `SavedLocationServiceIT`, `SavedPathServiceIT`, `GTFSRTDataServiceIT`, `MBajkDataServiceIT`. Ločeni ONNX integracijski testi naložijo prave modele iz Supabase Storage in preverijo obliko izhodnih tenzorjev: `BikePredictionServiceIT`, `BusDelayPredictionServiceIT`.
+
+```bash
+cd backend
+./mvnw test
+```
+
+#### Frontend
+
+Ogrodje: Vitest, React Testing Library, Playwright.
+
+Unit testi pokrivajo komponente in hooks: iskalna vrstica, prikaz poti in etap, navigacija korak-za-korakom, shranjene lokacije in poti, avtentikacija, upravljanje s temo, odzivnost UI, napake in loading stanja. Utility funkcije (`lib/utils`, `lib/text`) so prav tako pokrite.
+
+E2E testi z Playwrightom preverjajo ključne tokove: nalaganje aplikacije, registracija, prijava in odjava, navigacija med stranmi ter upravljanje z računom.
+
+```bash
+cd frontend
+npm test                  # unit testi z pokritostjo
+npx playwright test       # E2E testi
+```
 
 ---
 
 ### SonarQube
 
-Statična analiza kode se izvede samodejno ob vsakem pushu na `main` prek **SonarCloud**. Analiza pokriva backend in frontend ločeno.
+Statična analiza kode se izvede samodejno ob vsakem pushu na `main` prek **SonarCloud**. Analiza pokriva backend in frontend ločeno. Pokritost se meri z JaCoCo (backend) in Vitest V8 (frontend).
 
-| Komponenta | Pokritost meri | Coverage report                 |
-| ---------- | -------------- | ------------------------------- |
-| Backend    | JaCoCo         | `target/site/jacoco/jacoco.xml` |
-| Frontend   | Vitest + V8    | `frontend/coverage/lcov.info`   |
+SonarCloud preverja code smells, bugs, security hotspots, pokritost s testi in podvojeno kodo.
 
-SonarCloud preverja:
-
-- **Code smells** — vzdrževalnostne težave
-- **Bugs** — potencialne napake v logiki
-- **Security hotspots** — mesta, ki zahtevajo varnostni pregled
-- **Coverage** — odstotek pokritosti s testi
-- **Duplications** — podvojena koda
-
-Nekatere datoteke so namerno izključene iz analize ali pokritosti (Spring Data repozitoriji, JPA entitete, DTO razredi, ONNX servisi). Razlogi so opisani v:
-
-- [Pokritost in izključitve — backend](docs/backend/testiranje/pokritost-sonarqube.md)
-- [Pokritost in izključitve — frontend](docs/frontend/testiranje/pokritost-sonarqube.md)
+Iz analize so namerno izključene datoteke brez testabilne logike: Spring Data repozitoriji (JPA vmesniki brez implementacije), JPA entitete (goli podatkovni razredi), VAO/DTO razredi in ONNX servisi (ti so pokriti z integracijskimi testi).
 
 #### Poročilo
 
@@ -562,8 +581,6 @@ Nekatere datoteke so namerno izključene iz analize ali pokritosti (Spring Data 
 
 Posnetek zadnjega poročila je shranjen v [docs/sonarqube/](docs/sonarqube/).
 
-Posnetek zadnjega poročila je shranjen v [docs/sonarqube/](docs/sonarqube/).
-
 ---
 
 ## Deployment
@@ -574,6 +591,56 @@ Posnetek zadnjega poročila je shranjen v [docs/sonarqube/](docs/sonarqube/).
 | Backend — API + ML | Railway (`prod`) | Ročno ali ob spremembi `main`   |
 | Backend — ML zajem | Railway (`ci`)   | Vedno teče                      |
 | ML pipeline        | GitHub Actions   | Vsako noč ob 1:00 UTC           |
+
+```mermaid
+flowchart TD
+    Dev([Razvijalec])
+
+    subgraph GitHub
+        PR[Odprt PR]
+        Main[Merge v main]
+        Cron[Nočni cron\n1:00 UTC]
+    end
+
+    subgraph Actions_FE ["GitHub Actions — Frontend"]
+        PreviewDeploy[firebase-hosting-pull-request.yml]
+        ProdDeploy[firebase-hosting-merge.yml]
+    end
+
+    subgraph Actions_ML ["GitHub Actions — ML pipeline"]
+        ExportBronze[export_to_lake.py]
+        TransformSilver[transform_to_silver.py]
+        TrainGold[train_bikes.py\ntrain_buses.py]
+        ExportBronze --> TransformSilver --> TrainGold
+    end
+
+    subgraph Firebase ["Firebase Hosting"]
+        Preview[Preview kanal]
+        Prod[Produkcijski kanal]
+    end
+
+    subgraph Railway
+        direction LR
+        RailwayCI[ci — ML zajem podatkov]
+        RailwayProd[prod — API + ML inferenca]
+    end
+
+    subgraph Supabase
+        DB[(PostgreSQL)]
+        Storage[(Storage\nbronze / silver / gold)]
+    end
+
+    Dev -->|push| PR
+    Dev -->|merge| Main
+    PR --> PreviewDeploy --> Preview
+    Main --> ProdDeploy --> Prod
+    Main -->|ob spremembi main / ročno| RailwayProd
+    Cron --> ExportBronze
+    TrainGold -->|shrani ONNX modele| Storage
+    RailwayCI -->|shranjuje staging podatke| DB
+    DB -->|izvoz ob 1:00 UTC| ExportBronze
+    RailwayProd -->|naloži modele 3:30 UTC| Storage
+```
 
 ### Backend — Docker
 

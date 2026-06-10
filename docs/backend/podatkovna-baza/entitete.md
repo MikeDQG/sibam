@@ -9,6 +9,10 @@ Tabele se delijo v dve skupini glede na namen:
 | Uporabniški podatki | `users`, `saved_locations`, `saved_paths` | Trajni podatki — shranjeni dokler jih uporabnik ne izbriše |
 | ML staging | `bike_stations`, `bike_station_snapshots`, `weather_snapshots`, `trip_snapshots`, `stop_delay_snapshots` | Začasni podatki — po izvozu v Supabase Storage se počistijo |
 
+## ER diagram
+
+![ER diagram](../../diagrami/ER/er_diagram.png)
+
 ---
 
 ## Skupne lastnosti

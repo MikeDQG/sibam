@@ -73,6 +73,7 @@ export function SavedLocationMapCard({
             <div className='flex flex-col items-center gap-1'>
               <div
                 className='flex h-11 w-11 items-center justify-center rounded-full border-2 border-white text-white shadow-lg'
+                data-location-icon={location.icon}
                 style={{ backgroundColor: location.color }}>
                 <LocationIconGlyph icon={location.icon} size={23} />
               </div>

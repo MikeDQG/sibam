@@ -169,6 +169,27 @@ describe("integracijski AccountPage", () => {
     );
   });
 
+  it("za shranjeno lokacijo uporabi ikono iz backend polja logo", async () => {
+    mockAccountFetch({
+      locations: [
+        {
+          id: locationId,
+          name: "Fakulteta",
+          latitude: 46.5547,
+          longitude: 15.6459,
+          color: "#2563eb",
+          logo: "school",
+        },
+      ],
+    });
+
+    renderAccountPage();
+
+    expect(
+      (await screen.findByText("Fakulteta")).previousElementSibling,
+    ).toHaveAttribute("data-location-icon", "school");
+  });
+
   it("uporabi fetchUserSession, ko session ni v contextu", async () => {
     sessionMock.userSession = null;
     mockAccountFetch();
@@ -222,7 +243,7 @@ describe("integracijski AccountPage", () => {
   it("neveljavne lokacije in poti filtrira ter uporabi privzete vrednosti", async () => {
     mockAccountFetch({
       locations: [
-        { id: locationId, name: "  ", latitude: "46.5547", longitude: "15.6459", icon: "invalid" },
+        { id: locationId, name: "  ", latitude: "46.5547", longitude: "15.6459", logo: "invalid" },
         { id: "bad", name: "Neveljavna", latitude: "x", longitude: 15.6 },
       ],
       routes: [

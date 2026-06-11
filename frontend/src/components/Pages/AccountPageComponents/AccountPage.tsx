@@ -33,7 +33,7 @@ type SavedLocationResponse = {
   latitude?: number | string | null;
   longitude?: number | string | null;
   color?: string | null;
-  icon?: string | null;
+  logo?: string | null;
 };
 
 type SavedRouteResponse = {
@@ -68,7 +68,7 @@ function normalizeSavedLocation(
     name: location.name?.trim() || "Shranjena lokacija",
     position: { lat, lng },
     color: location.color ?? defaultLocationColor,
-    icon: isLocationIcon(location.icon) ? location.icon : defaultLocationIcon,
+    icon: isLocationIcon(location.logo) ? location.logo : defaultLocationIcon,
   };
 }
 
